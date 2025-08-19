@@ -9,17 +9,17 @@
       "type": "vector",
       "maxzoom": 6,
       "scheme": "xyz",
-      "url": "https://tiles.stadiamaps.com/data/global_landcover_v1.json"
+      "url": "https://tiles.stadiamaps.com/data/global_landcover_v1.json?api_key=83b37d68-4571-4939-bf36-d588384fec9e"
     },
     "stamen-omt": {
       "type": "vector",
       "scheme": "xyz",
-      "url": "https://tiles.stadiamaps.com/data/stamen-omt.json"
+      "url": "https://tiles.stadiamaps.com/data/stamen-omt.json?api_key=83b37d68-4571-4939-bf36-d588384fec9e"
     },
     "stamen_null": {
       "type": "vector",
       "scheme": "xyz",
-      "url": "https://tiles.stadiamaps.com/data/stamen_null.json"
+      "url": "https://tiles.stadiamaps.com/data/stamen_null.json?api_key=83b37d68-4571-4939-bf36-d588384fec9e"
     },
     "terrarium": {
       "type": "raster-dem",
@@ -29,8 +29,8 @@
       "url": "https://tiles.stadiamaps.com/data/terrarium.json"
     }
   },
-  "sprite": "https://tiles.stadiamaps.com/styles/stamen-terrain/sprite",
-  "glyphs": "https://tiles.stadiamaps.com/fonts/{fontstack}/{range}.pbf",
+  "sprite": "https://tiles.stadiamaps.com/styles/stamen-terrain/sprite?api_key=83b37d68-4571-4939-bf36-d588384fec9e",
+  "glyphs": "https://tiles.stadiamaps.com/fonts/{fontstack}/{range}.pbf?api_key=83b37d68-4571-4939-bf36-d588384fec9e",
   "layers": [
     {
       "id": "land",
