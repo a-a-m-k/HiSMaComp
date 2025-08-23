@@ -74,7 +74,6 @@ const theme = createTheme({
           boxShadow: "0px 1px 3px rgba(0,0,0,0.2)",
           backgroundColor: "rgba(255,255,255,0.8)",
           padding: "16px",
-          zIndex: 1000,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -87,6 +86,45 @@ const theme = createTheme({
           backgroundColor: common.white,
           opacity: 0.96,
           boxShadow: "0px 2px 8px rgba(0,0,0,0.08)",
+        },
+      },
+    },
+    MuiSlider: {
+      styleOverrides: {
+        thumb: ({ theme }) => ({
+          borderRadius: "50%",
+          width: 20,
+          height: 20,
+          [theme.breakpoints.down("md")]: {
+            width: 24,
+            height: 24,
+          },
+          [theme.breakpoints.down("sm")]: {
+            width: 26,
+            height: 26,
+          },
+        }),
+        track: {
+          borderRadius: 4,
+        },
+        rail: {
+          borderRadius: 4,
+        },
+        markLabel: ({ theme }) => {
+          return {
+            fontSize: theme.typography.pxToRem(16),
+            marginTop: 2,
+            textAlign: "center",
+
+            [theme.breakpoints.down("md")]: {
+              fontSize: theme.typography.pxToRem(14),
+              marginTop: 2,
+            },
+            [theme.breakpoints.down("sm")]: {
+              fontSize: theme.typography.pxToRem(14),
+              marginTop: 1,
+            },
+          };
         },
       },
     },

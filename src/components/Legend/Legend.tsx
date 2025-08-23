@@ -3,6 +3,7 @@ import { LegendContent, LegendProps } from "./LegendContent";
 import Paper from "@mui/material/Paper";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
+import { APP_MIN_WIDTH } from "@/constants";
 
 const Legend: React.FC<LegendProps> = (props) => {
   const theme = useTheme();
@@ -25,6 +26,7 @@ const Legend: React.FC<LegendProps> = (props) => {
           borderRadius: 2,
           p: 1,
           zIndex: theme.zIndex.appBar + 1,
+          minWidth: APP_MIN_WIDTH,
           ...props.style,
         }}
         data-testid={"legend-mobile"}

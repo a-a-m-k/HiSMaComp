@@ -16,7 +16,7 @@ export const FloatingButtonBox = styled(Box, {
   },
   [theme.breakpoints.down("sm")]: {
     // On mobile, position at bottom left above timeline, as first in column
-    bottom: timelineHeight + 20,
+    bottom: timelineHeight + 40,
     top: "auto",
   },
 }));

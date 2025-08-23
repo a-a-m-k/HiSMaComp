@@ -47,11 +47,23 @@ export const NO_DATA_MARKER_SIZE = 1;
 export const MIN_MARKER_SIZE = 5;
 export const MAX_MARKER_SIZE = 15;
 
+export const APP_MIN_WIDTH = 400;
+
 export const MIN_ZOOM = 5;
 export const MAX_ZOOM = 8;
 
 export const MAP_LAYER_ID = "towns-population-layer";
 
-export const FLOATING_BUTTON_SIZE = 36; // Size of the floating action button in pixels
+export const FLOATING_BUTTON_SIZE = 45;
 
 export const MOBILE_TIMELINE_HEIGHT = 110;
+
+export const ATTRIBUTION_LINKS = [
+  { href: "https://stadiamaps.com/", label: "© Stadia Maps" },
+  { href: "https://stamen.com/", label: "© Stamen Design" },
+  { href: "https://openmaptiles.org/", label: "© OpenMapTiles" },
+  {
+    href: "https://www.openstreetmap.org/copyright",
+    label: "© OpenStreetMap",
+  },
+];
