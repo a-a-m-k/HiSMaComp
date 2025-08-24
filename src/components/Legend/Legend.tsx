@@ -4,12 +4,13 @@ import Paper from "@mui/material/Paper";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { APP_MIN_WIDTH } from "@/constants";
+import { calculateMinWidth } from "@/utils";
 
 const Legend: React.FC<LegendProps> = (props) => {
   const theme = useTheme();
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
+  const spacing = theme.spacing(2);
   if (!props.layers || props.layers.length === 0) return null;
 
   if (isMobile) {
@@ -26,7 +27,7 @@ const Legend: React.FC<LegendProps> = (props) => {
           borderRadius: 2,
           p: 1,
           zIndex: theme.zIndex.appBar + 1,
-          minWidth: APP_MIN_WIDTH,
+          minWidth: calculateMinWidth(APP_MIN_WIDTH, spacing),
           ...props.style,
         }}
         data-testid={"legend-mobile"}

@@ -1,4 +1,4 @@
-import { Town } from "../common/types";
+import { SpacingValue, Town } from "../common/types";
 
 /**
  * Calculates the bounding box for a set of towns.
@@ -12,7 +12,7 @@ function getBounds(towns: Town[]) {
 
   // Filter out towns with null population
   const validTowns = towns.filter(
-    (town) => town.populationByCentury[11] !== null,
+    (town) => town.populationByCentury[11] !== null
   );
   const count = validTowns.length;
 
@@ -58,7 +58,7 @@ export function getCenter(towns: Town[]) {
 export function getFitZoom(
   towns: Town[],
   mapWidth: number = 800,
-  mapHeight: number = 600,
+  mapHeight: number = 600
 ): number {
   if (towns.length < 2) return 4;
 
@@ -99,4 +99,48 @@ export function townsToGeoJSON(localities: Town[]): GeoJSON.FeatureCollection {
       },
     })),
   };
+}
+
+/**
+ * Extracts the numeric value and unit from a CSS spacing string.
+ **/
+export function extractSpacingValue(spacing: string): SpacingValue {
+  const regex = /^(\d+(\.\d+)?)(px|rem|em)$/;
+  const match = spacing.match(regex);
+  if (match) {
+    return {
+      value: Number(match[1]),
+      unit: match[3],
+    };
+  }
+  return { value: 0, unit: "" };
+}
+
+/**
+ * Calculates the minWidth CSS string based on app's min width and theme spacing.
+ * Handles px, rem, and em units
+ *
+ * @param appMinWidthPx - Your app's minimum width in px
+ * @param spacing - Theme spacing string (e.g., "16px", "2rem", "1.5em")
+ * @param pxPerRemOrEm - The base px value for 1rem/1em. Defaults to 16.
+ * @returns minWidth string suitable for CSS (e.g., "304px", "18rem")
+ */
+export function calculateMinWidth(
+  appMinWidthPx: number,
+  spacing: string,
+  pxPerRemOrEm: number = 16
+): string {
+  const { value: spacingValue, unit } = extractSpacingValue(spacing);
+
+  if (unit === "px") {
+    return `${appMinWidthPx - spacingValue}px`;
+  } else if (unit === "rem") {
+    const appMinWidthRem = appMinWidthPx / pxPerRemOrEm;
+    return `${appMinWidthRem - spacingValue}rem`;
+  } else if (unit === "em") {
+    const appMinWidthEm = appMinWidthPx / pxPerRemOrEm;
+    return `${appMinWidthEm - spacingValue}em`;
+  } else {
+    return spacing;
+  }
 }

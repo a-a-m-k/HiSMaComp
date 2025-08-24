@@ -1,4 +1,5 @@
 import { APP_MIN_WIDTH } from "@/constants";
+import { calculateMinWidth } from "@/utils";
 import { Paper, Theme } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
@@ -13,19 +14,22 @@ const baseSheetStyles = (theme: Theme): React.CSSProperties => ({
   backgroundColor: theme.palette.background.paper,
 });
 
-export const MobileSheet = styled(Paper)(({ theme }) => ({
-  ...baseSheetStyles(theme),
-  left: theme.spacing(1),
-  right: theme.spacing(1),
-  bottom: theme.spacing(1),
-  borderTopLeftRadius: 18,
-  borderTopRightRadius: 18,
-  boxShadow: theme.shadows[8],
-  padding: theme.spacing(0.5, 3, 1, 3),
-  zIndex: theme.zIndex.modal + 2,
-  width: `calc(100% - ${theme.spacing(2)})`,
-  minWidth: APP_MIN_WIDTH,
-}));
+export const MobileSheet = styled(Paper)(({ theme }) => {
+  const spacing = theme.spacing(2);
+  return {
+    ...baseSheetStyles(theme),
+    left: theme.spacing(1),
+    right: theme.spacing(1),
+    bottom: theme.spacing(1),
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    boxShadow: theme.shadows[8],
+    padding: theme.spacing(0.5, 3, 1, 3),
+    zIndex: theme.zIndex.modal + 2,
+    width: `calc(100% - ${spacing})`,
+    minWidth: calculateMinWidth(APP_MIN_WIDTH, spacing),
+  };
+});
 
 export const MediumSheet = styled(Paper)(({ theme }) => ({
   ...baseSheetStyles(theme),

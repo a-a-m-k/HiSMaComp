@@ -4,7 +4,7 @@ import { FLOATING_BUTTON_SIZE } from "../constants";
 export const FloatingButtonBox = styled(Box, {
   shouldForwardProp: (prop) => prop !== "corner" && prop !== "timelineHeight",
 })<{ timelineHeight: number }>(({ theme, timelineHeight }) => ({
-  position: "absolute",
+  position: "fixed",
   zIndex: theme.zIndex.appBar + 1,
   left: theme.spacing(1),
   top: theme.spacing(2),
@@ -16,7 +16,7 @@ export const FloatingButtonBox = styled(Box, {
   },
   [theme.breakpoints.down("sm")]: {
     // On mobile, position at bottom left above timeline, as first in column
-    bottom: timelineHeight + 40,
+    bottom: timelineHeight + 30,
     top: "auto",
   },
 }));
