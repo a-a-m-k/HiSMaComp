@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
-import { LegendAttributionLinks } from "./LegendAttributionLinks";
+import { AttributionLinks } from "../AttributionLinks";
 
 interface LayerItem {
   layer: string;
@@ -102,7 +102,7 @@ export const LegendContent: React.FC<LegendProps> = ({
           </Box>
         ))}
       </Stack>
-      <LegendAttributionLinks />
+      <AttributionLinks />
     </Box>
   );
 };
