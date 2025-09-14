@@ -6,34 +6,32 @@ import { getCenter, getFitZoom } from "@/utils";
 import { CENTURY_MAP, YEARS } from "@/constants";
 import MapLegend from "@components/Legend";
 import { useLegendLayers } from "@/hooks";
+import { useMapDataCache } from "@/hooks/useMapDataCache";
 import { Box } from "@mui/material";
 
+const marks = YEARS.map((year) => ({
+  value: year,
+  label: CENTURY_MAP[year].toString() + "th ct.",
+}));
+
 const MapContainer = () => {
-  const minCentury = YEARS[0];
-
-  const marks = YEARS.map((year) => ({
-    value: year,
-    label: CENTURY_MAP[year].toString() + "th ct.",
-  }));
   const legendLayers = useLegendLayers();
+  const { filterTownsByYear, getPopulationStats } = useMapDataCache();
 
-  // Calculate map center and initial zoom
   const { latitude, longitude } = useMemo(() => getCenter(towns), []);
-
   const initialZoom = useMemo(() => {
     return getFitZoom(towns, window.innerWidth, window.innerHeight);
-  }, [towns]);
+  }, []);
 
-  const [selectedYear, setSelectedYear] = useState<number>(minCentury);
+  const [selectedYear, setSelectedYear] = useState<number>(YEARS[0]);
 
-  // Filter localities by selected year
   const filteredTowns = useMemo(() => {
-    return towns.filter(
-      (town) =>
-        town.populationByCentury &&
-        town.populationByCentury[selectedYear] !== undefined,
-    );
-  }, [selectedYear, towns]);
+    return filterTownsByYear(towns, selectedYear);
+  }, [selectedYear, filterTownsByYear]);
+
+  const populationStats = useMemo(() => {
+    return getPopulationStats(filteredTowns, selectedYear);
+  }, [filteredTowns, selectedYear, getPopulationStats]);
 
   return (
     <Box id="map-container" sx={{ width: "100%", height: "100%" }}>

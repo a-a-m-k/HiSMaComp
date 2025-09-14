@@ -1,7 +1,12 @@
 import { SaveAltRounded } from "@mui/icons-material";
-import { useMediaQuery, useTheme } from "@mui/material";
+import {
+  useMediaQuery,
+  useTheme,
+  Tooltip,
+  CircularProgress,
+} from "@mui/material";
 import html2canvas from "html2canvas";
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   hideMapControls,
   restoreMapControls,
@@ -20,8 +25,11 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [isCapturing, setIsCapturing] = useState(false);
 
-  const handleScreenshot = async () => {
+  const handleScreenshot = useCallback(async () => {
+    if (isCapturing) return;
+
     const mapContainer =
       document.querySelector<HTMLElement>(mapContainerSelector);
     if (!mapContainer) {
@@ -29,38 +37,83 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
       return;
     }
 
-    const { controls, prevDisplay } = hideMapControls(mapContainer);
-    const attributionDiv = addAttributionOverlay(mapContainer, theme, isMobile);
+    setIsCapturing(true);
 
     try {
+      const { controls, prevDisplay } = hideMapControls(mapContainer);
+      const attributionDiv = addAttributionOverlay(
+        mapContainer,
+        theme,
+        isMobile,
+      );
+
       const canvas = await html2canvas(mapContainer, {
         useCORS: true,
         backgroundColor: theme.palette.background.paper,
         logging: false,
+        scale: isMobile ? 1 : 2,
+        allowTaint: false,
+        foreignObjectRendering: false,
+        removeContainer: false,
+        imageTimeout: 5000,
+        onclone: (clonedDoc) => {
+          // Only check for performance monitor in development
+          if (process.env.NODE_ENV === "development") {
+            const perfMonitor = clonedDoc.querySelector(
+              "[data-performance-monitor]",
+            );
+            if (perfMonitor) {
+              perfMonitor.remove();
+            }
+          }
+        },
       });
-      const url = canvas.toDataURL("image/png");
+
+      const url = canvas.toDataURL("image/png", 0.9);
+
       const link = document.createElement("a");
       link.href = url;
       link.download = filename;
+      link.style.display = "none";
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+
+      setTimeout(() => {
+        document.body.removeChild(link);
+        attributionDiv.remove();
+        restoreMapControls(controls, prevDisplay);
+      }, 100);
+    } catch (error) {
+      console.error("Screenshot failed:", error);
+      window.alert("Screenshot failed. Please try again.");
     } finally {
-      attributionDiv.remove();
-      restoreMapControls(controls, prevDisplay);
+      setIsCapturing(false);
     }
-  };
+  }, [isCapturing, mapContainerSelector, filename, theme, isMobile]);
 
   return (
-    <FloatingButton
-      id="map-screenshot-button"
-      onClick={handleScreenshot}
-      size="medium"
-      color="secondary"
-      aria-label="save map as image"
+    <Tooltip
+      title={isCapturing ? "Capturing screenshot..." : "Save map as image"}
     >
-      <SaveAltRounded />
-    </FloatingButton>
+      <FloatingButton
+        id="map-screenshot-button"
+        onClick={handleScreenshot}
+        size="medium"
+        color="secondary"
+        aria-label="save map as image"
+        disabled={isCapturing}
+        sx={{
+          opacity: isCapturing ? 0.7 : 1,
+          transition: "opacity 0.2s ease-in-out",
+        }}
+      >
+        {isCapturing ? (
+          <CircularProgress size={20} color="inherit" />
+        ) : (
+          <SaveAltRounded />
+        )}
+      </FloatingButton>
+    </Tooltip>
   );
 };
 

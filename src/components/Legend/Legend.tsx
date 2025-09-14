@@ -79,4 +79,4 @@ const Legend: React.FC<LegendProps> = (props) => {
   );
 };
 
-export default React.memo(Legend);
+export default Legend;

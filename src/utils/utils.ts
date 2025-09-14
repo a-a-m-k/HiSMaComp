@@ -12,7 +12,7 @@ function getBounds(towns: Town[]) {
 
   // Filter out towns with null population
   const validTowns = towns.filter(
-    (town) => town.populationByCentury[11] !== null
+    (town) => town.populationByCentury[11] !== null,
   );
   const count = validTowns.length;
 
@@ -58,7 +58,7 @@ export function getCenter(towns: Town[]) {
 export function getFitZoom(
   towns: Town[],
   mapWidth: number = 800,
-  mapHeight: number = 600
+  mapHeight: number = 600,
 ): number {
   if (towns.length < 2) return 4;
 
@@ -128,7 +128,7 @@ export function extractSpacingValue(spacing: string): SpacingValue {
 export function calculateMinWidth(
   appMinWidthPx: number,
   spacing: string,
-  pxPerRemOrEm: number = 16
+  pxPerRemOrEm: number = 16,
 ): string {
   const { value: spacingValue, unit } = extractSpacingValue(spacing);
 

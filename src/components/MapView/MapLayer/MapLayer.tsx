@@ -25,7 +25,7 @@ interface MapLayerProps
   maxMarkerSize?: number;
 }
 
-const MapLayer: React.FC<MapLayerProps> = ({
+const MapLayer = ({
   layerId,
   selectedYear,
   data,
@@ -34,15 +34,39 @@ const MapLayer: React.FC<MapLayerProps> = ({
   minMarkerSize = MIN_MARKER_SIZE,
   maxMarkerSize = MAX_MARKER_SIZE,
   ...rest
-}) => {
+}: MapLayerProps) => {
   const selectedCentury = String(selectedYear);
-  const minPop = POPULATION_TRESHOLDS[0];
-  const maxPop = POPULATION_TRESHOLDS[POPULATION_TRESHOLDS.length - 1];
-  const minSize = MIN_MARKER_SIZE;
-  const maxSize = MAX_MARKER_SIZE;
 
   const populationSortKey = useMemo(
     () => getPopulationSortKey(selectedCentury),
+    [selectedCentury],
+  );
+
+  const circleRadiusExpression = useMemo(
+    () =>
+      getCircleRadiusExpression(
+        selectedCentury,
+        minPopulation,
+        maxPopulation,
+        minMarkerSize,
+        maxMarkerSize,
+      ),
+    [
+      selectedCentury,
+      minPopulation,
+      maxPopulation,
+      minMarkerSize,
+      maxMarkerSize,
+    ],
+  );
+
+  const circleColorExpression = useMemo(
+    () => getCircleColorExpression(selectedCentury),
+    [selectedCentury],
+  );
+
+  const populationExpression = useMemo(
+    () => getPopulationExpression(selectedCentury),
     [selectedCentury],
   );
 
@@ -52,14 +76,8 @@ const MapLayer: React.FC<MapLayerProps> = ({
         id={`${layerId}-circle`}
         type="circle"
         paint={{
-          "circle-radius": getCircleRadiusExpression(
-            selectedCentury,
-            minPop,
-            maxPop,
-            minSize,
-            maxSize,
-          ),
-          "circle-color": getCircleColorExpression(selectedCentury),
+          "circle-radius": circleRadiusExpression,
+          "circle-color": circleColorExpression,
           "circle-stroke-width": 1,
           "circle-stroke-color": "#fff",
         }}
@@ -79,10 +97,7 @@ const MapLayer: React.FC<MapLayerProps> = ({
             {},
             "\n",
             {},
-            [
-              "to-string",
-              ["coalesce", getPopulationExpression(selectedCentury), "N/A"],
-            ],
+            ["to-string", ["coalesce", populationExpression, "N/A"]],
             { "font-scale": 0.8 },
           ],
           "text-anchor": "top",
@@ -102,4 +117,4 @@ const MapLayer: React.FC<MapLayerProps> = ({
   );
 };
 
-export default MapLayer;
+export default React.memo(MapLayer) as React.FC<MapLayerProps>;
