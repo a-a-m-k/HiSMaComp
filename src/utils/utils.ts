@@ -18,6 +18,10 @@ export function getBounds(towns: Town[], year: number = DEFAULT_YEAR) {
     throw new Error("Towns must be an array");
   }
 
+  if (typeof year !== "number" || isNaN(year) || year < 0) {
+    throw new Error("Year must be a valid positive number");
+  }
+
   if (towns.length === 0) {
     return { minLat: 0, maxLat: 0, minLng: 0, maxLng: 0 };
   }
@@ -241,20 +245,6 @@ export function getPopulationStats(
       populations.reduce((sum, pop) => sum + pop, 0) / populations.length,
     median: sortedPopulations[Math.floor(sortedPopulations.length / 2)],
   };
-}
-
-/**
- * Converts a year to its corresponding century.
- * @param year - The year to convert (e.g., 800, 1000, 1200)
- * @returns The century number (e.g., 9, 11, 13)
- *
- * Examples:
- * - getCenturyFromYear(800) returns 9 (9th century: 801-900)
- * - getCenturyFromYear(1000) returns 11 (11th century: 1001-1100)
- * - getCenturyFromYear(1200) returns 13 (13th century: 1201-1300)
- */
-export function getCenturyFromYear(year: number): number {
-  return Math.floor(year / 100) + 1;
 }
 
 /**

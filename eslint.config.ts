@@ -13,7 +13,27 @@ const __dirname = dirname(__filename);
 
 export default [
   {
-    ignores: ["node_modules/**", "dist/**", "build/**"],
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "**/*.json",
+      "**/*.md",
+      "**/*.html",
+      "**/*.css",
+      "**/.DS_Store",
+      "**/.gitignore",
+      "**/.prettierrc",
+      "**/.prettierignore",
+      "**/.husky/**",
+      "**/package-lock.json",
+      "**/package.json",
+      "**/tsconfig.json",
+      "**/vite.config.ts",
+      "**/vitest.config.ts",
+      "**/eslint.config.ts",
+      "**/*service-worker.js",
+    ],
   },
   {
     files: ["*.config.{js,ts}", "vite.config.ts", "eslint.config.ts"],
@@ -68,7 +88,11 @@ export default [
     },
   },
   {
-    files: ["src/**/*.{ts,tsx}"],
+    files: [
+      "src/**/*.{ts,tsx}",
+      "!src/**/*.test.{ts,tsx}",
+      "!src/**/__tests__/**/*",
+    ],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
@@ -105,6 +129,40 @@ export default [
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
       "react/prop-types": "off",
+    },
+  },
+  {
+    files: ["src/**/*.test.{ts,tsx}", "src/**/__tests__/**/*", "src/test/**/*"],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        vi: "readonly",
+        describe: "readonly",
+        it: "readonly",
+        expect: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly",
+        global: "readonly",
+      },
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: "latest",
+        ecmaFeatures: { jsx: true },
+        sourceType: "module",
+      },
+    },
+    plugins: {
+      "@typescript-eslint": tseslint,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...tseslint.configs.recommended.rules,
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 ];

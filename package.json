@@ -9,6 +9,10 @@
     "build": "vite build",
     "build:analyze": "vite build && echo 'Bundle analysis generated at dist/bundle-analysis.html'",
     "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "prepare": "husky",
     "lint": "npx lint-staged",
     "lint:check": "eslint . --ext .ts,.tsx",
@@ -23,7 +27,8 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "prettier --write",
-      "eslint --fix"
+      "eslint --fix",
+      "vitest run --reporter=verbose --run"
     ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"
@@ -44,6 +49,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/babel__traverse": "^7.20.7",
     "@types/node": "^22.15.30",
     "@types/react": "^18.3.18",
@@ -59,11 +67,14 @@
     "globals": "^15.14.0",
     "husky": "^9.1.7",
     "jiti": "^2.4.2",
+    "jsdom": "^27.0.0",
+    "lighthouse": "^12.8.2",
     "lint-staged": "^16.1.2",
     "prettier": "^3.6.2",
     "rollup-plugin-visualizer": "^6.0.3",
     "typescript": "^4.0.0",
     "vite": "^6.0.5",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.4"
   }
 }
