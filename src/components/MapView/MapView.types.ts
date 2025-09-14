@@ -1,4 +1,4 @@
-import { Town, LatLngTuple } from "@/common/types";
+import { LatLngTuple } from "@/common/types";
 
 export interface MapContainerProps {
   center?: LatLngTuple;
@@ -10,8 +10,6 @@ export interface MapContainerProps {
 }
 export interface MapViewProps {
   initialPosition: { longitude: number; latitude: number };
-  towns: Town[];
-  selectedYear: number;
   mapContainerProps?: MapContainerProps;
   initialZoom: number;
 }

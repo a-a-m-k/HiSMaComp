@@ -3,7 +3,7 @@
     "name": "Paris",
     "latitude": 48.8566,
     "longitude": 2.3522,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 25000,
       "1000": 20000,
       "1200": 110000,
@@ -18,7 +18,7 @@
     "name": "Laon",
     "latitude": 49.5639,
     "longitude": 3.6244,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 25000,
       "1200": null,
@@ -33,7 +33,7 @@
     "name": "Rouen",
     "latitude": 49.4431,
     "longitude": 1.0993,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 20000,
       "1200": 40000,
@@ -48,7 +48,7 @@
     "name": "London",
     "latitude": 51.5074,
     "longitude": -0.1278,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 15000,
       "1200": 40000,
@@ -63,7 +63,7 @@
     "name": "Cordova",
     "latitude": 37.8882,
     "longitude": -4.7794,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 160000,
       "1000": 450000,
       "1200": 60000,
@@ -78,7 +78,7 @@
     "name": "Seville",
     "latitude": 37.3891,
     "longitude": -5.9845,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 35000,
       "1000": 90000,
       "1200": 150000,
@@ -93,7 +93,7 @@
     "name": "Almeria",
     "latitude": 36.834,
     "longitude": -2.4637,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 35000,
       "1200": null,
@@ -108,7 +108,7 @@
     "name": "Toledo",
     "latitude": 39.8628,
     "longitude": -4.0273,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 25000,
       "1000": 31000,
       "1200": null,
@@ -123,7 +123,7 @@
     "name": "Palma",
     "latitude": 39.5696,
     "longitude": 2.6502,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 20000,
       "1200": null,
@@ -138,7 +138,7 @@
     "name": "Amalfi",
     "latitude": 40.6346,
     "longitude": 14.6029,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 35000,
       "1200": null,
@@ -153,7 +153,7 @@
     "name": "Rome",
     "latitude": 41.9028,
     "longitude": 12.4964,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 50000,
       "1000": 35000,
       "1200": 35000,
@@ -168,7 +168,7 @@
     "name": "Pavia",
     "latitude": 45.1847,
     "longitude": 9.1582,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 22000,
       "1000": 30000,
       "1200": null,
@@ -183,7 +183,7 @@
     "name": "Naples",
     "latitude": 40.8518,
     "longitude": 14.2681,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 30000,
       "1000": 30000,
       "1200": 35000,
@@ -198,7 +198,7 @@
     "name": "Milan",
     "latitude": 45.4642,
     "longitude": 9.19,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 25000,
       "1000": 30000,
       "1200": 60000,
@@ -213,7 +213,7 @@
     "name": "Mainz",
     "latitude": 50.0,
     "longitude": 8.2711,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 25000,
       "1200": null,
@@ -228,7 +228,7 @@
     "name": "Cologne",
     "latitude": 50.9375,
     "longitude": 6.9603,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 15000,
       "1000": 21000,
       "1200": 50000,
@@ -243,7 +243,7 @@
     "name": "Verona",
     "latitude": 45.4384,
     "longitude": 10.9916,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 20000,
       "1200": 33000,
@@ -258,7 +258,7 @@
     "name": "Trier",
     "latitude": 49.7499,
     "longitude": 6.6371,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 15000,
       "1000": 20000,
       "1200": 25000,
@@ -273,7 +273,7 @@
     "name": "Regensburg",
     "latitude": 49.0134,
     "longitude": 12.1016,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 15000,
       "1200": 24000,
@@ -288,7 +288,7 @@
     "name": "Genoa",
     "latitude": 44.4056,
     "longitude": 8.9463,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 15000,
       "1200": 30000,
@@ -303,7 +303,7 @@
     "name": "Cremona",
     "latitude": 45.1333,
     "longitude": 10.0227,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 15000,
       "1200": null,
@@ -318,7 +318,7 @@
     "name": "Magdeburg",
     "latitude": 52.1205,
     "longitude": 11.6276,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -333,7 +333,7 @@
     "name": "Poznan",
     "latitude": 52.4064,
     "longitude": 16.9252,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -348,7 +348,7 @@
     "name": "Gniezno",
     "latitude": 52.5346,
     "longitude": 17.5824,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -363,7 +363,7 @@
     "name": "Kyiv",
     "latitude": 50.4501,
     "longitude": 30.5234,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 45000,
       "1200": 30000,
@@ -378,7 +378,7 @@
     "name": "Chersones",
     "latitude": 44.6122,
     "longitude": 33.4931,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 20000,
       "1000": 25000,
       "1200": null,
@@ -393,7 +393,7 @@
     "name": "Novgorod",
     "latitude": 58.5215,
     "longitude": 31.2755,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 19000,
       "1200": 25000,
@@ -408,7 +408,7 @@
     "name": "Ochrid",
     "latitude": 41.1231,
     "longitude": 20.8016,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 40000,
       "1200": null,
@@ -423,7 +423,7 @@
     "name": "Plovdiv",
     "latitude": 42.1354,
     "longitude": 24.7453,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 20000,
       "1200": 20000,
@@ -438,7 +438,7 @@
     "name": "Lisbon",
     "latitude": 38.7223,
     "longitude": -9.1393,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 15000,
       "1000": 15000,
       "1200": 15000,
@@ -453,7 +453,7 @@
     "name": "Palermo",
     "latitude": 38.1157,
     "longitude": 13.3615,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 75000,
       "1200": 150000,
@@ -468,7 +468,7 @@
     "name": "Prague",
     "latitude": 50.0755,
     "longitude": 14.4378,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 15000,
       "1200": 22000,
@@ -483,7 +483,7 @@
     "name": "Esztergom",
     "latitude": 47.7855,
     "longitude": 18.74,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 18000,
@@ -499,7 +499,7 @@
     "nameVariants": ["Istambul"],
     "latitude": 41.0082,
     "longitude": 28.9784,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 250000,
       "1000": 300000,
       "1200": 150000,
@@ -514,7 +514,7 @@
     "name": "Venice",
     "latitude": 45.4408,
     "longitude": 12.3155,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": 45000,
       "1200": 70000,
@@ -529,7 +529,7 @@
     "name": "Thessaloniki",
     "latitude": 40.6401,
     "longitude": 22.9444,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 40000,
       "1000": 40000,
       "1200": 30000,
@@ -544,7 +544,7 @@
     "name": "Bruges",
     "latitude": 51.2093,
     "longitude": 3.2247,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 25000,
@@ -559,7 +559,7 @@
     "name": "Toulouse",
     "latitude": 43.6047,
     "longitude": 1.4442,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 20000,
@@ -574,7 +574,7 @@
     "name": "Lyon",
     "latitude": 45.764,
     "longitude": 4.8357,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -589,7 +589,7 @@
     "name": "Narbonne",
     "latitude": 43.1837,
     "longitude": 3.0041,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -604,7 +604,7 @@
     "name": "Ypres",
     "latitude": 50.8514,
     "longitude": 2.8858,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -619,7 +619,7 @@
     "name": "Marseille",
     "latitude": 43.2965,
     "longitude": 5.3698,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 20000,
@@ -634,7 +634,7 @@
     "name": "Arras",
     "latitude": 50.292,
     "longitude": 2.7775,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -649,7 +649,7 @@
     "name": "Reims",
     "latitude": 49.2583,
     "longitude": 4.0317,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 20000,
       "1000": null,
       "1200": null,
@@ -664,7 +664,7 @@
     "name": "Florence",
     "latitude": 43.7696,
     "longitude": 11.2558,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -679,7 +679,7 @@
     "name": "Caffa",
     "latitude": 44.9521,
     "longitude": 34.1024,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -694,7 +694,7 @@
     "name": "Bologna",
     "latitude": 44.4949,
     "longitude": 11.3426,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 35000,
@@ -709,7 +709,7 @@
     "name": "Siena",
     "latitude": 43.3188,
     "longitude": 11.3308,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -724,7 +724,7 @@
     "name": "Granada",
     "latitude": 37.1773,
     "longitude": -3.5986,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 60000,
@@ -739,7 +739,7 @@
     "name": "Buda",
     "latitude": 47.5008,
     "longitude": 19.0372,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -754,7 +754,7 @@
     "name": "Trakai",
     "latitude": 54.6378,
     "longitude": 24.9342,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -769,7 +769,7 @@
     "name": "Sarai",
     "latitude": 48.7,
     "longitude": 45.5,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -784,7 +784,7 @@
     "name": "Vladimir",
     "latitude": 56.1291,
     "longitude": 40.4066,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 18000,
@@ -799,7 +799,7 @@
     "name": "Sudak",
     "latitude": 44.85,
     "longitude": 34.9711,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -814,7 +814,7 @@
     "name": "Smolensk",
     "latitude": 54.7867,
     "longitude": 32.0401,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 35000,
@@ -829,7 +829,7 @@
     "name": "Kirim Crimea",
     "latitude": 45.3,
     "longitude": 34.1,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -844,7 +844,7 @@
     "name": "Trnovo",
     "latitude": 43.0812,
     "longitude": 25.6292,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 35000,
@@ -859,7 +859,7 @@
     "name": "Dublin",
     "latitude": 53.3498,
     "longitude": -6.2603,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 19000,
@@ -874,7 +874,7 @@
     "name": "Ghent",
     "latitude": 51.0543,
     "longitude": 3.7174,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 25000,
@@ -889,7 +889,7 @@
     "name": "Metz",
     "latitude": 49.1193,
     "longitude": 6.1757,
-    "populationByCentury": {
+    "populationByYear": {
       "800": 25000,
       "1000": null,
       "1200": 23000,
@@ -904,7 +904,7 @@
     "name": "Erfurt",
     "latitude": 50.9848,
     "longitude": 11.0299,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 21000,
@@ -919,7 +919,7 @@
     "name": "Speyer",
     "latitude": 49.3176,
     "longitude": 8.4412,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 30000,
@@ -934,7 +934,7 @@
     "name": "Lübeck",
     "latitude": 53.8655,
     "longitude": 10.6866,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -949,7 +949,7 @@
     "name": "Vienna",
     "latitude": 48.2082,
     "longitude": 16.3738,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -964,7 +964,7 @@
     "name": "Aachen",
     "latitude": 50.7753,
     "longitude": 6.0839,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -979,7 +979,7 @@
     "name": "Worms",
     "latitude": 49.6326,
     "longitude": 8.3599,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 25000,
@@ -994,7 +994,7 @@
     "name": "Utrecht",
     "latitude": 52.0907,
     "longitude": 5.1214,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1009,7 +1009,7 @@
     "name": "Brunswick",
     "latitude": 52.2689,
     "longitude": 10.5268,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 21000,
@@ -1024,7 +1024,7 @@
     "name": "Strassburg",
     "latitude": 48.5734,
     "longitude": 7.7521,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1039,7 +1039,7 @@
     "name": "Soest",
     "latitude": 51.5756,
     "longitude": 8.1062,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 15000,
@@ -1054,7 +1054,7 @@
     "name": "Nuremberg",
     "latitude": 49.4521,
     "longitude": 11.0767,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1069,7 +1069,7 @@
     "name": "Frankfurt",
     "latitude": 50.1109,
     "longitude": 8.6821,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1084,7 +1084,7 @@
     "name": "Bordeaux",
     "latitude": 44.8378,
     "longitude": -0.5792,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": 15000,
@@ -1099,7 +1099,7 @@
     "name": "Hamburg",
     "latitude": 53.5511,
     "longitude": 9.9937,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1114,7 +1114,7 @@
     "name": "Breslau",
     "latitude": 51.1079,
     "longitude": 17.0385,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1129,7 +1129,7 @@
     "name": "Vilnius",
     "latitude": 54.6872,
     "longitude": 25.2797,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1144,7 +1144,7 @@
     "name": "Krakow",
     "latitude": 50.0647,
     "longitude": 19.945,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1159,7 +1159,7 @@
     "name": "Pskov",
     "latitude": 57.8193,
     "longitude": 28.3318,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1174,7 +1174,7 @@
     "name": "Moscow",
     "latitude": 55.7558,
     "longitude": 37.6176,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1189,7 +1189,7 @@
     "name": "Tver",
     "latitude": 56.8587,
     "longitude": 35.9176,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1204,7 +1204,7 @@
     "name": "Valencia",
     "latitude": 39.4699,
     "longitude": -0.3763,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1219,7 +1219,7 @@
     "name": "Sofia",
     "latitude": 42.6977,
     "longitude": 23.3219,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1234,7 +1234,7 @@
     "name": "Edinburgh",
     "latitude": 55.9533,
     "longitude": -3.1883,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1249,7 +1249,7 @@
     "name": "Padua",
     "latitude": 45.4064,
     "longitude": 11.8768,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1264,7 +1264,7 @@
     "name": "Antwerp",
     "latitude": 51.2194,
     "longitude": 4.4025,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1279,7 +1279,7 @@
     "name": "Augsburg",
     "latitude": 48.3705,
     "longitude": 10.8978,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1294,7 +1294,7 @@
     "name": "Brussels",
     "latitude": 50.8503,
     "longitude": 4.3517,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1309,7 +1309,7 @@
     "name": "Belgrade",
     "latitude": 44.7866,
     "longitude": 20.4489,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1324,7 +1324,7 @@
     "name": "Bremen",
     "latitude": 53.0793,
     "longitude": 8.8017,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1339,7 +1339,7 @@
     "name": "Danzig",
     "latitude": 54.352,
     "longitude": 18.6466,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1354,7 +1354,7 @@
     "name": "Suceava",
     "latitude": 47.6514,
     "longitude": 26.2556,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1369,7 +1369,7 @@
     "name": "Adrianople",
     "latitude": 41.6771,
     "longitude": 26.555,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1384,7 +1384,7 @@
     "name": "Athens",
     "latitude": 37.9838,
     "longitude": 23.7275,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1399,7 +1399,7 @@
     "name": "Bakhchiserai",
     "latitude": 44.7519,
     "longitude": 33.8578,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1414,7 +1414,7 @@
     "name": "Barcelona",
     "latitude": 41.3851,
     "longitude": 2.1734,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1429,7 +1429,7 @@
     "name": "Amsterdam",
     "latitude": 52.3676,
     "longitude": 4.9041,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1444,7 +1444,7 @@
     "name": "Leiden",
     "latitude": 52.1601,
     "longitude": 4.497,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1459,7 +1459,7 @@
     "name": "Munich",
     "latitude": 48.1351,
     "longitude": 11.582,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1474,7 +1474,7 @@
     "name": "Königsberg",
     "latitude": 54.7104,
     "longitude": 20.4522,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1489,7 +1489,7 @@
     "name": "Warsaw",
     "latitude": 52.2297,
     "longitude": 21.0122,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1504,7 +1504,7 @@
     "name": "Madrid",
     "latitude": 40.4168,
     "longitude": -3.7038,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,
@@ -1520,7 +1520,7 @@
     "nameVariants": ["Lviv"],
     "latitude": 49.8397,
     "longitude": 24.0297,
-    "populationByCentury": {
+    "populationByYear": {
       "800": null,
       "1000": null,
       "1200": null,

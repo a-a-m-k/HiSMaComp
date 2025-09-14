@@ -5,6 +5,7 @@ import Stack from "@mui/material/Stack";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { AttributionLinks } from "../AttributionLinks";
+import { useApp } from "@/context/AppContext";
 
 interface LayerItem {
   layer: string;
@@ -14,15 +15,14 @@ interface LayerItem {
 export interface LegendProps {
   label: string;
   layers: LayerItem[];
-  selectedYear: number;
   style?: React.CSSProperties;
 }
 export const LegendContent: React.FC<LegendProps> = ({
   layers,
-  selectedYear,
   label,
   style,
 }) => {
+  const { selectedYear } = useApp();
   const theme = useTheme();
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -85,7 +85,7 @@ export const LegendContent: React.FC<LegendProps> = ({
                 bgcolor: color,
                 borderRadius: "50%",
                 flexShrink: 0,
-                border: (theme) => `1.5px solid ${theme.palette.divider}`,
+                border: theme => `1.5px solid ${theme.palette.divider}`,
               }}
               aria-label={`Color for ${layer}`}
             />

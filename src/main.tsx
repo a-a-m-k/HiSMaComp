@@ -6,7 +6,7 @@ import App from "./App.jsx";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     const swPath = import.meta.env.BASE_URL + "hismacomp-service-worker.js";
-    navigator.serviceWorker.register(swPath).catch((error) => {
+    navigator.serviceWorker.register(swPath).catch(error => {
       console.warn("Service Worker registration failed:", error);
     });
   });
@@ -15,7 +15,7 @@ if ("serviceWorker" in navigator) {
 const rootElement = document.getElementById("root");
 if (rootElement) {
   createRoot(rootElement).render(
-    React.createElement(StrictMode, null, React.createElement(App)),
+    React.createElement(StrictMode, null, React.createElement(App))
   );
 } else {
   console.error("Failed to find the root element");

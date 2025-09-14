@@ -5,18 +5,14 @@ import { MobileSheet, MediumSheet, DesktopCard } from "./Timeline.styles";
 import { TimelineTitle } from "./TimlineTitle";
 import { TimelineSlider } from "./TimelineSlider";
 import { getMobileLabelledMarks } from "./utils";
+import { useApp } from "@/context/AppContext";
 
 interface TimelineProps {
-  setSelectedYear: (year: number) => void;
-  selectedYear: number;
   marks: Array<{ value: number; label: string }>;
 }
 
-const Timeline: React.FC<TimelineProps> = ({
-  setSelectedYear,
-  selectedYear,
-  marks,
-}) => {
+const Timeline: React.FC<TimelineProps> = ({ marks }) => {
+  const { selectedYear, setSelectedYear } = useApp();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isMedium = useMediaQuery(theme.breakpoints.between("sm", "md"));
@@ -26,7 +22,7 @@ const Timeline: React.FC<TimelineProps> = ({
 
   const mobileMarks = useMemo(
     () => (isMobile ? getMobileLabelledMarks(marks, selectedYear) : marks),
-    [isMobile, marks, selectedYear],
+    [isMobile, marks, selectedYear]
   );
 
   if (isMobile) {

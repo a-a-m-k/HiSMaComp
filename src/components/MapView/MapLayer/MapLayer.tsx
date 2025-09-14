@@ -13,11 +13,11 @@ import {
   getPopulationExpression,
   getPopulationSortKey,
 } from "./maplibreExpressions";
+import { useApp } from "@/context/AppContext";
 
 interface MapLayerProps
   extends Omit<LayerProps, "id" | "type" | "layout" | "paint"> {
   layerId: string;
-  selectedYear: number;
   data: GeoJSON;
   minPopulation?: number;
   maxPopulation?: number;
@@ -27,7 +27,6 @@ interface MapLayerProps
 
 const MapLayer = ({
   layerId,
-  selectedYear,
   data,
   minPopulation = POPULATION_TRESHOLDS[0],
   maxPopulation = POPULATION_TRESHOLDS[POPULATION_TRESHOLDS.length - 1],
@@ -35,11 +34,12 @@ const MapLayer = ({
   maxMarkerSize = MAX_MARKER_SIZE,
   ...rest
 }: MapLayerProps) => {
+  const { selectedYear } = useApp();
   const selectedCentury = String(selectedYear);
 
   const populationSortKey = useMemo(
     () => getPopulationSortKey(selectedCentury),
-    [selectedCentury],
+    [selectedCentury]
   );
 
   const circleRadiusExpression = useMemo(
@@ -49,7 +49,7 @@ const MapLayer = ({
         minPopulation,
         maxPopulation,
         minMarkerSize,
-        maxMarkerSize,
+        maxMarkerSize
       ),
     [
       selectedCentury,
@@ -57,17 +57,17 @@ const MapLayer = ({
       maxPopulation,
       minMarkerSize,
       maxMarkerSize,
-    ],
+    ]
   );
 
   const circleColorExpression = useMemo(
     () => getCircleColorExpression(selectedCentury),
-    [selectedCentury],
+    [selectedCentury]
   );
 
   const populationExpression = useMemo(
     () => getPopulationExpression(selectedCentury),
-    [selectedCentury],
+    [selectedCentury]
   );
 
   return (

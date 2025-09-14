@@ -2,7 +2,7 @@ import { Theme } from "@mui/material";
 import { ATTRIBUTION_TEXT } from "../../constants";
 export function hideMapControls(mapContainer: HTMLElement) {
   const controls = mapContainer.querySelectorAll(
-    ".maplibregl-control-container, .maplibregl-ctrl, #attribution, #map-screenshot-button, #info-button, #timeline",
+    ".maplibregl-control-container, .maplibregl-ctrl, #attribution, #map-screenshot-button, #info-button, #timeline"
   );
   const prevDisplay: string[] = [];
   controls.forEach((el, i) => {
@@ -14,7 +14,7 @@ export function hideMapControls(mapContainer: HTMLElement) {
 
 export function restoreMapControls(
   controls: NodeListOf<Element>,
-  prevDisplay: string[],
+  prevDisplay: string[]
 ) {
   // Restore the styels of the controls after screenshot
   controls.forEach((el, i) => {
@@ -25,7 +25,7 @@ export function restoreMapControls(
 export function addAttributionOverlay(
   mapContainer: HTMLElement,
   theme: Theme,
-  isMobile: boolean = false,
+  isMobile: boolean = false
 ) {
   // Create attribution div on screenshot
   const attributionDiv = document.createElement("div");

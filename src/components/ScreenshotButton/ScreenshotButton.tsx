@@ -44,7 +44,7 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
       const attributionDiv = addAttributionOverlay(
         mapContainer,
         theme,
-        isMobile,
+        isMobile
       );
 
       const canvas = await html2canvas(mapContainer, {
@@ -56,11 +56,11 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
         foreignObjectRendering: false,
         removeContainer: false,
         imageTimeout: 5000,
-        onclone: (clonedDoc) => {
+        onclone: clonedDoc => {
           // Only check for performance monitor in development
           if (process.env.NODE_ENV === "development") {
             const perfMonitor = clonedDoc.querySelector(
-              "[data-performance-monitor]",
+              "[data-performance-monitor]"
             );
             if (perfMonitor) {
               perfMonitor.remove();

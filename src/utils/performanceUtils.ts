@@ -1,12 +1,23 @@
 import { Town } from "@/common/types";
+import {
+  MAX_CACHE_SIZE,
+  SPATIAL_INDEX_PRECISION,
+  MIN_ZOOM_CALCULATION,
+  MAX_ZOOM_CALCULATION,
+  ZOOM_CALCULATION_BASE,
+} from "@/constants";
 
 export const createSpatialIndex = (towns: Town[]) => {
   const index = new Map<string, Town[]>();
 
-  towns.forEach((town) => {
+  towns.forEach(town => {
     // Grid cells for spatial indexing
-    const latCell = Math.floor(town.latitude * 10) / 10;
-    const lngCell = Math.floor(town.longitude * 10) / 10;
+    const latCell =
+      Math.floor(town.latitude * SPATIAL_INDEX_PRECISION) /
+      SPATIAL_INDEX_PRECISION;
+    const lngCell =
+      Math.floor(town.longitude * SPATIAL_INDEX_PRECISION) /
+      SPATIAL_INDEX_PRECISION;
     const key = `${latCell},${lngCell}`;
 
     if (!index.has(key)) {
@@ -20,14 +31,14 @@ export const createSpatialIndex = (towns: Town[]) => {
 
 export const filterTownsInBounds = (
   towns: Town[],
-  bounds: { north: number; south: number; east: number; west: number },
+  bounds: { north: number; south: number; east: number; west: number }
 ): Town[] => {
   return towns.filter(
-    (town) =>
+    town =>
       town.latitude >= bounds.south &&
       town.latitude <= bounds.north &&
       town.longitude >= bounds.west &&
-      town.longitude <= bounds.east,
+      town.longitude <= bounds.east
   );
 };
 
@@ -35,7 +46,7 @@ const populationCache = new Map<string, number>();
 
 export const calculatePopulationForYear = (
   towns: Town[],
-  year: number,
+  year: number
 ): number => {
   const cacheKey = `${year}-${towns.length}`;
 
@@ -44,14 +55,14 @@ export const calculatePopulationForYear = (
   }
 
   const totalPopulation = towns.reduce((sum, town) => {
-    const population = town.populationByCentury[year];
+    const population = town.populationByYear[year];
     return sum + (population || 0);
   }, 0);
 
   populationCache.set(cacheKey, totalPopulation);
 
   // Prevent memory leaks
-  if (populationCache.size > 50) {
+  if (populationCache.size > MAX_CACHE_SIZE) {
     const firstKey = populationCache.keys().next().value;
     populationCache.delete(firstKey);
   }
@@ -60,9 +71,9 @@ export const calculatePopulationForYear = (
 };
 
 export const createGeoJSONFeatures = (
-  towns: Town[],
+  towns: Town[]
 ): GeoJSON.FeatureCollection => {
-  const features: GeoJSON.Feature[] = towns.map((town) => ({
+  const features: GeoJSON.Feature[] = towns.map(town => ({
     id: town.name,
     type: "Feature",
     geometry: {
@@ -80,17 +91,13 @@ export const createGeoJSONFeatures = (
   };
 };
 
-export const optimizeMapViewport = (
-  towns: Town[],
-  containerWidth: number,
-  containerHeight: number,
-) => {
+export const optimizeMapViewport = (towns: Town[]) => {
   if (towns.length === 0) {
     return { center: { lat: 0, lng: 0 }, zoom: 2 };
   }
 
-  const lats = towns.map((t) => t.latitude);
-  const lngs = towns.map((t) => t.longitude);
+  const lats = towns.map(t => t.latitude);
+  const lngs = towns.map(t => t.longitude);
 
   const bounds = {
     north: Math.max(...lats),
@@ -108,7 +115,13 @@ export const optimizeMapViewport = (
   const lngDiff = bounds.east - bounds.west;
   const maxDiff = Math.max(latDiff, lngDiff);
 
-  const zoom = Math.min(15, Math.max(2, Math.floor(10 - Math.log2(maxDiff))));
+  const zoom = Math.min(
+    MAX_ZOOM_CALCULATION,
+    Math.max(
+      MIN_ZOOM_CALCULATION,
+      Math.floor(ZOOM_CALCULATION_BASE - Math.log2(maxDiff))
+    )
+  );
 
   return { center, zoom, bounds };
 };

@@ -13,32 +13,32 @@ import {
  *
  * @param selectedCentury - The century for which to retrieve the population (e.g., "19th", "20th").
  * @returns An expression specification that accesses the population value for the specified century
- *          from the "populationByCentury" property of a feature.
+ *          from the "populationByYear" property of a feature.
  */
 export const getPopulationExpression = (
-  selectedCentury: string,
+  selectedCentury: string
 ): ExpressionSpecification => [
   "get",
   selectedCentury,
-  ["get", "populationByCentury"],
+  ["get", "populationByYear"],
 ];
 
 /**
  * Generates a MapLibre expression that checks if there is no population data available
- * for the specified century in a feature's `populationByCentury` property.
+ * for the specified century in a feature's `populationByYear` property.
  *
  * The returned expression evaluates to `true` if either:
- * - The `populationByCentury` object does not have the specified century as a property, or
+ * - The `populationByYear` object does not have the specified century as a property, or
  * - The population value for the specified century is `null`.
  *
  * @param selectedCentury - The century (as a string) to check for population data.
  * @returns An `ExpressionSpecification` that evaluates to `true` when no data is present for the given century.
  */
 export const getNoDataExpression = (
-  selectedCentury: string,
+  selectedCentury: string
 ): ExpressionSpecification => [
   "any",
-  ["!", ["has", selectedCentury, ["get", "populationByCentury"]]],
+  ["!", ["has", selectedCentury, ["get", "populationByYear"]]],
   ["==", getPopulationExpression(selectedCentury), null],
 ];
 
@@ -54,7 +54,7 @@ export const getNoDataExpression = (
  * @returns A MapLibre `ExpressionSpecification` that can be used as a sort key in layer styling.
  */
 export const getPopulationSortKey = (
-  selectedCentury: string,
+  selectedCentury: string
 ): ExpressionSpecification => [
   "case",
   getNoDataExpression(selectedCentury),
@@ -83,7 +83,7 @@ export const getCircleRadiusExpression = (
   maxPopulation: number = POPULATION_TRESHOLDS[POPULATION_TRESHOLDS.length - 1],
   minMarkerSize: number = MIN_MARKER_SIZE,
   maxMarkerSize: number = MAX_MARKER_SIZE,
-  noDataMarkerSize: number = NO_DATA_MARKER_SIZE,
+  noDataMarkerSize: number = NO_DATA_MARKER_SIZE
 ): ExpressionSpecification => [
   "case",
   getNoDataExpression(selectedCentury),
@@ -115,7 +115,7 @@ export const getCircleRadiusExpression = (
 export const getCircleColorExpression = (
   selectedCentury: string,
   populationTresholds: number[] = POPULATION_TRESHOLDS,
-  legendColors = MAP_LEGEND_COLORS,
+  legendColors = MAP_LEGEND_COLORS
 ): ExpressionSpecification => [
   "step",
   ["coalesce", getPopulationExpression(selectedCentury), 0],

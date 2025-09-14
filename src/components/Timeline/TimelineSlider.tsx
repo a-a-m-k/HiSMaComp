@@ -1,4 +1,4 @@
-import { Slider } from "@mui/material";
+import { Slider, SxProps, Theme } from "@mui/material";
 
 interface TimelineSliderProps {
   marks: Array<{ value: number; label: string }>;
@@ -6,7 +6,7 @@ interface TimelineSliderProps {
   max: number;
   value: number;
   onChange: (value: number) => void;
-  sx?: any;
+  sx?: SxProps<Theme>;
 }
 
 export const TimelineSlider: React.FC<TimelineSliderProps> = ({

@@ -2,7 +2,7 @@ import { Box, IconButton, styled } from "@mui/material";
 import { FLOATING_BUTTON_SIZE } from "../constants";
 
 export const FloatingButtonBox = styled(Box, {
-  shouldForwardProp: (prop) => prop !== "corner" && prop !== "timelineHeight",
+  shouldForwardProp: prop => prop !== "corner" && prop !== "timelineHeight",
 })<{ timelineHeight: number }>(({ theme, timelineHeight }) => ({
   position: "fixed",
   zIndex: theme.zIndex.appBar + 1,

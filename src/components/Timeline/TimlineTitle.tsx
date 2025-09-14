@@ -1,11 +1,11 @@
-import { Typography } from "@mui/material";
+import { Typography, TypographyProps } from "@mui/material";
 
-export const TimelineTitle: React.FC<{ variant: string; fontSize: string }> = ({
-  variant,
-  fontSize,
-}) => (
+export const TimelineTitle: React.FC<{
+  variant: TypographyProps["variant"];
+  fontSize: string;
+}> = ({ variant, fontSize }) => (
   <Typography
-    variant={variant as any}
+    variant={variant}
     component="h6"
     align="center"
     sx={{

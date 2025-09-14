@@ -1,11 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Chip, useTheme } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Chip,
+  useTheme,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import { BugReport, Memory, Speed } from "@mui/icons-material";
+import { PerformanceMemory } from "@/common/types";
 
 interface PerformanceMetrics {
   renderTime: number;
   memoryUsage?: number;
   fps: number;
   componentCount: number;
+  townsCount: number;
+  lastRenderTime: number;
 }
 
 const PerformanceMonitor = () => {
@@ -14,6 +25,8 @@ const PerformanceMonitor = () => {
     renderTime: 0,
     fps: 60,
     componentCount: 0,
+    townsCount: 0,
+    lastRenderTime: 0,
   });
 
   const [isVisible, setIsVisible] = useState(false);
@@ -35,11 +48,21 @@ const PerformanceMonitor = () => {
       if (currentTime - lastTime >= 1000) {
         const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
 
-        setMetrics((prev) => ({
+        // Get towns count from map data
+        const mapContainer = document.querySelector("#map-container");
+        const townsCount = mapContainer
+          ? Array.from(mapContainer.querySelectorAll("[data-town]")).length
+          : 0;
+
+        setMetrics(prev => ({
           ...prev,
           fps,
-          memoryUsage: (performance as any).memory?.usedJSHeapSize,
+          memoryUsage: (
+            performance as Performance & { memory?: PerformanceMemory }
+          ).memory?.usedJSHeapSize,
           componentCount: document.querySelectorAll("[data-testid]").length,
+          townsCount,
+          lastRenderTime: currentTime - prev.lastRenderTime,
         }));
 
         frameCount = 0;
@@ -60,7 +83,7 @@ const PerformanceMonitor = () => {
     // Toggle with Ctrl+Shift+P
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key === "P") {
-        setIsVisible((prev) => !prev);
+        setIsVisible(prev => !prev);
       }
     };
 
@@ -101,6 +124,21 @@ const PerformanceMonitor = () => {
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
   };
 
+  const handleDebugLog = () => {
+    console.group("🐛 Debug Info");
+    console.log("Performance Metrics:", metrics);
+    console.log("Window dimensions:", {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+    console.log("Map container:", document.querySelector("#map-container"));
+    console.log(
+      "Towns data loaded:",
+      document.querySelectorAll("[data-town]").length
+    );
+    console.groupEnd();
+  };
+
   return (
     <Box
       data-performance-monitor
@@ -109,22 +147,50 @@ const PerformanceMonitor = () => {
         top: theme.spacing(1.25),
         left: theme.spacing(9),
         zIndex: 9999,
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        backgroundColor: "rgba(0, 0, 0, 0.85)",
         color: "white",
         padding: 2,
         borderRadius: 1,
         fontFamily: "monospace",
         fontSize: "12px",
-        minWidth: 200,
+        minWidth: 220,
+        backdropFilter: "blur(4px)",
       }}
     >
-      <Typography variant="h6" sx={{ mb: 1, color: "white" }}>
-        Performance Monitor
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 1,
+        }}
+      >
+        <Typography variant="h6" sx={{ color: "white", fontSize: "14px" }}>
+          🚀 Dev Monitor
+        </Typography>
+        <Tooltip title="Log debug info to console">
+          <IconButton
+            size="small"
+            onClick={handleDebugLog}
+            sx={{ color: "white" }}
+          >
+            <BugReport fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <span>FPS:</span>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Speed fontSize="small" />
+            <span>FPS:</span>
+          </Box>
           <Chip
             label={metrics.fps}
             size="small"
@@ -135,12 +201,27 @@ const PerformanceMonitor = () => {
                   ? "warning"
                   : "error"
             }
+            sx={{ fontSize: "10px", height: "20px" }}
           />
         </Box>
 
-        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <span>Memory:</span>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Memory fontSize="small" />
+            <span>Memory:</span>
+          </Box>
           <span>{formatMemory(metrics.memoryUsage)}</span>
+        </Box>
+
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <span>Towns:</span>
+          <span>{metrics.townsCount}</span>
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
@@ -149,8 +230,8 @@ const PerformanceMonitor = () => {
         </Box>
 
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <span>Render Time:</span>
-          <span>{metrics.renderTime.toFixed(2)}ms</span>
+          <span>Render:</span>
+          <span>{metrics.renderTime.toFixed(1)}ms</span>
         </Box>
       </Box>
 
@@ -158,12 +239,13 @@ const PerformanceMonitor = () => {
         variant="caption"
         sx={{
           display: "block",
-          mt: 1,
-          color: "rgba(255, 255, 255, 0.7)",
+          mt: 1.5,
+          color: "rgba(255, 255, 255, 0.6)",
           fontSize: "10px",
+          textAlign: "center",
         }}
       >
-        Press Ctrl+Shift+P to toggle
+        Ctrl+Shift+P to toggle
       </Typography>
     </Box>
   );

@@ -10,14 +10,14 @@ const getPopulationThresholds = (isMobile: boolean): (string | number)[] =>
   isMobile ? POPULATION_TRESHOLDS_MOBILE : POPULATION_TRESHOLDS;
 
 export const useLegendLayers = (
-  legendColors: string[] = MAP_LEGEND_COLORS,
+  legendColors: string[] = MAP_LEGEND_COLORS
 ): { color: string; layer: string }[] => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const thresholds = useMemo(
     () => getPopulationThresholds(isMobile),
-    [isMobile],
+    [isMobile]
   );
 
   const legendLayers = useMemo(() => {

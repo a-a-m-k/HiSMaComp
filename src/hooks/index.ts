@@ -1,2 +1,3 @@
 export * from "./useLegendLayers";
-export * from "./useMapDataCache";
+export * from "./useTownData";
+export * from "./useMapCalculations";

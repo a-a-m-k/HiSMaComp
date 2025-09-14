@@ -3,13 +3,16 @@ import { ThemeProvider, CssBaseline } from "@mui/material";
 import theme from "./theme/theme";
 import MapPage from "./pages/MapPage";
 import PerformanceMonitor from "./components/PerformanceMonitor/PerformanceMonitor";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <MapPage />
-      <PerformanceMonitor />
+      <ErrorBoundary>
+        <MapPage />
+        <PerformanceMonitor />
+      </ErrorBoundary>
     </ThemeProvider>
   );
 };

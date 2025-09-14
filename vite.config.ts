@@ -27,7 +27,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
+        manualChunks: id => {
           if (id.includes("react") && !id.includes("react-map-gl")) {
             return "react-vendor";
           }

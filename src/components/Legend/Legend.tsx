@@ -6,7 +6,7 @@ import { useTheme } from "@mui/material/styles";
 import { APP_MIN_WIDTH } from "@/constants";
 import { calculateMinWidth } from "@/utils";
 
-const Legend: React.FC<LegendProps> = (props) => {
+const Legend: React.FC<LegendProps> = props => {
   const theme = useTheme();
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
