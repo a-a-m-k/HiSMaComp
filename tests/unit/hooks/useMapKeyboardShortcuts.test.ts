@@ -197,7 +197,7 @@ describe("useMapKeyboardShortcuts", () => {
     expect(mockZoomIn).not.toHaveBeenCalled();
   });
 
-  it("should not zoom when Ctrl+Plus is pressed in an input field", () => {
+  it("should zoom when Ctrl+Plus is pressed even in an input field (browser zoom always prevented)", () => {
     renderHook(() => useMapKeyboardShortcuts(mapRef, true));
 
     const input = document.createElement("input");
@@ -219,13 +219,13 @@ describe("useMapKeyboardShortcuts", () => {
 
     window.dispatchEvent(event);
 
-    expect(mockZoomIn).not.toHaveBeenCalled();
+    expect(mockZoomIn).toHaveBeenCalledTimes(1);
     expect(mockZoomOut).not.toHaveBeenCalled();
 
     document.body.removeChild(input);
   });
 
-  it("should not zoom when Ctrl+Plus is pressed in a textarea", () => {
+  it("should zoom when Ctrl+Plus is pressed even in a textarea (browser zoom always prevented)", () => {
     renderHook(() => useMapKeyboardShortcuts(mapRef, true));
 
     const textarea = document.createElement("textarea");
@@ -247,7 +247,7 @@ describe("useMapKeyboardShortcuts", () => {
 
     window.dispatchEvent(event);
 
-    expect(mockZoomIn).not.toHaveBeenCalled();
+    expect(mockZoomIn).toHaveBeenCalledTimes(1);
     expect(mockZoomOut).not.toHaveBeenCalled();
 
     document.body.removeChild(textarea);
@@ -342,9 +342,7 @@ describe("useMapKeyboardShortcuts", () => {
 
   it("should clean up event listeners on unmount", () => {
     const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
-    const { unmount } = renderHook(() =>
-      useMapKeyboardShortcuts(mapRef, true)
-    );
+    const { unmount } = renderHook(() => useMapKeyboardShortcuts(mapRef, true));
 
     unmount();
 

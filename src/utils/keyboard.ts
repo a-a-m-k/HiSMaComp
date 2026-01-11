@@ -9,7 +9,9 @@
  * @param target - The HTML element that received the keyboard event
  * @returns True if the target is an input field, false otherwise
  */
-export const isInputField = (target: HTMLElement): boolean => {
+export const isInputField = (target: HTMLElement | null): boolean => {
+  if (!target) return false;
+
   return (
     target.tagName === "INPUT" ||
     target.tagName === "TEXTAREA" ||
