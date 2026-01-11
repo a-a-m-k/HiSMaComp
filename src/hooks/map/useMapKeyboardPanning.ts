@@ -66,6 +66,9 @@ export const useMapKeyboardPanning = (
   const panLoop = useCallback(() => {
     const mapInstance = mapRef.current?.getMap();
     if (!mapInstance) {
+      // Map instance unavailable - stop panning loop
+      // Note: No logging here unlike useMapKeyboardShortcuts because this runs
+      // in requestAnimationFrame loop and would spam console during initial load
       animationFrameRef.current = null;
       return;
     }
@@ -119,6 +122,8 @@ export const useMapKeyboardPanning = (
       }
 
       if (!pressedKeysRef.current.has(e.key)) {
+        // Prevent default and stop propagation (no stopImmediatePropagation needed
+        // unlike useMapKeyboardShortcuts, because we're not intercepting browser defaults)
         e.preventDefault();
         e.stopPropagation();
         pressedKeysRef.current.add(e.key);

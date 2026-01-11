@@ -2,7 +2,6 @@ import { useEffect, RefObject } from "react";
 import { MapRef } from "react-map-gl/maplibre";
 import { ZOOM_ANIMATION_DURATION_MS } from "@/constants/keyboard";
 import { logger } from "@/utils/logger";
-import { isInputField } from "@/utils/keyboard";
 
 /**
  * Custom hook for handling keyboard shortcuts for map zoom.
@@ -44,25 +43,22 @@ export const useMapKeyboardShortcuts = (
       // If not a zoom key, ignore
       if (!isZoomIn && !isZoomOut) return;
 
-      // Don't trigger if user is typing in an input field - allow browser zoom
-      if (isInputField(e.target as HTMLElement)) {
-        return;
-      }
-
-      // Check if map instance is available
-      const mapInstance = mapRef.current?.getMap();
-      if (!mapInstance) {
-        return;
-      }
-
-      // Always handle zoom shortcuts when map is available and not in input field
-      // The input field check above already handles that case
-
-      // Prevent browser zoom and handle map zoom
+      // Always prevent browser zoom for zoom key combinations
+      // Uses stopImmediatePropagation() to prevent browser zoom handler from running
+      // This is more aggressive than other keyboard hooks because browser zoom
+      // needs to be intercepted before it reaches the browser's default handler
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation?.();
 
+      // Check if map instance is available
+      const mapInstance = mapRef.current?.getMap();
+      if (!mapInstance) {
+        logger.warn("Map instance not available for zoom keyboard shortcut");
+        return;
+      }
+
+      // Handle map zoom
       try {
         if (isZoomIn) {
           mapInstance.zoomIn({ duration: ZOOM_ANIMATION_DURATION_MS });
@@ -75,6 +71,8 @@ export const useMapKeyboardShortcuts = (
     };
 
     // Use capture phase with high priority to intercept before browser default behavior
+    // This is different from other keyboard hooks (e.g., useMapKeyboardPanning) which
+    // use default bubbling phase, because browser zoom handler runs in capture phase
     window.addEventListener("keydown", handleKeyDown, {
       capture: true,
       passive: false,
