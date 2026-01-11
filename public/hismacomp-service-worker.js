@@ -52,10 +52,7 @@ self.addEventListener("fetch", (event) => {
   if (
     event.request.url.includes("__vite") ||
     event.request.url.includes("node_modules") ||
-    event.request.url.includes("@react-refresh") ||
-    event.request.url.includes("favicon") ||
-    event.request.url.includes("/icons/") ||
-    event.request.url.includes("manifest.json")
+    event.request.url.includes("@react-refresh")
   ) {
     return;
   }
