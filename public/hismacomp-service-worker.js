@@ -67,10 +67,11 @@ self.addEventListener("fetch", (event) => {
       }
 
       return fetch(event.request).then((response) => {
+        const responseClone = response.clone();
+
         if (response?.status === 200 && response.type === "basic") {
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, response.clone()).then(() => {
-              // Enforce cache size limit after adding new item
+            cache.put(event.request, responseClone).then(() => {
               enforceCacheSizeLimit(cache);
             });
           });
