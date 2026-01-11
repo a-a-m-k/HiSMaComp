@@ -1,0 +1,142 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  /* Color constants - matches src/constants/ui.ts COLORS */
+  --color-focus: #646cff;
+  --color-focus-hover: #535bf2;
+  --color-focus-shadow: rgba(100, 108, 255, 0.4);
+  --color-focus-shadow-inset: rgba(100, 108, 255, 0.2);
+  --color-text-black: #000000;
+  --color-focus-blue: rgba(0, 150, 255, 1);
+  --color-control-border: rgba(0, 0, 0, 0.1);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+a {
+  font-weight: 500;
+  color: var(--color-focus);
+  text-decoration: inherit;
+}
+a:hover {
+  color: var(--color-focus-hover);
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: stretch;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 12px;
+  border: 1px solid transparent;
+  padding: 0.75em 1.5em;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: none;
+}
+button:hover {
+  border-color: var(--color-focus);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+button:focus,
+button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+button:active {
+  transform: translateY(0);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+/* Accessibility utilities */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Map container focus styles are handled by getMapContainerStyles() in src/constants/ui.ts */
+
+/* Exclude IconButtons from global focus style */
+button[class*="MuiIconButton"]:focus-visible,
+.MuiIconButton-root:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Exclude screenshot button from IconButton global rule - it has custom blue outline */
+#map-screenshot-button:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 2px 2px var(--color-focus-blue) !important;
+}
+
+/* MapLibre zoom buttons keep their default blue outline - don't override */
+.maplibregl-ctrl-zoom-in:focus-visible,
+.maplibregl-ctrl-zoom-out:focus-visible {
+  outline: none !important;
+  /* Blue outline is handled by MapLibre's default styles - don't remove it */
+}
+
+a:focus-visible {
+  outline: none;
+  color: var(--color-text-black);
+  font-weight: 600;
+  text-decoration: none;
+}

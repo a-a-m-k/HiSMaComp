@@ -1,0 +1,38 @@
+# Node modules
+node_modules/
+
+# Build output
+dist/
+
+# Local environment variables
+.env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+
+# Vite cache
+.vite/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Test results
+tests/results/
+playwright-report/
+test-results/
+
+# Lighthouse reports (may contain API keys)
+lighthouse-report.html
+lighthouse-production.json
+lighthouse-scores.json
+
+# macOS system files
+.DS_Store
+**/.DS_Store
