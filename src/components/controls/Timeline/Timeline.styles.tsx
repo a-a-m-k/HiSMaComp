@@ -17,14 +17,16 @@ const baseSheetStyles = (theme: Theme): React.CSSProperties => ({
 
 export const MobileSheet = styled(Paper)(({ theme }) => ({
   ...baseSheetStyles(theme),
-  left: `calc(${theme.spacing(1)} + env(safe-area-inset-left, 0px))`,
-  right: `calc(${theme.spacing(1)} + env(safe-area-inset-right, 0px))`,
-  bottom: `calc(${theme.spacing(1)} + env(safe-area-inset-bottom, 0px))`,
+  left: theme.spacing(1),
+  right: theme.spacing(1),
+  bottom: theme.spacing(1),
   boxShadow: "0 12px 40px rgba(0, 0, 0, 0.15)",
   padding: theme.spacing(1.5, 3.5, 1.5),
   paddingBottom: `calc(${theme.spacing(1.5)} + env(safe-area-inset-bottom, 0px))`,
   zIndex: theme.zIndex.modal + 2,
-  width: `calc(100% - ${theme.spacing(2)} - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))`,
+  width: `calc(100% - ${theme.spacing(2)})`,
+  marginLeft: "env(safe-area-inset-left, 0px)",
+  marginRight: "env(safe-area-inset-right, 0px)",
 }));
 
 export const MediumSheet = styled(Paper)(({ theme }) => ({
