@@ -1,0 +1,108 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  /* CSS variables mapped to TypeScript constants in src/constants/ui.ts */
+  --color-focus: #646cff;
+  --color-focus-hover: #535bf2;
+  --color-focus-shadow: rgba(100, 108, 255, 0.4);
+  --color-focus-shadow-inset: rgba(100, 108, 255, 0.2);
+  --color-text-black: #000000;
+  --color-focus-blue: rgba(0, 150, 255, 1);
+  --color-control-border: rgba(0, 0, 0, 0.1);
+
+  --overlay-edge-spacing: 8px;
+  --overlay-edge-spacing-lg: 16px;
+  
+  --timeline-height-mobile: 87px;
+  --timeline-height-tablet: 120px;
+  --timeline-height-desktop: 100px;
+  
+  --button-spacing: 8px;
+  --screenshot-button-tablet-bottom: calc(
+    var(--timeline-height-tablet) + var(--overlay-edge-spacing) + var(--button-spacing)
+  );
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+a {
+  font-weight: 500;
+  color: var(--color-focus);
+  text-decoration: inherit;
+}
+a:hover {
+  color: var(--color-focus-hover);
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: stretch;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+}
+
+/* Accessibility utilities */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.maplibregl-ctrl-zoom-in:focus-visible,
+.maplibregl-ctrl-zoom-out:focus-visible {
+  outline: none !important;
+}
+
+a:focus-visible {
+  outline: none;
+  color: var(--color-text-black);
+  font-weight: 600;
+  text-decoration: none;
+}
