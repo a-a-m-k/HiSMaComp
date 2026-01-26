@@ -28,7 +28,7 @@ export const MobileSheet = styled(Paper)(({ theme }) => ({
   ...baseSheetStyles(theme),
   left: theme.spacing(OVERLAY_POSITIONS.TIMELINE.HORIZONTAL),
   right: theme.spacing(OVERLAY_POSITIONS.TIMELINE.HORIZONTAL),
-  bottom: `calc(${theme.spacing(OVERLAY_POSITIONS.TIMELINE.BOTTOM_MOBILE)} + env(safe-area-inset-bottom, 0px))`,
+  bottom: `calc(${theme.spacing(OVERLAY_POSITIONS.TIMELINE.BOTTOM)} + env(safe-area-inset-bottom, 0px))`,
   boxShadow: "0 12px 40px rgba(0, 0, 0, 0.15)",
   padding: theme.spacing(1.5, 3.5, 1.5),
   zIndex: theme.zIndex.modal + 2,
