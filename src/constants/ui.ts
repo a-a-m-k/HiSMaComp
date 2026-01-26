@@ -149,6 +149,7 @@ export const OVERLAY_SPACING = {
  */
 export const OVERLAY_POSITIONS = {
   TIMELINE: {
+    BOTTOM_MOBILE: 0.5,
     BOTTOM: 1,
     HORIZONTAL: 1,
   },
