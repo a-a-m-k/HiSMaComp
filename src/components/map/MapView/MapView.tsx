@@ -30,6 +30,7 @@ import {
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
 import { TownMarkers } from "./TownMarkers";
 import { handleMapFeatureClick } from "@/utils/map";
+import { logger } from "@/utils/logger";
 
 interface MapViewComponentProps {
   initialPosition: { longitude: number; latitude: number };
@@ -73,44 +74,69 @@ const MapView: React.FC<MapViewComponentProps> = ({
   useMapKeyboardPanning(mapRef, containerRef, isDesktop);
   useNavigationControlAccessibility(isMobile, containerRef);
 
-  // Optimize tile loading: prioritize visible tiles, load off-screen tiles later
-  // MapLibre GL already prioritizes visible tiles by default, but we can configure
-  // the map instance to further optimize tile loading behavior
+  /**
+   * Optimizes tile loading to prioritize visible tiles over off-screen tiles.
+   *
+   * MapLibre GL already prioritizes visible tiles by default, but we can further
+   * optimize by reducing cache sizes and parallel requests to ensure visible tiles
+   * get priority in the request queue.
+   *
+   * Note: This accesses internal MapLibre GL properties which are not part of the
+   * public API. These optimizations may need adjustment if MapLibre GL internals change.
+   *
+   * @see https://maplibre.org/maplibre-gl-js-docs/api/
+   */
   const handleMapLoad = React.useCallback(() => {
     if (!mapRef.current) return;
 
-    const map = mapRef.current.getMap();
+    try {
+      const map = mapRef.current.getMap();
+      if (!map) return;
 
-    // Configure tile loading to prioritize visible tiles
-    // Access internal map properties to optimize tile caching
-    if (map) {
-      // Type assertion to access internal MapLibre GL properties
-      // These properties control tile loading prioritization
+      // Type assertion to access internal MapLibre GL properties for optimization
+      // These are internal implementation details, but stable enough for optimization
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mapInstance = map as any;
 
       // Reduce tile cache size to limit off-screen tiles
       // Smaller cache = visible tiles prioritized, off-screen tiles load later
-      if ("_maxTileCacheSize" in mapInstance) {
-        mapInstance._maxTileCacheSize = 30; // Reduce from default 50
+      // Default: 50, Optimized: 30
+      if (
+        "_maxTileCacheSize" in mapInstance &&
+        typeof mapInstance._maxTileCacheSize === "number"
+      ) {
+        mapInstance._maxTileCacheSize = 30;
       }
 
       // Reduce parallel image requests to prioritize visible tiles
       // Lower value = visible tiles load first, others queue
-      if ("_maxParallelImageRequests" in mapInstance) {
-        mapInstance._maxParallelImageRequests = 6; // Reduce from default 16
+      // Default: 16, Optimized: 6
+      if (
+        "_maxParallelImageRequests" in mapInstance &&
+        typeof mapInstance._maxParallelImageRequests === "number"
+      ) {
+        mapInstance._maxParallelImageRequests = 6;
       }
 
-      // Configure transformRequest to prioritize visible tile requests
-      // This ensures visible tiles are requested before off-screen tiles
-      if (mapInstance._requestManager) {
-        // MapLibre GL's request manager already prioritizes visible tiles,
-        // but we can ensure it's configured optimally
+      // Configure request manager to limit concurrent requests per tile
+      // This ensures visible tiles get priority in the request queue
+      if (
+        mapInstance._requestManager &&
+        typeof mapInstance._requestManager === "object"
+      ) {
         const requestManager = mapInstance._requestManager;
-        if (requestManager && "maxRequestsPerTile" in requestManager) {
-          // Limit concurrent requests per tile to prioritize visible ones
-          requestManager.maxRequestsPerTile = 2; // Default is higher
+        if (
+          requestManager &&
+          "maxRequestsPerTile" in requestManager &&
+          typeof requestManager.maxRequestsPerTile === "number"
+        ) {
+          requestManager.maxRequestsPerTile = 2;
         }
       }
+    } catch (error) {
+      // Gracefully handle errors - tile loading optimization is non-critical
+      // MapLibre GL will still work with default settings
+      logger.warn("Failed to optimize tile loading configuration:", error);
     }
   }, []);
 
