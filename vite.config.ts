@@ -69,6 +69,9 @@ export default defineConfig(({ command }) => ({
   // Path aliases are handled by vite-tsconfig-paths plugin
   // which automatically reads from tsconfig.json paths
   build: {
+    // Enable CSS code splitting for better caching
+    // CSS will be split by component/route, reducing initial bundle size
+    cssCodeSplit: true,
     rollupOptions: {
       output: {
         manualChunks: id => {
