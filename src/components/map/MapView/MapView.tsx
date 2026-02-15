@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, Suspense } from "react";
 import Map, { NavigationControl, MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -7,9 +7,13 @@ import { useTheme } from "@mui/material";
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
 import MapLayer from "./MapLayer/MapLayer";
 import { getTerrainStyle } from "@/utils/map";
-import { ScreenshotButton } from "@/components/controls";
 import { MAP_LAYER_ID } from "@/constants";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
+
+// Lazy load ScreenshotButton as it's non-critical and only shown on non-mobile devices
+const ScreenshotButton = React.lazy(
+  () => import("@/components/controls/ScreenshotButton/ScreenshotButton")
+);
 import {
   getNavigationControlStyles,
   getMapContainerStyles,
@@ -125,7 +129,9 @@ const MapView: React.FC<MapViewComponentProps> = ({
           <MapLayer layerId={MAP_LAYER_ID} data={townsGeojson} />
           {!isMobile && (
             <ScreenshotButtonContainer>
-              <ScreenshotButton />
+              <Suspense fallback={null}>
+                <ScreenshotButton />
+              </Suspense>
             </ScreenshotButtonContainer>
           )}
           {isDesktop && <NavigationControl position="bottom-right" />}
