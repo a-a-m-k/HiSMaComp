@@ -28,50 +28,30 @@ export function vitePluginFixPaths(): Plugin {
           const basePath = baseUrl.replace(/\/$/, ""); // Remove trailing slash
           const basePathNoSlash = basePath.replace(/^\//, ""); // Remove leading slash for comparison
 
-          // Fix absolute paths that don't start with baseUrl
-          // Pattern: href="/path" or src="/path" that should be href="/HiSMaComp/path"
-          // This regex matches paths starting with / but NOT starting with /HiSMaComp/
-          const absolutePathRegex =
-            /(href|src)=["']\/(?!HiSMaComp\/)([^"']+)["']/g;
-
+          // Comprehensive fix for all absolute paths
+          // This regex matches href="/path" or src="/path" that don't already have the base path
           htmlContent = htmlContent.replace(
-            absolutePathRegex,
+            /(href|src)=["'](\/[^"']+)["']/g,
             (match, attr, path) => {
-              // Skip if it's already correct or is an external URL
-              if (path.startsWith("http") || path.startsWith("//")) {
+              // Skip external URLs
+              if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("//")) {
                 return match;
               }
-              // Skip if it's a data URI or special protocol
+              // Skip data URIs and blob URIs
               if (path.startsWith("data:") || path.startsWith("blob:")) {
                 return match;
               }
-              // Skip if path already includes base path (check both with and without leading slash)
-              if (
-                path.startsWith(basePathNoSlash + "/") ||
-                path === basePathNoSlash
-              ) {
+              // Skip if path already includes base path
+              if (path.startsWith(basePath + "/") || path === basePath) {
+                return match;
+              }
+              // Skip if it's the base path itself (to avoid /HiSMaComp/HiSMaComp/)
+              if (path === "/" + basePathNoSlash) {
                 return match;
               }
               // Add base path (remove leading slash from path to avoid double slashes)
               const cleanPath = path.replace(/^\//, "");
               return `${attr}="${basePath}/${cleanPath}"`;
-            }
-          );
-
-          // Also fix any remaining paths that might have been missed
-          // This catches paths like /src/main.tsx, /assets/..., /manifest.json, etc.
-          htmlContent = htmlContent.replace(
-            /(href|src)=["']\/(src\/[^"']+|assets\/[^"']+|manifest\.json|favicon[^"']*|icons\/[^"']*)["']/gi,
-            (match, attr, path) => {
-              // Skip if already has base path
-              if (path.startsWith(basePathNoSlash + "/")) {
-                return match;
-              }
-              // Skip external URLs (shouldn't match but just in case)
-              if (path.startsWith("http")) {
-                return match;
-              }
-              return `${attr}="${basePath}/${path}"`;
             }
           );
 
