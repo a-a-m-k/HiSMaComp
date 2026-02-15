@@ -22,6 +22,8 @@ export function vitePluginFixPaths(): Plugin {
     const basePathNoSlash = basePath.replace(/^\//, ""); // Remove leading slash
 
     // Fix ALL absolute paths that don't already have the base path
+    // With <base> tag, we can use absolute paths with base prefix OR relative paths
+    // We'll use absolute paths with base prefix for better compatibility
     return html.replace(
       /(href|src)=["'](\/[^"']+)["']/g,
       (match, attr, path) => {
@@ -59,12 +61,36 @@ export function vitePluginFixPaths(): Plugin {
       baseUrl = config.base || "/";
     },
     transformIndexHtml(html): IndexHtmlTransformResult {
-      // Fix paths during HTML transformation (runs early in the build)
-      const fixed = fixPathsInHtml(html);
-      if (fixed !== html) {
-        console.log(`[vite-plugin-fix-paths] ✓ Fixed paths in transformIndexHtml`);
+      // Add <base> tag for GitHub Pages deployment
+      // With <base> tag, absolute paths like /favicon.ico will resolve relative to base
+      // So /favicon.ico with base="/HiSMaComp/" becomes /HiSMaComp/favicon.ico
+      if (baseUrl !== "/") {
+        // Check if base tag already exists
+        if (!html.includes('<base')) {
+          // Insert base tag right after <head>
+          html = html.replace(
+            /<head>/i,
+            `<head>\n    <base href="${baseUrl}">`
+          );
+          console.log(`[vite-plugin-fix-paths] ✓ Added <base> tag with href="${baseUrl}"`);
+        }
       }
-      return fixed;
+      
+      // With <base> tag, we don't need to fix paths - they'll resolve relative to base
+      // But we still fix paths that might have been incorrectly prefixed
+      // Remove any double base path prefixes
+      if (baseUrl !== "/") {
+        const basePath = baseUrl.replace(/\/$/, "");
+        html = html.replace(
+          new RegExp(`(href|src)=["']${basePath}${basePath}(/[^"']+)["']`, 'g'),
+          (match, attr, path) => {
+            // Fix double prefix: /HiSMaComp/HiSMaComp/path -> /HiSMaComp/path
+            return `${attr}="${basePath}${path}"`;
+          }
+        );
+      }
+      
+      return html;
     },
     writeBundle() {
       // Also fix paths after all plugins run (safety net)
