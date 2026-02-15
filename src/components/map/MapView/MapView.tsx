@@ -6,18 +6,14 @@ import { useTheme } from "@mui/material/styles";
 
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
 import MapLayer from "./MapLayer/MapLayer";
-import { getTerrainStyle } from "@/utils/map";
+import {
+  getTerrainStyle,
+  getMapDescription,
+  applyTileOptimization,
+} from "@/utils/map";
 import { MAP_LAYER_ID } from "@/constants";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
-
-// Lazy load ScreenshotButton as it's non-critical and only shown on non-mobile devices
-const ScreenshotButton = React.lazy(
-  () => import("@/components/controls/ScreenshotButton/ScreenshotButton")
-);
-import {
-  getNavigationControlStyles,
-  getMapContainerStyles,
-} from "@/constants/ui";
+import { getMapStyles } from "@/constants/ui";
 import { useApp } from "@/context/AppContext";
 import { useResponsive, useScreenDimensions } from "@/hooks/ui";
 import {
@@ -30,7 +26,10 @@ import {
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
 import { TownMarkers } from "./TownMarkers";
 import { handleMapFeatureClick } from "@/utils/map";
-import { logger } from "@/utils/logger";
+
+const ScreenshotButton = React.lazy(
+  () => import("@/components/controls/ScreenshotButton/ScreenshotButton")
+);
 
 interface MapViewComponentProps {
   initialPosition: { longitude: number; latitude: number };
@@ -75,99 +74,26 @@ const MapView: React.FC<MapViewComponentProps> = ({
   useMapKeyboardPanning(mapRef, containerRef, isDesktop);
   useNavigationControlAccessibility(isMobile, containerRef);
 
-  /**
-   * Optimizes tile loading to prioritize visible tiles over off-screen tiles.
-   * Uses device-aware settings: more aggressive optimizations for mobile devices
-   * with limited memory and slower connections.
-   *
-   * MapLibre GL already prioritizes visible tiles by default, but we can further
-   * optimize by reducing cache sizes and parallel requests to ensure visible tiles
-   * get priority in the request queue.
-   *
-   * Note: This accesses internal MapLibre GL properties which are not part of the
-   * public API. These optimizations may need adjustment if MapLibre GL internals change.
-   *
-   * @see https://maplibre.org/maplibre-gl-js-docs/api/
-   */
   const handleMapLoad = React.useCallback(() => {
     if (!mapRef.current) return;
+    const map = mapRef.current.getMap();
+    if (!map) return;
 
-    try {
-      const map = mapRef.current.getMap();
-      if (!map) return;
+    setMapReady(true);
+    const deviceType = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
+    applyTileOptimization(map, deviceType);
+  }, [isMobile, isTablet]);
 
-      // Mark map as ready for LCP - this allows non-critical features to load
-      setMapReady(true);
-
-      // Determine device type once to avoid redundant checks
-      const deviceType = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
-
-      // Device-aware optimization settings (defaults: cache=50, parallel=16, perTile=higher)
-      // Mobile: Most aggressive (limited memory, slower connections)
-      // Tablet: Moderate (balanced)
-      // Desktop: Balanced (more resources available)
-      const optimizationSettings = {
-        mobile: { cache: 20, parallel: 4, perTile: 1 },
-        tablet: { cache: 25, parallel: 5, perTile: 2 },
-        desktop: { cache: 30, parallel: 6, perTile: 2 },
-      } as const;
-
-      const settings = optimizationSettings[deviceType];
-
-      // Type assertion to access internal MapLibre GL properties for optimization
-      // These are internal implementation details, but stable enough for optimization
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapInstance = map as any;
-
-      // Reduce tile cache size to limit off-screen tiles (default: 50)
-      if (
-        "_maxTileCacheSize" in mapInstance &&
-        typeof mapInstance._maxTileCacheSize === "number"
-      ) {
-        mapInstance._maxTileCacheSize = settings.cache;
-      }
-
-      // Reduce parallel image requests to prioritize visible tiles (default: 16)
-      if (
-        "_maxParallelImageRequests" in mapInstance &&
-        typeof mapInstance._maxParallelImageRequests === "number"
-      ) {
-        mapInstance._maxParallelImageRequests = settings.parallel;
-      }
-
-      // Configure request manager to limit concurrent requests per tile
-      const requestManager = mapInstance._requestManager;
-      if (
-        requestManager &&
-        typeof requestManager === "object" &&
-        "maxRequestsPerTile" in requestManager &&
-        typeof requestManager.maxRequestsPerTile === "number"
-      ) {
-        requestManager.maxRequestsPerTile = settings.perTile;
-      }
-    } catch (error) {
-      // Gracefully handle errors - tile loading optimization is non-critical
-      // MapLibre GL will still work with default settings
-      logger.warn("Failed to optimize tile loading configuration:", error);
-    }
-  }, [isMobile, isTablet, isDesktop]);
+  const mapDescription = useMemo(
+    () => getMapDescription({ isMobile, isDesktop }),
+    [isMobile, isDesktop]
+  );
 
   return (
     <>
-      <style>{getNavigationControlStyles(theme)}</style>
-      <style>{getMapContainerStyles()}</style>
+      <style>{getMapStyles(theme)}</style>
       <div id="map-description" className="sr-only">
-        Interactive map displaying European towns and their populations. Use Tab
-        to navigate controls: Timeline{!isMobile ? ", Save button" : ""}
-        {isDesktop ? ", Zoom controls" : ""}, map area, and town markers. Click
-        on the map or press Tab to focus the map area, then use arrow keys to
-        pan. When a town marker is focused, use arrow keys to navigate between
-        markers.
-        {!isMobile ? " Press Ctrl+S or Cmd+S to save the map as an image." : ""}
-        {isDesktop
-          ? " Press Ctrl+Plus or Cmd+Plus to zoom in, and Ctrl+Minus or Cmd+Minus to zoom out."
-          : " On tablets, use pinch-to-zoom gestures to zoom."}{" "}
-        Town markers are color-coded by population size.
+        {mapDescription}
       </div>
       <div
         id="map-container-area"
@@ -208,7 +134,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
           touchZoomRotate={true}
           dragPan={true}
         >
-          {/* Defer non-critical features until map is ready for better LCP */}
           {mapReady && (
             <>
               <MapLayer layerId={MAP_LAYER_ID} data={townsGeojson} />

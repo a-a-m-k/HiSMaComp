@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:check": "npm run build && node scripts/check-bundle-size.js",
     "build:analyze": "vite build && echo 'Bundle analysis generated at dist/bundle-analysis.html'",
     "preview": "vite preview --base /HiSMaComp/",
     "test": "NODE_OPTIONS=--max-old-space-size=4096 vitest",

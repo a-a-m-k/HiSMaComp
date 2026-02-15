@@ -9,14 +9,19 @@ import { vitePluginResourceHints } from "./vite-plugin-resource-hints";
 import { vitePluginLcpLegend } from "./vite-plugin-lcp-legend";
 import { vitePluginFixPaths } from "./vite-plugin-fix-paths";
 
-const manifestPlugin = () => ({
+/** Base path for production (e.g. GitHub Pages subpath). Single source for build output. */
+const BUILD_BASE =
+  (process.env.VITE_BASE_PATH as string | undefined) ?? "/HiSMaComp/";
+
+const manifestPlugin = (base: string) => ({
   name: "manifest-transform",
   writeBundle() {
     const manifestPath = join(process.cwd(), "dist", "manifest.json");
     const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
+    const basePath = base.replace(/\/$/, "");
     manifest.icons = manifest.icons.map((icon: { src: string }) => ({
       ...icon,
-      src: icon.src.replace("/icons/", "/HiSMaComp/icons/"),
+      src: icon.src.replace("/icons/", `${basePath}/icons/`),
     }));
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
   },
@@ -36,7 +41,7 @@ export default defineConfig(({ command }) => ({
             brotliSize: true,
             template: "treemap",
           }),
-          manifestPlugin(),
+          manifestPlugin(BUILD_BASE),
           vitePluginResourceHints(),
           vitePluginCritical({
             base: process.cwd(),
@@ -48,19 +53,22 @@ export default defineConfig(({ command }) => ({
             ],
             inline: true,
             minify: true,
-            baseUrl: command === "build" ? "/HiSMaComp/" : "/",
+            baseUrl: command === "build" ? BUILD_BASE : "/",
           }),
           vitePluginFixPaths(), // Run last to fix all paths after other plugins modify HTML
         ]
       : []),
   ],
-  base: command === "build" ? "/HiSMaComp/" : "/",
+  base: command === "build" ? BUILD_BASE : "/",
   preview: {
     // Configure preview server to serve from base path
     port: 4173,
     strictPort: false,
   },
   optimizeDeps: {
+    // Full package include for stable dev pre-bundle. To narrow (faster cold start),
+    // replace with the specific subpaths in use: @mui/material/Box, /Button, /Paper,
+    // /Typography, /Alert, /AlertTitle, /styles, /colors, etc. and icons one-by-one.
     include: [
       "@mui/material",
       "@mui/icons-material",

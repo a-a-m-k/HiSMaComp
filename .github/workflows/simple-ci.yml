@@ -33,3 +33,6 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+      - name: Check bundle size budget
+        run: node scripts/check-bundle-size.js

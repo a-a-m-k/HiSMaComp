@@ -3,7 +3,8 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 const LCP_PLACEHOLDER_COMMENT = "<!-- LCP_LEGEND_PLACEHOLDER -->";
-const CONSTANT_FILE = join(process.cwd(), "src/constants/legendLcp.ts");
+const LEGEND_LABEL_JSON = join(process.cwd(), "src/constants/legendLcp.json");
+const LEGEND_LABEL_FALLBACK = "Town size according to population number";
 
 /**
  * Injects the LCP legend heading placeholder into index.html at build and dev.
@@ -21,15 +22,13 @@ export function vitePluginLcpLegend(): Plugin {
 
         let heading: string;
         try {
-          const content = readFileSync(CONSTANT_FILE, "utf-8");
-          const match = content.match(
-            /export const LEGEND_HEADING_LABEL\s*=\s*["']([^"']+)["']/
-          );
-          heading = match
-            ? match[1]
-            : "Town size according to population number";
+          const json = JSON.parse(readFileSync(LEGEND_LABEL_JSON, "utf-8"));
+          heading =
+            typeof json.heading === "string"
+              ? json.heading
+              : LEGEND_LABEL_FALLBACK;
         } catch {
-          heading = "Town size according to population number";
+          heading = LEGEND_LABEL_FALLBACK;
         }
 
         const snippet = [

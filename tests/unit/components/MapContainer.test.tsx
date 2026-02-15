@@ -43,6 +43,11 @@ vi.mock("@/hooks", () => ({
     { layer: "small", color: "#ff0000" },
     { layer: "medium", color: "#00ff00" },
   ],
+  useTownsData: () => ({
+    towns: [],
+    isLoading: false,
+    error: null,
+  }),
 }));
 
 vi.mock("@/utils/utils", () => ({

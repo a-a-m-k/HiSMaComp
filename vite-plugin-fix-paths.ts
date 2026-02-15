@@ -27,12 +27,16 @@ export function vitePluginFixPaths(): Plugin {
         if (baseUrl !== "/") {
           const basePath = baseUrl.replace(/\/$/, ""); // Remove trailing slash
           const basePathNoSlash = basePath.replace(/^\//, ""); // Remove leading slash for comparison
+          const escapedBase = basePathNoSlash.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&"
+          );
 
-          // Fix absolute paths that don't start with baseUrl
-          // Pattern: href="/path" or src="/path" that should be href="/HiSMaComp/path"
-          // This regex matches paths starting with / but NOT starting with /HiSMaComp/
-          const absolutePathRegex =
-            /(href|src)=["']\/(?!HiSMaComp\/)([^"']+)["']/g;
+          // Fix absolute paths that don't start with baseUrl (dynamic regex so any base path works)
+          const absolutePathRegex = new RegExp(
+            `(href|src)=["']\\/(?!${escapedBase}\\/)([^"']+)["']`,
+            "g"
+          );
 
           htmlContent = htmlContent.replace(
             absolutePathRegex,
@@ -58,8 +62,7 @@ export function vitePluginFixPaths(): Plugin {
             }
           );
 
-          // Also fix any remaining paths that might have been missed
-          // This catches paths like /src/main.tsx, /assets/..., /manifest.json, etc.
+          // Safety net for path prefixes the first regex might miss (e.g. /assets/..., /manifest.json)
           htmlContent = htmlContent.replace(
             /(href|src)=["']\/(src\/[^"']+|assets\/[^"']+|manifest\.json|favicon[^"']*|icons\/[^"']*)["']/gi,
             (match, attr, path) => {

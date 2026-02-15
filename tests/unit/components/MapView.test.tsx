@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import MapView from "@/components/map/MapView/MapView";
 import { AppProvider } from "@/context/AppContext";
 import { Town } from "@/common/types";
@@ -67,7 +67,7 @@ vi.mock(
   () => {
     const React = require("react");
     const ScreenshotButton = React.forwardRef((props: any, ref: any) => {
-      const { children, ...rest } = props;
+      const { children, disableRipple, ...rest } = props;
       return React.createElement(
         "button",
         {
@@ -95,11 +95,12 @@ vi.mock(
 vi.mock("@/components/controls", () => {
   const React = require("react");
   const ScreenshotButton = React.forwardRef((props: any, ref: any) => {
+    const { disableRipple, ...rest } = props;
     return React.createElement("button", {
       ref,
       id: "map-screenshot-button",
       "data-testid": "screenshot-button",
-      ...props,
+      ...rest,
     });
   });
   ScreenshotButton.displayName = "ScreenshotButton";
@@ -350,7 +351,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe("MapView", () => {
-  it("should render map container with correct initial position and zoom", () => {
+  it("should render map container with correct initial position and zoom", async () => {
     const initialPosition = { latitude: 48.8566, longitude: 2.3522 };
     const initialZoom = 8;
 
@@ -363,12 +364,13 @@ describe("MapView", () => {
     // MapView renders #map-container-area
     expect(container.querySelector("#map-container-area")).toBeInTheDocument();
 
-    // ScreenshotButton should be rendered inside ScreenshotButtonContainer
-    // Check for the button by id or testid
-    const screenshotButton =
-      container.querySelector("#map-screenshot-button") ||
-      container.querySelector('[data-testid="screenshot-button"]');
-    expect(screenshotButton).toBeInTheDocument();
+    // ScreenshotButton is lazy-loaded; wait for it to appear
+    await waitFor(() => {
+      const screenshotButton =
+        container.querySelector("#map-screenshot-button") ||
+        screen.queryByTestId("screenshot-button");
+      expect(screenshotButton).toBeInTheDocument();
+    });
   });
 
   it("should handle invalid coordinates gracefully", () => {

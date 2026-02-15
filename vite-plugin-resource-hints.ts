@@ -8,7 +8,7 @@ import { join } from "path";
  *
  * Preloads:
  * - Main entry script (modulepreload)
- * - MapLibre GL bundle (modulepreload) - largest chunk, critical for LCP
+ * - MapLibre GL bundle (modulepreload) - for faster map load after first paint
  * - Vendor bundle (modulepreload) - if large enough
  */
 export function vitePluginResourceHints(): Plugin {
@@ -109,7 +109,7 @@ export function vitePluginResourceHints(): Plugin {
           );
         }
 
-        // Preload MapLibre GL bundle (critical for LCP on mobile)
+        // Preload MapLibre GL bundle for faster map load after first paint
         // This is the largest chunk (~247KB gzipped) and is needed for map rendering
         // Check both HTML scripts and assets directory
         const maplibreSrc = maplibreScript?.src || maplibreAsset;
