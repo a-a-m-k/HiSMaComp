@@ -4,7 +4,12 @@ import Box from "@mui/material/Box";
 import { Timeline, Legend as MapLegend } from "@/components/controls";
 import { ErrorBoundary } from "@/components/dev";
 import { LoadingSpinner, ErrorAlert } from "@/components/ui";
-import { CENTURY_MAP, YEARS, MAX_ZOOM_LEVEL } from "@/constants";
+import {
+  CENTURY_MAP,
+  YEARS,
+  MAX_ZOOM_LEVEL,
+  LEGEND_HEADING_LABEL,
+} from "@/constants";
 import { Z_INDEX } from "@/constants/ui";
 import { LayerItem, TimelineMark, Town } from "@/common/types";
 import { AppProvider, useApp } from "@/context/AppContext";
@@ -144,10 +149,9 @@ const MapContainerContent = ({
 }) => {
   const { isLoading, error, retry } = useApp();
 
-  // Hide the static LCP placeholder once the real legend has mounted (avoids duplicate)
+  // Declarative: signal that the app has mounted so CSS hides the LCP placeholder
   React.useEffect(() => {
-    const placeholder = document.getElementById("legend-heading-placeholder");
-    if (placeholder) placeholder.style.setProperty("display", "none");
+    document.documentElement.setAttribute("data-app-ready", "true");
   }, []);
 
   return (
@@ -163,10 +167,7 @@ const MapContainerContent = ({
       {!error && (
         <>
           <Timeline marks={marks} />
-          <MapLegend
-            label="Town size according to population number"
-            layers={legendLayers}
-          />
+          <MapLegend label={LEGEND_HEADING_LABEL} layers={legendLayers} />
         </>
       )}
       {error && (

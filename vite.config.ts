@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { vitePluginCritical } from "./vite-plugin-critical";
 import { vitePluginResourceHints } from "./vite-plugin-resource-hints";
+import { vitePluginLcpLegend } from "./vite-plugin-lcp-legend";
 import { vitePluginFixPaths } from "./vite-plugin-fix-paths";
 
 const manifestPlugin = () => ({
@@ -25,6 +26,7 @@ export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     tsconfigPaths(),
+    vitePluginLcpLegend(), // dev + build: inject LCP legend placeholder from legendLcp.ts
     ...(command === "build"
       ? [
           visualizer({

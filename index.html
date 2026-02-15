@@ -66,16 +66,8 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- LCP placeholder: legend heading visible before JS runs. Hidden when React mounts. -->
-    <div
-      id="legend-heading-placeholder"
-      aria-hidden="true"
-      style="position:fixed;top:16px;right:16px;z-index:1000;max-width:280px;padding:8px 12px;background:#fff;border-radius:4px;box-shadow:0 16px 48px rgba(0,0,0,0.12);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;"
-    >
-      <h2 style="margin:0;font-size:1.25rem;font-weight:500;line-height:1.4;color:#212121;">
-        Town size according to population number
-      </h2>
-    </div>
+    <!-- LCP: placeholder injected here by vite-plugin-lcp-legend (from src/constants/legendLcp.ts) -->
+    <!-- LCP_LEGEND_PLACEHOLDER -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
