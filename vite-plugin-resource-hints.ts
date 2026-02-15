@@ -66,6 +66,7 @@ export function vitePluginResourceHints(): Plugin {
         // they won't be in the HTML. We need to scan the assets directory
         const assetsDir = join(outputDir, "assets");
         let vendorAsset: string | null = null;
+        let screenshotButtonAsset: string | null = null;
 
         try {
           const assets = readdirSync(assetsDir);
@@ -77,6 +78,16 @@ export function vitePluginResourceHints(): Plugin {
           );
           if (vendorFile) {
             vendorAsset = `${baseUrl}assets/${vendorFile}`;
+          }
+
+          // ScreenshotButton is lazy-loaded; preload to avoid dynamic import 404s
+          const screenshotFile = assets.find(
+            file =>
+              file.toLowerCase().includes("screenshotbutton") &&
+              file.endsWith(".js")
+          );
+          if (screenshotFile) {
+            screenshotButtonAsset = `${baseUrl}assets/${screenshotFile}`;
           }
         } catch (error) {
           // Assets directory might not exist or be readable
@@ -96,8 +107,6 @@ export function vitePluginResourceHints(): Plugin {
         }
 
         // Preload vendor bundle if it exists (Material-UI + React)
-        // This helps with faster initial render
-        // Check both HTML scripts and assets directory
         const vendorSrc = vendorScript?.src || vendorAsset;
         if (vendorSrc) {
           preloadLinks.push(
@@ -105,10 +114,17 @@ export function vitePluginResourceHints(): Plugin {
           );
         }
 
+        // Preload ScreenshotButton (lazy chunk) - ensures correct path resolution
+        if (screenshotButtonAsset) {
+          preloadLinks.push(
+            `    <link rel="modulepreload" href="${screenshotButtonAsset}" />`
+          );
+        }
+
         if (preloadLinks.length > 0) {
           // Insert preload hints right before the first script tag
           const firstScript = scripts[0];
-          const updatedHtml = htmlContent.replace(
+          let updatedHtml = htmlContent.replace(
             firstScript.match,
             `${preloadLinks.join("\n")}\n${firstScript.match}`
           );

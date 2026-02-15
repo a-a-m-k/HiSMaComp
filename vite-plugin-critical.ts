@@ -107,9 +107,12 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
         // Critical package has trouble resolving paths with base URLs
         if (actualBaseUrl !== "/") {
           const basePath = actualBaseUrl.replace(/\/$/, "").replace(/^\//, "");
-          // Replace /HiSMaComp/path with /path (remove base prefix)
+          // Replace /HiSMaComp/path with /path (remove base prefix for critical package)
           htmlContent = htmlContent.replace(
-            new RegExp(`/${basePath}/`, "g"),
+            new RegExp(
+              `/${basePath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/`,
+              "g"
+            ),
             "/"
           );
           // Write temporary HTML for critical to process
@@ -131,14 +134,14 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
             // Restore base paths in the result
             let processedHtml = result.html;
             const basePathNoSlash = basePath.replace(/^\//, ""); // Remove leading slash for comparison
-            
+
             // CRITICAL: Ensure base tag is correct (critical package might change it)
             // We use relative paths with base tag, so ensure it's correct
             processedHtml = processedHtml.replace(
               /<base\s+[^>]*>/i,
               `<base href="${actualBaseUrl}">`
             );
-            
+
             // Restore base paths: href="/assets/..." -> href="/HiSMaComp/assets/..."
             processedHtml = processedHtml.replace(
               /(href|src)=["']\/([^"']+)["']/g,
