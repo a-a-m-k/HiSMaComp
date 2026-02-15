@@ -80,8 +80,9 @@ const MapView: React.FC<MapViewComponentProps> = ({
     if (!map) return;
 
     setMapReady(true);
-    const deviceType = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
-    applyTileOptimization(map, deviceType);
+    // applyTileOptimization disabled temporarily for deployed comparison
+    // const deviceType = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
+    // applyTileOptimization(map, deviceType);
   }, [isMobile, isTablet]);
 
   const mapDescription = useMemo(
