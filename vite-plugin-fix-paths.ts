@@ -32,16 +32,19 @@ export function vitePluginFixPaths(): Plugin {
         const basePath = baseUrl.replace(/\/$/, ""); // Remove trailing slash
         
         // Step 1: Ensure <base> tag exists with correct href
-        // Vite should add it, but we ensure it's correct
+        // Handle empty href="" or missing href attribute
+        // First, specifically fix empty href=""
+        htmlContent = htmlContent.replace(/<base\s+href=["']{2}\s*>/i, `<base href="${baseUrl}">`);
+        // Then handle any other base tag variations
         const baseTagRegex = /<base\s+[^>]*>/i;
         if (baseTagRegex.test(htmlContent)) {
-          // Replace existing base tag
+          // Replace existing base tag (including empty href="")
           htmlContent = htmlContent.replace(baseTagRegex, `<base href="${baseUrl}">`);
-          console.log(`[vite-plugin-fix-paths] [${hookName}] ✓ Ensured <base> tag is correct`);
+          console.log(`[vite-plugin-fix-paths] [${hookName}] ✓ Ensured <base> tag is correct: ${baseUrl}`);
         } else {
           // Add base tag if missing
           htmlContent = htmlContent.replace(/<head>/i, `<head>\n    <base href="${baseUrl}">`);
-          console.log(`[vite-plugin-fix-paths] [${hookName}] ✓ Added <base> tag`);
+          console.log(`[vite-plugin-fix-paths] [${hookName}] ✓ Added <base> tag: ${baseUrl}`);
         }
 
         // Step 2: Convert absolute paths to relative paths (works with base tag)
@@ -115,18 +118,17 @@ export function vitePluginFixPaths(): Plugin {
       outputDir = join(process.cwd(), config.build.outDir || "dist");
       baseUrl = config.base || "/";
     },
-    transformIndexHtml(html: string) {
-      // Only ensure base tag is correct here
-      // Don't convert paths yet - let Vite process /src/main.tsx first
-      if (baseUrl !== "/") {
-        const baseTagRegex = /<base\s+[^>]*>/i;
-        if (baseTagRegex.test(html)) {
-          html = html.replace(baseTagRegex, `<base href="${baseUrl}">`);
-        } else {
-          html = html.replace(/<head>/i, `<head>\n    <base href="${baseUrl}">`);
-        }
-      }
-      return html;
+    transformIndexHtml: {
+      order: "post", // Run LAST so we override any plugin that sets base incorrectly
+      handler(html: string) {
+        if (baseUrl === "/") return html;
+        const correctBaseTag = `<base href="${baseUrl}">`;
+        // Remove any existing base tag (empty href, wrong href, etc.)
+        let out = html.replace(/<base\s+[^>]*\/?>/gi, "");
+        // Insert correct base as first child of head
+        out = out.replace(/<head>/i, `<head>\n    ${correctBaseTag}`);
+        return out;
+      },
     },
     closeBundle() {
       // Run in closeBundle (after critical CSS plugin)

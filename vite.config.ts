@@ -4,7 +4,6 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { visualizer } from "rollup-plugin-visualizer";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import { vitePluginCritical } from "./vite-plugin-critical";
 import { vitePluginResourceHints } from "./vite-plugin-resource-hints";
 import { vitePluginFixPaths } from "./vite-plugin-fix-paths";
 import { vitePluginMaplibreCDN } from "./vite-plugin-maplibre-cdn";
