@@ -125,15 +125,17 @@ const MapContainer = () => {
     );
   }
 
-  // Render app immediately with default map view
-  // Map will update when towns data is ready
+  // Render app immediately with default map view (even while towns are loading)
+  // Pass empty array initially so AppProvider can render immediately
   // This allows MapLibre to load in parallel with towns data
+  // Map will update when towns data is ready
   return (
-    <AppProvider towns={towns}>
+    <AppProvider towns={towns.length > 0 ? towns : []}>
       <MapContainerContent
         legendLayers={legendLayers}
         marks={marks}
         showDefaultMap={townsLoading || towns.length === 0}
+        townsLoading={townsLoading}
       />
     </AppProvider>
   );
@@ -143,10 +145,12 @@ const MapContainerContent = ({
   legendLayers,
   marks,
   showDefaultMap,
+  townsLoading,
 }: {
   legendLayers: LayerItem[];
   marks: TimelineMark[];
   showDefaultMap?: boolean;
+  townsLoading?: boolean;
 }) => {
   const { isLoading, error, retry } = useApp();
 
@@ -201,7 +205,9 @@ const MapContainerContent = ({
           <MapViewWithCalculations showDefaultMap={showDefaultMap} />
         </Suspense>
       </ErrorBoundary>
-      {isLoading && <LoadingSpinner message="Processing historical data..." />}
+      {(isLoading || townsLoading) && (
+        <LoadingSpinner message="Loading historical data..." />
+      )}
     </Box>
   );
 };
