@@ -56,14 +56,11 @@ import { logger } from "@/utils/logger";
 interface MapViewComponentProps {
   initialPosition: { longitude: number; latitude: number };
   initialZoom: number;
-  /** Called when map has finished loading - used for progressive rendering (skeleton → map) */
-  onMapReady?: () => void;
 }
 
 const MapView: React.FC<MapViewComponentProps> = ({
   initialPosition: { longitude, latitude },
   initialZoom,
-  onMapReady,
 }) => {
   const theme = useTheme();
   const { isMobile, isTablet, isDesktop } = useResponsive();
@@ -122,7 +119,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
 
       // Mark map as ready for LCP - this allows non-critical features to load
       setMapReady(true);
-      onMapReady?.();
 
       // Determine device type once to avoid redundant checks
       const deviceType = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
@@ -175,7 +171,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
       // MapLibre GL will still work with default settings
       logger.warn("Failed to optimize tile loading configuration:", error);
     }
-  }, [isMobile, isTablet, isDesktop, onMapReady]);
+  }, [isMobile, isTablet, isDesktop]);
 
   return (
     <>
