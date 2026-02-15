@@ -1,13 +1,13 @@
 import type { Plugin } from "vite";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
 
 /**
  * Vite plugin to fix absolute paths in built HTML for GitHub Pages deployment
  * Ensures all asset references include the base path
  * 
- * This plugin runs in closeBundle AFTER all other plugins to ensure
- * it fixes paths that may have been modified by other plugins (like critical CSS)
+ * This plugin uses writeBundle hook which runs AFTER all other plugins including
+ * closeBundle hooks, ensuring it's the absolute last thing to run.
  */
 export function vitePluginFixPaths(): Plugin {
   let outputDir = "";
@@ -21,43 +21,11 @@ export function vitePluginFixPaths(): Plugin {
       outputDir = join(process.cwd(), config.build.outDir || "dist");
       baseUrl = config.base || "/";
     },
-    transformIndexHtml(html) {
-      // Fix paths during HTML transformation (runs before closeBundle)
-      if (baseUrl !== "/") {
-        const basePath = baseUrl.replace(/\/$/, "");
-        const basePathNoSlash = basePath.replace(/^\//, "");
-
-        // Fix absolute paths in HTML
-        html = html.replace(
-          /(href|src)=["'](\/[^"']+)["']/g,
-          (match, attr, path) => {
-            // Skip external URLs
-            if (/^https?:\/\//.test(path) || path.startsWith("//")) {
-              return match;
-            }
-            // Skip data URIs and blob URIs
-            if (path.startsWith("data:") || path.startsWith("blob:")) {
-              return match;
-            }
-            // Skip if already has base path
-            if (path.startsWith(basePath + "/") || path === basePath) {
-              return match;
-            }
-            // Skip base path itself
-            if (path === "/" + basePathNoSlash || path === "/" + basePathNoSlash + "/") {
-              return match;
-            }
-            const cleanPath = path.replace(/^\//, "");
-            return `${attr}="${basePath}/${cleanPath}"`;
-          }
-        );
-      }
-      return html;
-    },
-    async closeBundle() {
+    writeBundle() {
+      // This hook runs AFTER all closeBundle hooks, ensuring we're last
       try {
         const htmlPath = join(outputDir, "index.html");
-        if (!htmlPath || !require("fs").existsSync(htmlPath)) {
+        if (!existsSync(htmlPath)) {
           console.warn(`[vite-plugin-fix-paths] ⚠ HTML file not found: ${htmlPath}`);
           return;
         }
@@ -70,8 +38,8 @@ export function vitePluginFixPaths(): Plugin {
           const basePath = baseUrl.replace(/\/$/, ""); // Remove trailing slash
           const basePathNoSlash = basePath.replace(/^\//, ""); // Remove leading slash for comparison
 
-          // Comprehensive fix for all absolute paths
-          // Match: href="/path" or src="/path" 
+          // Fix ALL absolute paths that don't already have the base path
+          // This regex matches: href="/path" or src="/path"
           htmlContent = htmlContent.replace(
             /(href|src)=["'](\/[^"']+)["']/g,
             (match, attr, path) => {
@@ -96,29 +64,6 @@ export function vitePluginFixPaths(): Plugin {
               const newPath = `${basePath}/${cleanPath}`;
               console.log(`[vite-plugin-fix-paths] Fixing: ${path} -> ${newPath}`);
               return `${attr}="${newPath}"`;
-            }
-          );
-
-          // Also fix any paths in link tags that might have been missed
-          // This catches cases like: <link rel="icon" href="/favicon.ico">
-          htmlContent = htmlContent.replace(
-            /<link([^>]*)\s+(href|src)=["'](\/[^"']+)["']([^>]*)>/gi,
-            (match, before, attr, path, after) => {
-              // Skip external URLs
-              if (/^https?:\/\//.test(path) || path.startsWith("//")) {
-                return match;
-              }
-              // Skip data URIs
-              if (path.startsWith("data:") || path.startsWith("blob:")) {
-                return match;
-              }
-              // Skip if already has base path
-              if (path.startsWith(basePath + "/") || path === basePath) {
-                return match;
-              }
-              const cleanPath = path.replace(/^\//, "");
-              const newPath = `${basePath}/${cleanPath}`;
-              return `<link${before} ${attr}="${newPath}"${after}>`;
             }
           );
 
