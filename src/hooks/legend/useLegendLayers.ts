@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { useMediaQuery, useTheme } from "@mui/material";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 
 import {
   MAP_LEGEND_COLORS,
