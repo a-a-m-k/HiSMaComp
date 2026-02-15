@@ -4,7 +4,6 @@ import Box from "@mui/material/Box";
 import { Timeline, Legend as MapLegend } from "@/components/controls";
 import { ErrorBoundary } from "@/components/dev";
 import { LoadingSpinner, ErrorAlert } from "@/components/ui";
-import { MapSkeleton } from "@/components/map/MapSkeleton";
 import { CENTURY_MAP, YEARS, MAX_ZOOM_LEVEL } from "@/constants";
 import { Z_INDEX } from "@/constants/ui";
 import { LayerItem, TimelineMark, Town } from "@/common/types";
@@ -12,9 +11,9 @@ import { AppProvider, useApp } from "@/context/AppContext";
 import { useLegendLayers } from "@/hooks";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
-// Import MapView directly (not lazy) for parallel loading with towns data
-// This allows MapLibre bundle to download immediately while towns data loads
-import MapView from "@/components/map/MapView/MapView";
+// Lazy-load MapView so the LCP element (legend heading) can paint before MapLibre parses.
+// MapLibre is large; deferring it reduces main-thread blocking and element render delay.
+const MapView = React.lazy(() => import("@/components/map/MapView/MapView"));
 
 const marks: TimelineMark[] = YEARS.map(year => ({
   value: year,
@@ -74,9 +73,6 @@ const DEFAULT_MAP_ZOOM = 4;
 const MapContainer = () => {
   const legendLayers = useLegendLayers();
   const { towns, isLoading: townsLoading, error: townsError } = useTownsData();
-
-  // MapView is now imported directly (not lazy), so it starts loading immediately
-  // This allows MapLibre GL bundle to download in parallel with towns data
 
   // Show error state if towns data failed to load
   if (townsError) {
@@ -148,10 +144,21 @@ const MapContainerContent = ({
 }) => {
   const { isLoading, error, retry } = useApp();
 
+  // Hide the static LCP placeholder once the real legend has mounted (avoids duplicate)
+  React.useEffect(() => {
+    const placeholder = document.getElementById("legend-heading-placeholder");
+    if (placeholder) placeholder.style.setProperty("display", "none");
+  }, []);
+
   return (
     <Box
       id="map-container"
-      sx={{ width: "100%", height: "100%", position: "relative" }}
+      sx={{
+        width: "100%",
+        height: "100%",
+        minHeight: "100vh",
+        position: "relative",
+      }}
     >
       {!error && (
         <>
@@ -195,7 +202,19 @@ const MapContainerContent = ({
         </Box>
       )}
       <ErrorBoundary>
-        <MapViewWithCalculations showDefaultMap={showDefaultMap} />
+        <Suspense
+          fallback={
+            <Box
+              sx={{
+                width: "100%",
+                height: "100%",
+                bgcolor: "grey.100",
+              }}
+            />
+          }
+        >
+          <MapViewWithCalculations showDefaultMap={showDefaultMap} />
+        </Suspense>
       </ErrorBoundary>
       {(isLoading || townsLoading) && (
         <LoadingSpinner message="Loading historical data..." />
