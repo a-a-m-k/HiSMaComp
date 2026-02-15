@@ -35,13 +35,11 @@ import { logger } from "@/utils/logger";
 interface MapViewComponentProps {
   initialPosition: { longitude: number; latitude: number };
   initialZoom: number;
-  onMapReady?: () => void;
 }
 
 const MapView: React.FC<MapViewComponentProps> = ({
   initialPosition: { longitude, latitude },
   initialZoom,
-  onMapReady,
 }) => {
   const theme = useTheme();
   const { isMobile, isTablet, isDesktop } = useResponsive();
@@ -143,24 +141,12 @@ const MapView: React.FC<MapViewComponentProps> = ({
       ) {
         requestManager.maxRequestsPerTile = settings.perTile;
       }
-
-      // Notify parent that map is ready for progressive rendering
-      if (onMapReady) {
-        // Small delay to ensure map is fully rendered
-        setTimeout(() => {
-          onMapReady();
-        }, 200);
-      }
     } catch (error) {
       // Gracefully handle errors - tile loading optimization is non-critical
       // MapLibre GL will still work with default settings
       logger.warn("Failed to optimize tile loading configuration:", error);
-      // Still notify parent even if optimization fails
-      if (onMapReady) {
-        onMapReady();
-      }
     }
-  }, [isMobile, isTablet, isDesktop, onMapReady]);
+  }, [isMobile, isTablet, isDesktop]);
 
   return (
     <>

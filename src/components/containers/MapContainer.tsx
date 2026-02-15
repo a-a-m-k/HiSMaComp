@@ -1,6 +1,5 @@
 import React, { Suspense, useState, useEffect } from "react";
 import Box from "@mui/material/Box";
-import { useTheme } from "@mui/material/styles";
 
 import { Timeline, Legend as MapLegend } from "@/components/controls";
 import { ErrorBoundary } from "@/components/dev";
@@ -14,97 +13,8 @@ import { useLegendLayers } from "@/hooks";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
 
-// Preload MapView component immediately for progressive rendering
-// This starts downloading the bundle while placeholder is shown
+// Lazy load MapView to improve First Contentful Paint (FCP)
 const MapView = React.lazy(() => import("@/components/map/MapView/MapView"));
-
-/**
- * Map placeholder component for progressive rendering.
- * Shows immediately while MapLibre GL loads in the background.
- * This improves perceived LCP by showing content right away.
- */
-const MapPlaceholder: React.FC = () => {
-  const theme = useTheme();
-
-  return (
-    <Box
-      id="map-container-area"
-      role="application"
-      aria-label="Loading map..."
-      sx={{
-        width: "100%",
-        height: "100%",
-        position: "relative",
-        backgroundColor:
-          theme.palette.mode === "dark"
-            ? theme.palette.grey[900]
-            : theme.palette.grey[100],
-        backgroundImage: `linear-gradient(
-          135deg,
-          ${theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[200]} 0%,
-          ${theme.palette.mode === "dark" ? theme.palette.grey[900] : theme.palette.grey[100]} 50%,
-          ${theme.palette.mode === "dark" ? theme.palette.grey[800] : theme.palette.grey[200]} 100%
-        )`,
-        backgroundSize: "200% 200%",
-        animation: "shimmer 2s ease-in-out infinite",
-        "@keyframes shimmer": {
-          "0%": {
-            backgroundPosition: "0% 50%",
-          },
-          "50%": {
-            backgroundPosition: "100% 50%",
-          },
-          "100%": {
-            backgroundPosition: "0% 50%",
-          },
-        },
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `radial-gradient(circle at 50% 50%, 
-            ${theme.palette.mode === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.02)"} 0%, 
-            transparent 70%)`,
-        },
-      }}
-    >
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          color: theme.palette.text.secondary,
-          zIndex: 1,
-        }}
-      >
-        <Box
-          component="div"
-          sx={{
-            width: 48,
-            height: 48,
-            margin: "0 auto 16px",
-            border: `3px solid ${theme.palette.divider}`,
-            borderTopColor: theme.palette.primary.main,
-            borderRadius: "50%",
-            animation: "spin 1s linear infinite",
-            "@keyframes spin": {
-              "0%": { transform: "rotate(0deg)" },
-              "100%": { transform: "rotate(360deg)" },
-            },
-          }}
-        />
-      </Box>
-    </Box>
-  );
-};
 
 const marks: TimelineMark[] = YEARS.map(year => ({
   value: year,
@@ -229,15 +139,6 @@ const MapContainerContent = ({
   marks: TimelineMark[];
 }) => {
   const { isLoading, error, retry } = useApp();
-  const [mapReady, setMapReady] = useState(false);
-
-  // Start preloading MapView immediately for progressive rendering
-  useEffect(() => {
-    // Preload the MapView component chunk
-    import("@/components/map/MapView/MapView").catch(err => {
-      logger.warn("Failed to preload MapView:", err);
-    });
-  }, []);
 
   return (
     <Box
@@ -285,54 +186,25 @@ const MapContainerContent = ({
           </Box>
         </Box>
       )}
-      {/* Progressive rendering: Show placeholder immediately, swap when map ready */}
       <ErrorBoundary>
-        {!mapReady && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              zIndex: 1,
-            }}
-          >
-            <MapPlaceholder />
-          </Box>
-        )}
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            opacity: mapReady ? 1 : 0,
-            transition: "opacity 0.3s ease-in",
-            zIndex: 2,
-          }}
-        >
-          <Suspense fallback={null}>
-            <MapViewWithCalculations onMapReady={() => setMapReady(true)} />
-          </Suspense>
-        </Box>
+        <Suspense fallback={<MapSkeleton />}>
+          <MapViewWithCalculations />
+        </Suspense>
       </ErrorBoundary>
       {isLoading && <LoadingSpinner message="Processing historical data..." />}
     </Box>
   );
 };
 
-const MapViewWithCalculations = ({
-  onMapReady,
-}: {
-  onMapReady?: () => void;
-}) => {
+const MapViewWithCalculations = () => {
   const { center, fitZoom, isLoading } = useApp();
 
-  // Don't render map until data is ready
-  if (isLoading || !center) {
-    return null; // Placeholder is already shown
+  if (isLoading) {
+    return <MapSkeleton />;
+  }
+
+  if (!center) {
+    return null;
   }
 
   const isValidCenter =
@@ -356,7 +228,6 @@ const MapViewWithCalculations = ({
         longitude: center.longitude,
       }}
       initialZoom={fitZoom}
-      onMapReady={onMapReady}
     />
   );
 };
