@@ -83,9 +83,16 @@ class ErrorBoundary extends Component<Props, State> {
             sx={{ mb: SPACING.XL, maxWidth: 600, width: "90%" }}
           >
             <AlertTitle>Oops! Something went wrong</AlertTitle>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Here&rsquo;s what happened:
-            </Typography>
+            {this.state.error && (
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {this.state.error.message || this.state.error.toString()}
+              </Typography>
+            )}
+            {!this.state.error && (
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                An unexpected error occurred. Please try reloading the page.
+              </Typography>
+            )}
 
             {process.env.NODE_ENV === "development" && this.state.error && (
               <Box
@@ -108,6 +115,13 @@ class ErrorBoundary extends Component<Props, State> {
                   }}
                 >
                   {this.state.error.toString()}
+                  {this.state.errorInfo && (
+                    <>
+                      {"\n\n"}
+                      Component Stack:
+                      {this.state.errorInfo.componentStack}
+                    </>
+                  )}
                 </Typography>
               </Box>
             )}
