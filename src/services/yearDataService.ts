@@ -28,8 +28,6 @@ interface YearData {
  */
 class YearDataService {
   private yearDataCache = new LRUCache<string, YearData>(50);
-  private townsArrayIds = new WeakMap<Town[], number>();
-  private nextTownsArrayId = 1;
 
   /**
    * Gets processed year data (filtered towns, bounds, center, GeoJSON) for a specific year.
@@ -98,9 +96,9 @@ class YearDataService {
   }
 
   /**
-   * Creates a cache key based on the towns array identity and year.
-   * This avoids expensive sorting/hashing work on every request while still
-   * producing stable keys for each towns dataset instance.
+   * Creates a deterministic cache key from town content and year.
+   * Uses a linear-time hash over town fields to avoid expensive O(n log n) sort
+   * while still reflecting in-place data mutations.
    *
    * @param towns - Array of town objects
    * @param year - Year to filter by
@@ -111,12 +109,38 @@ class YearDataService {
       return `empty-${year}`;
     }
 
-    let townsId = this.townsArrayIds.get(towns);
-    if (!townsId) {
-      townsId = this.nextTownsArrayId++;
-      this.townsArrayIds.set(towns, townsId);
+    let hash = 2166136261;
+
+    for (const town of towns) {
+      hash = this.fnv1aString(hash, town.name);
+      hash = this.fnv1aString(hash, `${town.latitude.toFixed(4)}`);
+      hash = this.fnv1aString(hash, `${town.longitude.toFixed(4)}`);
+
+      if (town.populationByYear) {
+        for (const [k, v] of Object.entries(town.populationByYear)) {
+          hash = this.fnv1aString(hash, k);
+          hash = this.fnv1aString(hash, `${v}`);
+        }
+      }
     }
-    return `${townsId}-${towns.length}-${year}`;
+
+    return `${(hash >>> 0).toString(36)}-${towns.length}-${year}`;
+  }
+
+  /**
+   * FNV-1a string hash step.
+   *
+   * @param seed - Current hash seed
+   * @param input - Text to hash
+   * @returns Updated hash
+   */
+  private fnv1aString(seed: number, input: string): number {
+    let hash = seed;
+    for (let i = 0; i < input.length; i++) {
+      hash ^= input.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash;
   }
 }
 

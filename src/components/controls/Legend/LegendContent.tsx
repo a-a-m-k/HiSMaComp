@@ -20,7 +20,7 @@ export interface LegendProps {
 const LegendItem: React.FC<{ layer: string; color: string }> = React.memo(
   ({ layer, color }) => {
     const theme = useTheme();
-    const { isMobile, isTablet } = useResponsive();
+    const { isMobile } = useResponsive();
     const sizingStyles = useMemo(() => getLegendStyles(theme), [theme]);
 
     const indicatorStyles = useMemo(

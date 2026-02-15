@@ -153,13 +153,13 @@ export const useMapKeyboardPanning = (
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     container?.addEventListener("blur", handleBlur);
+    const currentPressedKeys = pressedKeysRef.current;
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       container?.removeEventListener("blur", handleBlur);
 
-      const currentPressedKeys = pressedKeysRef.current;
       const currentAnimationFrame = animationFrameRef.current;
 
       currentPressedKeys.clear();

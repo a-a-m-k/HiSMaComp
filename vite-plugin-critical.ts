@@ -57,17 +57,13 @@ interface ViteCriticalOptions {
 export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
   const {
     base = process.cwd(),
-    src = "index.html",
     dest = "index.html",
     dimensions = [
       { width: 1300, height: 900 },
       { width: 375, height: 667 },
     ], // Desktop and mobile
     inline = true,
-    minify = true,
-    css,
     baseUrl = "/",
-    skipOnError = true,
   } = options;
 
   let distDir = "";
@@ -117,7 +113,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
           writeFileSync(tempHtmlPath, htmlContent, "utf-8");
 
           // Use temp file for processing
-          const criticalOptions: any = {
+          const criticalOptions: Record<string, unknown> = {
             base: outputDir,
             src: tempHtmlPath,
             inline,
@@ -134,7 +130,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
             // Restore base paths: href="/assets/..." -> href="/HiSMaComp/assets/..."
             processedHtml = processedHtml.replace(
               /(href|src)=["']\/([^"']+)["']/g,
-              (match, attr, path) => {
+              (match: string, attr: string, path: string) => {
                 // Skip external URLs
                 if (path.startsWith("http") || path.startsWith("//")) {
                   return match;
@@ -180,7 +176,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
 
         // Generate critical CSS (for root base path)
         // Note: critical package uses a headless browser
-        const criticalOptions: any = {
+        const criticalOptions: Record<string, unknown> = {
           base: outputDir,
           src: htmlPath,
           inline,

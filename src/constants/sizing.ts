@@ -117,7 +117,7 @@ export const getResponsiveFontSize = (sizes: ResponsiveFontSizes) => ({
   xl: sizes.xl || sizes.lg,
 });
 
-const generateTypographyStyle = (type: TypographyType, theme: Theme) => {
+const generateTypographyStyle = (type: TypographyType) => {
   const sizeMap = {
     title: FONT_SIZES.TITLE,
     subtitle: FONT_SIZES.SUBTITLE,
@@ -150,10 +150,10 @@ export const generateComponentStyles = (
   includeAttributionLinks: boolean = false
 ): ComponentStyles => {
   const styles: ComponentStyles = {
-    title: generateTypographyStyle("title", theme),
-    subtitle: generateTypographyStyle("subtitle", theme),
-    itemText: generateTypographyStyle("itemLabel", theme),
-    label: generateTypographyStyle("itemLabel", theme),
+    title: generateTypographyStyle("title"),
+    subtitle: generateTypographyStyle("subtitle"),
+    itemText: generateTypographyStyle("itemLabel"),
+    label: generateTypographyStyle("itemLabel"),
   };
 
   if (includeAttributionLinks) {

@@ -21,7 +21,7 @@
     "prepare": "husky",
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"scripts/**/*.{ts,tsx}\" \"vite-plugin-*.ts\"",
     "lint:staged": "npx lint-staged",
-    "lint:check": "eslint \"src/**/*.{ts,tsx}\" \"scripts/**/*.{ts,tsx}\" \"vite-plugin-*.ts\"",
+    "lint:check": "eslint \"src/**/*.{ts,tsx}\" \"scripts/**/*.{ts,tsx}\" \"vite-plugin-*.ts\" --max-warnings=0",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "prettier": "prettier --write .",
     "prettier:check": "prettier --check .",
