@@ -4,6 +4,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { visualizer } from "rollup-plugin-visualizer";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
+import { vitePluginCritical } from "./vite-plugin-critical";
 import { vitePluginResourceHints } from "./vite-plugin-resource-hints";
 import { vitePluginFixPaths } from "./vite-plugin-fix-paths";
 import { vitePluginMaplibreCDN } from "./vite-plugin-maplibre-cdn";
@@ -36,12 +37,20 @@ export default defineConfig(({ command }) => ({
             template: "treemap",
           }),
           manifestPlugin(),
-          vitePluginResourceHints(), // Adds preload hints
-          vitePluginFixPaths(), // Fix paths for GitHub Pages
+          vitePluginResourceHints(),
+          vitePluginCritical({
+            baseUrl: "/HiSMaComp/",
+            dimensions: [
+              { width: 1300, height: 900 },
+              { width: 375, height: 667 },
+            ],
+            skipOnError: true,
+          }),
+          vitePluginFixPaths(), // Run last to fix all paths after other plugins modify HTML
         ]
       : []),
   ],
-  base: command === "build" ? "./" : "/",
+  base: command === "build" ? "/HiSMaComp/" : "/",
   preview: {
     // Configure preview server to serve from base path
     port: 4173,

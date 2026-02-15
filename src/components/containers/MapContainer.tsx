@@ -147,6 +147,7 @@ const MapContainerContent = ({
   townsLoading?: boolean;
 }) => {
   const { isLoading, error, retry } = useApp();
+  const [mapReady, setMapReady] = useState(false);
 
   return (
     <Box
@@ -162,6 +163,23 @@ const MapContainerContent = ({
           />
         </>
       )}
+      {/* Progressive rendering: show MapSkeleton overlay until map is ready */}
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          pointerEvents: mapReady ? "none" : "auto",
+          opacity: mapReady ? 0 : 1,
+          transition: "opacity 0.3s ease-in-out",
+          zIndex: mapReady ? -1 : 1,
+        }}
+      >
+        <MapSkeleton />
+      </Box>
       {error && (
         <Box
           sx={{
@@ -195,7 +213,10 @@ const MapContainerContent = ({
         </Box>
       )}
       <ErrorBoundary>
-        <MapViewWithCalculations showDefaultMap={showDefaultMap} />
+        <MapViewWithCalculations
+          showDefaultMap={showDefaultMap}
+          onMapReady={() => setMapReady(true)}
+        />
       </ErrorBoundary>
       {(isLoading || townsLoading) && (
         <LoadingSpinner message="Loading historical data..." />
@@ -206,8 +227,10 @@ const MapContainerContent = ({
 
 const MapViewWithCalculations = ({
   showDefaultMap,
+  onMapReady,
 }: {
   showDefaultMap?: boolean;
+  onMapReady?: () => void;
 }) => {
   const { center, fitZoom, isLoading } = useApp();
 
@@ -218,6 +241,7 @@ const MapViewWithCalculations = ({
       <MapView
         initialPosition={DEFAULT_MAP_CENTER}
         initialZoom={DEFAULT_MAP_ZOOM}
+        onMapReady={onMapReady}
       />
     );
   }
@@ -238,6 +262,7 @@ const MapViewWithCalculations = ({
       <MapView
         initialPosition={DEFAULT_MAP_CENTER}
         initialZoom={DEFAULT_MAP_ZOOM}
+        onMapReady={onMapReady}
       />
     );
   }
@@ -249,6 +274,7 @@ const MapViewWithCalculations = ({
         longitude: center.longitude,
       }}
       initialZoom={fitZoom}
+      onMapReady={onMapReady}
     />
   );
 };
