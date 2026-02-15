@@ -63,7 +63,8 @@ export function vitePluginFixPaths(): Plugin {
           }
         });
 
-        // Step 3: Convert other absolute paths to relative (for assets)
+        // Step 3: Convert ALL absolute paths that start with base path to relative
+        // This catches /HiSMaComp/assets/..., /HiSMaComp/manifest.json, etc.
         htmlContent = htmlContent.replace(
           /(href|src)=["'](\/[^"']+)["']/g,
           (match, attr, path) => {
@@ -85,7 +86,13 @@ export function vitePluginFixPaths(): Plugin {
             if (path === basePath) {
               return `${attr}="./"`;
             }
-            // Otherwise, keep as is (might be root path like /src/main.tsx which Vite handles)
+            // For any other absolute path (like /src/main.tsx), convert to relative
+            // This handles paths that Vite might not have processed correctly
+            if (path.startsWith("/")) {
+              const relativePath = path.substring(1); // Remove leading /
+              console.log(`[vite-plugin-fix-paths] [${hookName}] Fixed: ${path} -> ${relativePath} (relative)`);
+              return `${attr}="${relativePath}"`;
+            }
             return match;
           }
         );
@@ -109,7 +116,8 @@ export function vitePluginFixPaths(): Plugin {
       baseUrl = config.base || "/";
     },
     transformIndexHtml(html: string) {
-      // Ensure base tag is correct (Vite should add it, but we verify)
+      // Only ensure base tag is correct here
+      // Don't convert paths yet - let Vite process /src/main.tsx first
       if (baseUrl !== "/") {
         const baseTagRegex = /<base\s+[^>]*>/i;
         if (baseTagRegex.test(html)) {
