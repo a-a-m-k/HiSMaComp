@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:analyze": "vite build && echo 'Bundle analysis generated at dist/bundle-analysis.html'",
-    "preview": "vite preview --base /HiSMaComp/",
+    "preview": "vite preview --base ./",
     "test": "NODE_OPTIONS=--max-old-space-size=4096 vitest",
     "test:ui": "NODE_OPTIONS=--max-old-space-size=4096 vitest --ui",
     "test:run": "NODE_OPTIONS=--max-old-space-size=4096 vitest run",

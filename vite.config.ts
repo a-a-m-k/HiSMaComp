@@ -37,12 +37,13 @@ export default defineConfig(({ command }) => ({
             template: "treemap",
           }),
           manifestPlugin(),
-          vitePluginResourceHints(),
-          vitePluginFixPaths(), // Run last to fix all paths after other plugins modify HTML
+          vitePluginCritical(), // Extract and inline critical CSS
+          vitePluginResourceHints(), // Adds preload hints
+          vitePluginFixPaths(), // Fix paths for GitHub Pages
         ]
       : []),
   ],
-  base: command === "build" ? "/HiSMaComp/" : "/",
+  base: command === "build" ? "./" : "/",
   preview: {
     // Configure preview server to serve from base path
     port: 4173,

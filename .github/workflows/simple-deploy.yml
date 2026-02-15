@@ -2,7 +2,7 @@ name: Simple Deploy
 
 on:
   push:
-    branches: [main, optimization-v1]
+    branches: [main, optimization-v1, feature/maplibre-cdn]
 
 jobs:
   deploy:
