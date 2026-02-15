@@ -12,9 +12,9 @@ import { AppProvider, useApp } from "@/context/AppContext";
 import { useLegendLayers } from "@/hooks";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
-
-// Lazy load MapView to improve First Contentful Paint (FCP)
-const MapView = React.lazy(() => import("@/components/map/MapView/MapView"));
+// Import MapView directly (not lazy) for parallel loading with towns data
+// This allows MapLibre bundle to download immediately while towns data loads
+import MapView from "@/components/map/MapView/MapView";
 
 const marks: TimelineMark[] = YEARS.map(year => ({
   value: year,
@@ -75,14 +75,8 @@ const MapContainer = () => {
   const legendLayers = useLegendLayers();
   const { towns, isLoading: townsLoading, error: townsError } = useTownsData();
 
-  // Preload MapView component immediately (don't wait for towns data)
-  // This starts downloading MapLibre GL bundle in parallel with towns data
-  useEffect(() => {
-    // Preload MapView chunk immediately for parallel loading
-    import("@/components/map/MapView/MapView").catch(err => {
-      logger.warn("Failed to preload MapView:", err);
-    });
-  }, []);
+  // MapView is now imported directly (not lazy), so it starts loading immediately
+  // This allows MapLibre GL bundle to download in parallel with towns data
 
   // Show error state if towns data failed to load
   if (townsError) {
@@ -201,9 +195,7 @@ const MapContainerContent = ({
         </Box>
       )}
       <ErrorBoundary>
-        <Suspense fallback={<MapSkeleton />}>
-          <MapViewWithCalculations showDefaultMap={showDefaultMap} />
-        </Suspense>
+        <MapViewWithCalculations showDefaultMap={showDefaultMap} />
       </ErrorBoundary>
       {(isLoading || townsLoading) && (
         <LoadingSpinner message="Loading historical data..." />
