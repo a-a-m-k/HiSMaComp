@@ -26,28 +26,54 @@ export function vitePluginFixPaths(): Plugin {
         // Only fix paths if baseUrl is not root
         if (baseUrl !== "/") {
           const basePath = baseUrl.replace(/\/$/, ""); // Remove trailing slash
-          
+          const basePathNoSlash = basePath.replace(/^\//, ""); // Remove leading slash for comparison
+
           // Fix absolute paths that don't start with baseUrl
           // Pattern: href="/path" or src="/path" that should be href="/HiSMaComp/path"
-          const absolutePathRegex = /(href|src)=["']\/(?!HiSMaComp\/)([^"']+)["']/g;
-          
-          htmlContent = htmlContent.replace(absolutePathRegex, (match, attr, path) => {
-            // Skip if it's already correct or is an external URL
-            if (path.startsWith("http") || path.startsWith("//")) {
-              return match;
+          // This regex matches paths starting with / but NOT starting with /HiSMaComp/
+          const absolutePathRegex =
+            /(href|src)=["']\/(?!HiSMaComp\/)([^"']+)["']/g;
+
+          htmlContent = htmlContent.replace(
+            absolutePathRegex,
+            (match, attr, path) => {
+              // Skip if it's already correct or is an external URL
+              if (path.startsWith("http") || path.startsWith("//")) {
+                return match;
+              }
+              // Skip if it's a data URI or special protocol
+              if (path.startsWith("data:") || path.startsWith("blob:")) {
+                return match;
+              }
+              // Skip if path already includes base path (check both with and without leading slash)
+              if (
+                path.startsWith(basePathNoSlash + "/") ||
+                path === basePathNoSlash
+              ) {
+                return match;
+              }
+              // Add base path (remove leading slash from path to avoid double slashes)
+              const cleanPath = path.replace(/^\//, "");
+              return `${attr}="${basePath}/${cleanPath}"`;
             }
-            // Skip if it's a data URI or special protocol
-            if (path.startsWith("data:") || path.startsWith("blob:")) {
-              return match;
+          );
+
+          // Also fix any remaining paths that might have been missed
+          // This catches paths like /src/main.tsx, /assets/..., /manifest.json, etc.
+          htmlContent = htmlContent.replace(
+            /(href|src)=["']\/(src\/[^"']+|assets\/[^"']+|manifest\.json|favicon[^"']*|icons\/[^"']*)["']/gi,
+            (match, attr, path) => {
+              // Skip if already has base path
+              if (path.startsWith(basePathNoSlash + "/")) {
+                return match;
+              }
+              // Skip external URLs (shouldn't match but just in case)
+              if (path.startsWith("http")) {
+                return match;
+              }
+              return `${attr}="${basePath}/${path}"`;
             }
-            // Skip if path already includes base path
-            if (path.startsWith(basePath.replace(/^\//, ""))) {
-              return match;
-            }
-            // Add base path (remove leading slash from path to avoid double slashes)
-            const cleanPath = path.replace(/^\//, "");
-            return `${attr}="${basePath}/${cleanPath}"`;
-          });
+          );
 
           writeFileSync(htmlPath, htmlContent, "utf-8");
           console.log(
@@ -55,10 +81,7 @@ export function vitePluginFixPaths(): Plugin {
           );
         }
       } catch (error) {
-        console.warn(
-          `[vite-plugin-fix-paths] ⚠ Could not fix paths:`,
-          error
-        );
+        console.warn(`[vite-plugin-fix-paths] ⚠ Could not fix paths:`, error);
       }
     },
   };

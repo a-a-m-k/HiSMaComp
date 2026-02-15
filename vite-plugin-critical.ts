@@ -59,7 +59,10 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
     base = process.cwd(),
     src = "index.html",
     dest = "index.html",
-    dimensions = [{ width: 1300, height: 900 }, { width: 375, height: 667 }], // Desktop and mobile
+    dimensions = [
+      { width: 1300, height: 900 },
+      { width: 375, height: 667 },
+    ], // Desktop and mobile
     inline = true,
     minify = true,
     css,
@@ -78,10 +81,10 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
     async closeBundle() {
       try {
         const htmlPath = join(outputDir, dest);
-        
+
         // Wait a bit to ensure files are written
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         // Check if HTML file exists
         if (!existsSync(htmlPath)) {
           console.warn(
@@ -97,6 +100,9 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
         let htmlContent = readFileSync(htmlPath, "utf-8");
         const actualBaseUrl = baseUrl !== "/" ? baseUrl : viteBaseUrl;
 
+        // Save original HTML BEFORE any modifications
+        const originalHtml = htmlContent;
+
         // Temporarily rewrite absolute paths with base to relative paths for critical package
         // Critical package has trouble resolving paths with base URLs
         if (actualBaseUrl !== "/") {
@@ -109,7 +115,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
           // Write temporary HTML for critical to process
           const tempHtmlPath = join(outputDir, "index.temp.html");
           writeFileSync(tempHtmlPath, htmlContent, "utf-8");
-          
+
           // Use temp file for processing
           const criticalOptions: any = {
             base: outputDir,
@@ -121,9 +127,6 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
 
           const result = await criticalGenerate(criticalOptions);
 
-          // Read the original HTML again to restore base paths
-          const originalHtml = readFileSync(htmlPath, "utf-8");
-          
           if (result && result.html) {
             // Restore base paths in the result
             let processedHtml = result.html;
@@ -159,7 +162,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
               `[vite-plugin-critical] ✓ Critical CSS extracted and inlined successfully`
             );
           }
-          
+
           // Clean up temp file
           try {
             const { unlinkSync } = await import("fs");
@@ -167,7 +170,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
           } catch {
             // Ignore cleanup errors
           }
-          
+
           return;
         }
 
@@ -226,13 +229,23 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
               `[vite-plugin-critical] Build will continue without critical CSS optimization.`
             );
           } else {
-            console.error("[vite-plugin-critical] ✗ Error extracting critical CSS:", error);
+            console.error(
+              "[vite-plugin-critical] ✗ Error extracting critical CSS:",
+              error
+            );
             // Don't fail the build if critical CSS extraction fails
-            console.warn("[vite-plugin-critical] Build will continue without critical CSS optimization");
+            console.warn(
+              "[vite-plugin-critical] Build will continue without critical CSS optimization"
+            );
           }
         } else {
-          console.error("[vite-plugin-critical] ✗ Error extracting critical CSS:", error);
-          console.warn("[vite-plugin-critical] Build will continue without critical CSS optimization");
+          console.error(
+            "[vite-plugin-critical] ✗ Error extracting critical CSS:",
+            error
+          );
+          console.warn(
+            "[vite-plugin-critical] Build will continue without critical CSS optimization"
+          );
         }
       }
     },
