@@ -41,9 +41,17 @@
     <!-- Resource Hints: Preconnect to external domains -->
     <link rel="preconnect" href="https://tiles.stadiamaps.com" />
     <link rel="preconnect" href="https://api.stadiamaps.com" />
+    <link rel="preconnect" href="https://unpkg.com" crossorigin />
     
     <!-- Resource Hints: Prefetch likely-next resources -->
     <link rel="prefetch" href="https://tiles.stadiamaps.com" as="document" />
+    
+    <!-- MapLibre GL from CDN (reduces bundle size by ~248KB) -->
+    <!-- Load synchronously before module scripts to ensure global is available -->
+    <link rel="preload" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js" as="script" crossorigin="anonymous" />
+    <link rel="preload" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" as="style" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" />
+    <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js" crossorigin="anonymous"></script>
     
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#1976d2" />
@@ -59,13 +67,20 @@
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' https://tiles.stadiamaps.com data:; img-src 'self' data: blob: https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com; connect-src 'self' https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests;"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; font-src 'self' https://tiles.stadiamaps.com data:; img-src 'self' data: blob: https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com; connect-src 'self' https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com https://unpkg.com; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests;"
     />
 
     <title>HiSMaComp - Historical Map Visualizer</title>
   </head>
   <body>
     <div id="root"></div>
+    <!-- Ensure MapLibre GL is loaded before module code executes -->
+    <script>
+      // Verify maplibre-gl is loaded from CDN before module scripts run
+      if (typeof window.maplibregl === 'undefined') {
+        console.warn('MapLibre GL not loaded from CDN. Module scripts may fail.');
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

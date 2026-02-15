@@ -56,33 +56,19 @@ export function vitePluginResourceHints(): Plugin {
               !s.src.includes("react-map")
           ) || scripts[0];
 
-        // Find MapLibre GL bundle (critical for LCP, largest chunk)
-        const maplibreScript = scripts.find(s =>
-          s.src.toLowerCase().includes("maplibre")
-        );
-
+        // MapLibre GL is now loaded from CDN, so we don't need to preload it
         // Find vendor bundle (Material-UI + React, also large)
         const vendorScript = scripts.find(s =>
           s.src.toLowerCase().includes("vendor")
         );
 
-        // Since MapLibre and vendor chunks are dynamically imported,
+        // Since vendor chunks are dynamically imported,
         // they won't be in the HTML. We need to scan the assets directory
         const assetsDir = join(outputDir, "assets");
-        let maplibreAsset: string | null = null;
         let vendorAsset: string | null = null;
 
         try {
           const assets = readdirSync(assetsDir);
-
-          // Find MapLibre chunk by filename pattern
-          const maplibreFile = assets.find(
-            file =>
-              file.toLowerCase().includes("maplibre") && file.endsWith(".js")
-          );
-          if (maplibreFile) {
-            maplibreAsset = `${baseUrl}assets/${maplibreFile}`;
-          }
 
           // Find vendor chunk by filename pattern
           const vendorFile = assets.find(
@@ -109,16 +95,6 @@ export function vitePluginResourceHints(): Plugin {
           );
         }
 
-        // Preload MapLibre GL bundle (critical for LCP on mobile)
-        // This is the largest chunk (~247KB gzipped) and is needed for map rendering
-        // Check both HTML scripts and assets directory
-        const maplibreSrc = maplibreScript?.src || maplibreAsset;
-        if (maplibreSrc) {
-          preloadLinks.push(
-            `    <link rel="modulepreload" href="${maplibreSrc}" />`
-          );
-        }
-
         // Preload vendor bundle if it exists (Material-UI + React)
         // This helps with faster initial render
         // Check both HTML scripts and assets directory
@@ -141,7 +117,6 @@ export function vitePluginResourceHints(): Plugin {
 
           const preloadedChunks = [];
           if (mainScript) preloadedChunks.push("main bundle");
-          if (maplibreSrc) preloadedChunks.push("MapLibre GL");
           if (vendorSrc) preloadedChunks.push("vendor bundle");
 
           console.log(

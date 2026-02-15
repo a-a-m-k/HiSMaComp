@@ -7,6 +7,7 @@ import { join } from "path";
 import { vitePluginCritical } from "./vite-plugin-critical";
 import { vitePluginResourceHints } from "./vite-plugin-resource-hints";
 import { vitePluginFixPaths } from "./vite-plugin-fix-paths";
+import { vitePluginMaplibreCDN } from "./vite-plugin-maplibre-cdn";
 
 const manifestPlugin = () => ({
   name: "manifest-transform",
@@ -27,6 +28,7 @@ export default defineConfig(({ command }) => ({
     tsconfigPaths(),
     ...(command === "build"
       ? [
+          vitePluginMaplibreCDN(), // Must run early to handle maplibre-gl externalization
           visualizer({
             filename: "dist/bundle-analysis.html",
             open: false,
@@ -65,6 +67,10 @@ export default defineConfig(({ command }) => ({
       "@emotion/react",
       "@emotion/styled",
     ],
+    // Exclude maplibre-gl from optimization in production (using CDN)
+    ...(command === "build" && {
+      exclude: ["maplibre-gl"],
+    }),
   },
   // Path aliases are handled by vite-tsconfig-paths plugin
   // which automatically reads from tsconfig.json paths
@@ -73,9 +79,22 @@ export default defineConfig(({ command }) => ({
     // CSS will be split by component/route, reducing initial bundle size
     cssCodeSplit: true,
     rollupOptions: {
+      // Externalize MapLibre GL in production - it's loaded from CDN
+      // In development, we use the local package for faster HMR
+      external: command === "build" ? ["maplibre-gl"] : [],
       output: {
+        // Provide global variable name for MapLibre GL (loaded from CDN)
+        ...(command === "build" && {
+          globals: {
+            "maplibre-gl": "maplibregl",
+          },
+        }),
         manualChunks: id => {
           if (id.includes("node_modules")) {
+            // MapLibre GL is external in build (CDN), so skip it
+            if (command === "build" && id.includes("maplibre-gl")) {
+              return null; // Don't bundle it
+            }
             if (id.includes("maplibre-gl")) {
               return "maplibre";
             }

@@ -1,7 +1,28 @@
 import React, { useMemo, useRef, Suspense, useState } from "react";
 import Map, { NavigationControl, MapRef } from "react-map-gl/maplibre";
-import MaplibreGL from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+// MapLibre GL: In production, loaded from CDN (externalized by Vite)
+// In development, imported normally from node_modules
+// When externalized, Vite replaces maplibre-gl imports with window.maplibregl
+import type * as MaplibreGLType from "maplibre-gl";
+
+declare global {
+  interface Window {
+    maplibregl?: typeof MaplibreGLType;
+  }
+}
+
+// Import maplibre-gl - Vite will handle externalization in production
+// In production: Vite replaces this with window.maplibregl (from CDN)
+// In development: Normal import from node_modules
+import MaplibreGLDefault from "maplibre-gl";
+
+// Use CDN global if available (production), otherwise use imported module (development)
+// When externalized, Vite replaces the import above with the global, so this fallback
+// is only used in development
+const MaplibreGL =
+  typeof window !== "undefined" && window.maplibregl
+    ? window.maplibregl
+    : MaplibreGLDefault;
 import { useTheme } from "@mui/material/styles";
 
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
