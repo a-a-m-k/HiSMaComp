@@ -6,11 +6,7 @@ import { useTheme } from "@mui/material/styles";
 
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
 import MapLayer from "./MapLayer/MapLayer";
-import {
-  getTerrainStyle,
-  getMapDescription,
-  applyTileOptimization,
-} from "@/utils/map";
+import { getTerrainStyle, getMapDescription } from "@/utils/map";
 import { MAP_LAYER_ID } from "@/constants";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
 import { getMapStyles } from "@/constants/ui";
@@ -78,12 +74,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
     if (!mapRef.current) return;
     const map = mapRef.current.getMap();
     if (!map) return;
-
     setMapReady(true);
-    // applyTileOptimization disabled temporarily for deployed comparison
-    // const deviceType = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
-    // applyTileOptimization(map, deviceType);
-  }, [isMobile, isTablet]);
+  }, []);
 
   const mapDescription = useMemo(
     () => getMapDescription({ isMobile, isDesktop }),
