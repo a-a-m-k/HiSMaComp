@@ -38,18 +38,6 @@ export default defineConfig(({ command }) => ({
           }),
           manifestPlugin(),
           vitePluginResourceHints(),
-          vitePluginCritical({
-            base: process.cwd(),
-            src: "index.html",
-            dest: "index.html",
-            dimensions: [
-              { width: 1300, height: 900 }, // Desktop
-              { width: 375, height: 667 }, // Mobile
-            ],
-            inline: true,
-            minify: true,
-            baseUrl: command === "build" ? "/HiSMaComp/" : "/",
-          }),
           vitePluginFixPaths(), // Run last to fix all paths after other plugins modify HTML
         ]
       : []),
