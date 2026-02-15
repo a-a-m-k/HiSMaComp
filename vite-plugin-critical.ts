@@ -130,6 +130,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
           if (result && result.html) {
             // Restore base paths in the result
             let processedHtml = result.html;
+            const basePathNoSlash = basePath.replace(/^\//, ""); // Remove leading slash for comparison
             // Restore base paths: href="/assets/..." -> href="/HiSMaComp/assets/..."
             processedHtml = processedHtml.replace(
               /(href|src)=["']\/([^"']+)["']/g,
@@ -139,7 +140,10 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
                   return match;
                 }
                 // Skip if already has base path
-                if (path.startsWith(basePath + "/")) {
+                if (
+                  path.startsWith(basePathNoSlash + "/") ||
+                  path === basePathNoSlash
+                ) {
                   return match;
                 }
                 return `${attr}="${actualBaseUrl}${path}"`;
