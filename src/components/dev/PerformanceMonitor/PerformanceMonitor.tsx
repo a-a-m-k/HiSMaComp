@@ -34,7 +34,7 @@ const PerformanceMonitor = () => {
   const [isLargeScreen, setIsLargeScreen] = useState(false);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== "development") {
+    if (!import.meta.env.DEV) {
       return;
     }
 
@@ -113,7 +113,7 @@ const PerformanceMonitor = () => {
     };
   }, []);
 
-  if (!isVisible || process.env.NODE_ENV !== "development") {
+  if (!isVisible || !import.meta.env.DEV) {
     return null;
   }
 
@@ -127,7 +127,7 @@ const PerformanceMonitor = () => {
   };
 
   const handleDebugLog = () => {
-    if (process.env.NODE_ENV !== "development") {
+    if (!import.meta.env.DEV) {
       return;
     }
 

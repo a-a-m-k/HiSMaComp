@@ -30,12 +30,9 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Always log to console for debugging, even in production
-    console.error("Error Boundary caught an error:", error);
-    console.error("Error Info:", errorInfo);
     logger.error("Error Boundary caught an error:", error, errorInfo);
 
-    if (process.env.NODE_ENV === "development") {
+    if (import.meta.env.DEV) {
       logger.debug("Error Details:", {
         error: error.toString(),
         errorInfo,
@@ -100,7 +97,7 @@ class ErrorBoundary extends Component<Props, State> {
               </Typography>
             )}
 
-            {process.env.NODE_ENV === "development" && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <Box
                 sx={{
                   mt: SPACING.LG,
@@ -151,7 +148,7 @@ class ErrorBoundary extends Component<Props, State> {
             </Button>
           </Box>
 
-          {process.env.NODE_ENV === "development" && (
+          {import.meta.env.DEV && (
             <Typography
               variant="caption"
               sx={{ mt: SPACING.LG, color: "text.secondary" }}

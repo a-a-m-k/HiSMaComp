@@ -5,7 +5,7 @@ import React from "react";
  * Only active in development mode or when ?testError=true query parameter is present.
  */
 export const ErrorTestHelper: React.FC = () => {
-  if (process.env.NODE_ENV === "production") {
+  if (!import.meta.env.DEV) {
     return null;
   }
 

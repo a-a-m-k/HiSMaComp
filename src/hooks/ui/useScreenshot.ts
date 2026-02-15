@@ -85,7 +85,7 @@ export const useScreenshot = ({
         foreignObjectRendering: false,
         imageTimeout: 5000,
         onclone: clonedDoc => {
-          if (process.env.NODE_ENV === "development") {
+          if (import.meta.env.DEV) {
             clonedDoc.querySelector("[data-performance-monitor]")?.remove();
           }
           const legendElements = clonedDoc.querySelectorAll(
@@ -113,7 +113,6 @@ export const useScreenshot = ({
         restoreMapControls(controls, prevDisplay);
       }, 100);
     } catch (error) {
-      logger.error("Screenshot failed:", error);
       logger.error("Screenshot capture failed:", error);
     } finally {
       setIsCapturing(false);

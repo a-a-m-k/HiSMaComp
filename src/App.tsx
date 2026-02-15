@@ -21,13 +21,13 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <ErrorBoundary>
-        {process.env.NODE_ENV === "development" && (
+        {import.meta.env.DEV && (
           <Suspense fallback={null}>
             <ErrorTestHelper />
           </Suspense>
         )}
         <MapPage />
-        {process.env.NODE_ENV === "development" && (
+        {import.meta.env.DEV && (
           <Suspense fallback={null}>
             <PerformanceMonitor />
           </Suspense>

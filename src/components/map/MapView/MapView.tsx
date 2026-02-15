@@ -6,7 +6,11 @@ import { useTheme } from "@mui/material/styles";
 
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
 import MapLayer from "./MapLayer/MapLayer";
-import { getTerrainStyle, getMapDescription } from "@/utils/map";
+import {
+  getTerrainStyle,
+  getMapDescription,
+  handleMapFeatureClick,
+} from "@/utils/map";
 import { MAP_LAYER_ID } from "@/constants";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
 import { getMapStyles } from "@/constants/ui";
@@ -21,7 +25,6 @@ import {
 } from "@/hooks/map";
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
 import { TownMarkers } from "./TownMarkers";
-import { handleMapFeatureClick } from "@/utils/map";
 
 /**
  * Loaded lazily because it is not rendered on mobile and is non-critical for
