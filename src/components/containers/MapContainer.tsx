@@ -66,21 +66,23 @@ const useTownsData = () => {
   return { towns, isLoading, error };
 };
 
+// Default map center (Europe) and zoom for initial render
+// This allows map to show immediately while towns data loads
+const DEFAULT_MAP_CENTER = { latitude: 50.0, longitude: 10.0 }; // Central Europe
+const DEFAULT_MAP_ZOOM = 4;
+
 const MapContainer = () => {
   const legendLayers = useLegendLayers();
   const { towns, isLoading: townsLoading, error: townsError } = useTownsData();
 
-  // Show loading state while towns data is being fetched
-  if (townsLoading) {
-    return (
-      <Box
-        id="map-container"
-        sx={{ width: "100%", height: "100%", position: "relative" }}
-      >
-        <LoadingSpinner message="Loading historical data..." />
-      </Box>
-    );
-  }
+  // Preload MapView component immediately (don't wait for towns data)
+  // This starts downloading MapLibre GL bundle in parallel with towns data
+  useEffect(() => {
+    // Preload MapView chunk immediately for parallel loading
+    import("@/components/map/MapView/MapView").catch(err => {
+      logger.warn("Failed to preload MapView:", err);
+    });
+  }, []);
 
   // Show error state if towns data failed to load
   if (townsError) {
@@ -123,10 +125,16 @@ const MapContainer = () => {
     );
   }
 
-  // Once towns are loaded, render the app
+  // Render app immediately with default map view
+  // Map will update when towns data is ready
+  // This allows MapLibre to load in parallel with towns data
   return (
     <AppProvider towns={towns}>
-      <MapContainerContent legendLayers={legendLayers} marks={marks} />
+      <MapContainerContent
+        legendLayers={legendLayers}
+        marks={marks}
+        showDefaultMap={townsLoading || towns.length === 0}
+      />
     </AppProvider>
   );
 };
@@ -134,9 +142,11 @@ const MapContainer = () => {
 const MapContainerContent = ({
   legendLayers,
   marks,
+  showDefaultMap,
 }: {
   legendLayers: LayerItem[];
   marks: TimelineMark[];
+  showDefaultMap?: boolean;
 }) => {
   const { isLoading, error, retry } = useApp();
 
@@ -188,7 +198,7 @@ const MapContainerContent = ({
       )}
       <ErrorBoundary>
         <Suspense fallback={<MapSkeleton />}>
-          <MapViewWithCalculations />
+          <MapViewWithCalculations showDefaultMap={showDefaultMap} />
         </Suspense>
       </ErrorBoundary>
       {isLoading && <LoadingSpinner message="Processing historical data..." />}
@@ -196,15 +206,22 @@ const MapContainerContent = ({
   );
 };
 
-const MapViewWithCalculations = () => {
+const MapViewWithCalculations = ({
+  showDefaultMap,
+}: {
+  showDefaultMap?: boolean;
+}) => {
   const { center, fitZoom, isLoading } = useApp();
 
-  if (isLoading) {
-    return <MapSkeleton />;
-  }
-
-  if (!center) {
-    return null;
+  // Show default map while data is loading or processing
+  // This allows map to render immediately while towns data loads in parallel
+  if (showDefaultMap || isLoading || !center) {
+    return (
+      <MapView
+        initialPosition={DEFAULT_MAP_CENTER}
+        initialZoom={DEFAULT_MAP_ZOOM}
+      />
+    );
   }
 
   const isValidCenter =
@@ -218,7 +235,13 @@ const MapViewWithCalculations = () => {
 
   if (!isValidCenter || !isValidZoom) {
     logger.error("Invalid map parameters:", { center, fitZoom });
-    return null;
+    // Fallback to default map if invalid
+    return (
+      <MapView
+        initialPosition={DEFAULT_MAP_CENTER}
+        initialZoom={DEFAULT_MAP_ZOOM}
+      />
+    );
   }
 
   return (
