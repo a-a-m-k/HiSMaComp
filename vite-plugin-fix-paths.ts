@@ -31,39 +31,39 @@ export function vitePluginFixPaths(): Plugin {
       if (baseUrl !== "/") {
         const basePath = baseUrl.replace(/\/$/, ""); // Remove trailing slash
         
-        // Step 1: REMOVE <base> tag entirely - we use absolute paths instead
-        // The base tag can cause issues when combined with absolute paths
-        // Since we're fixing all paths to be absolute with base prefix, we don't need base tag
-        // Match base tag with any whitespace/newlines around it
-        const baseTagRegex = /<base\s+[^>]*>/gi;
+        // Step 1: Ensure <base> tag exists with correct href
+        // Vite should add it, but we ensure it's correct
+        const baseTagRegex = /<base\s+[^>]*>/i;
         if (baseTagRegex.test(htmlContent)) {
-          htmlContent = htmlContent.replace(baseTagRegex, '');
-          // Also remove any trailing newline/whitespace after base tag
-          htmlContent = htmlContent.replace(/\n\s*<base\s+[^>]*>/gi, '');
-          htmlContent = htmlContent.replace(/<base\s+[^>]*>\s*\n/gi, '');
-          console.log(`[vite-plugin-fix-paths] [${hookName}] ✓ Removed <base> tag (using absolute paths instead)`);
+          // Replace existing base tag
+          htmlContent = htmlContent.replace(baseTagRegex, `<base href="${baseUrl}">`);
+          console.log(`[vite-plugin-fix-paths] [${hookName}] ✓ Ensured <base> tag is correct`);
+        } else {
+          // Add base tag if missing
+          htmlContent = htmlContent.replace(/<head>/i, `<head>\n    <base href="${baseUrl}">`);
+          console.log(`[vite-plugin-fix-paths] [${hookName}] ✓ Added <base> tag`);
         }
 
-        // Step 2: Fix specific known paths first (more reliable)
+        // Step 2: Convert absolute paths to relative paths (works with base tag)
+        // /HiSMaComp/favicon.ico -> favicon.ico (relative to base)
         const pathsToFix = [
-          '/favicon.ico',
-          '/favicon-16x16.png',
-          '/favicon-32x32.png',
-          '/apple-touch-icon.png',
-          '/manifest.json',
+          { absolute: '/favicon.ico', relative: 'favicon.ico' },
+          { absolute: '/favicon-16x16.png', relative: 'favicon-16x16.png' },
+          { absolute: '/favicon-32x32.png', relative: 'favicon-32x32.png' },
+          { absolute: '/apple-touch-icon.png', relative: 'apple-touch-icon.png' },
+          { absolute: '/manifest.json', relative: 'manifest.json' },
         ];
 
-        pathsToFix.forEach(path => {
-          // Match both href and src attributes
-          const regex = new RegExp(`(href|src)=["']${path.replace(/\//g, '\\/')}["']`, 'gi');
-          if (regex.test(htmlContent)) {
-            const newPath = `${basePath}${path}`;
-            htmlContent = htmlContent.replace(regex, `$1="${newPath}"`);
-            console.log(`[vite-plugin-fix-paths] [${hookName}] Fixed: ${path} -> ${newPath}`);
+        pathsToFix.forEach(({ absolute, relative }) => {
+          // Match both href and src attributes with absolute path
+          const absoluteRegex = new RegExp(`(href|src)=["']${absolute.replace(/\//g, '\\/')}["']`, 'gi');
+          if (absoluteRegex.test(htmlContent)) {
+            htmlContent = htmlContent.replace(absoluteRegex, `$1="${relative}"`);
+            console.log(`[vite-plugin-fix-paths] [${hookName}] Fixed: ${absolute} -> ${relative} (relative)`);
           }
         });
 
-        // Step 3: Fix any remaining absolute paths (catch-all)
+        // Step 3: Convert other absolute paths to relative (for assets)
         htmlContent = htmlContent.replace(
           /(href|src)=["'](\/[^"']+)["']/g,
           (match, attr, path) => {
@@ -75,14 +75,18 @@ export function vitePluginFixPaths(): Plugin {
             if (path.startsWith("data:") || path.startsWith("blob:")) {
               return match;
             }
-            // Skip if already has base path
-            if (path.startsWith(basePath + "/") || path === basePath) {
-              return match;
+            // If path starts with base path, make it relative
+            if (path.startsWith(basePath + "/")) {
+              const relativePath = path.substring(basePath.length + 1); // Remove /HiSMaComp/
+              console.log(`[vite-plugin-fix-paths] [${hookName}] Fixed: ${path} -> ${relativePath} (relative)`);
+              return `${attr}="${relativePath}"`;
             }
-            // Fix the path
-            const newPath = `${basePath}${path}`;
-            console.log(`[vite-plugin-fix-paths] [${hookName}] Fixed: ${path} -> ${newPath}`);
-            return `${attr}="${newPath}"`;
+            // If path is just the base path, use "./"
+            if (path === basePath) {
+              return `${attr}="./"`;
+            }
+            // Otherwise, keep as is (might be root path like /src/main.tsx which Vite handles)
+            return match;
           }
         );
       }
@@ -105,12 +109,14 @@ export function vitePluginFixPaths(): Plugin {
       baseUrl = config.base || "/";
     },
     transformIndexHtml(html: string) {
-      // Remove base tag that Vite injects - we use absolute paths instead
+      // Ensure base tag is correct (Vite should add it, but we verify)
       if (baseUrl !== "/") {
-        // Remove base tag with any whitespace
-        html = html.replace(/<base\s+[^>]*>/gi, '');
-        html = html.replace(/\n\s*<base\s+[^>]*>/gi, '');
-        html = html.replace(/<base\s+[^>]*>\s*\n/gi, '');
+        const baseTagRegex = /<base\s+[^>]*>/i;
+        if (baseTagRegex.test(html)) {
+          html = html.replace(baseTagRegex, `<base href="${baseUrl}">`);
+        } else {
+          html = html.replace(/<head>/i, `<head>\n    <base href="${baseUrl}">`);
+        }
       }
       return html;
     },
