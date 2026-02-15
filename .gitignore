@@ -36,3 +36,8 @@ lighthouse-scores.json
 # macOS system files
 .DS_Store
 **/.DS_Store
+
+# Documentation/explanation files (to prevent accidental commits)
+*_OPTIMIZATION_PLAN.md
+*_EXPLANATION.md
+*_README.md

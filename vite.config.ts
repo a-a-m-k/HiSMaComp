@@ -4,6 +4,8 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { visualizer } from "rollup-plugin-visualizer";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
+import { vitePluginCritical } from "./vite-plugin-critical";
+import { vitePluginResourceHints } from "./vite-plugin-resource-hints";
 
 const manifestPlugin = () => ({
   name: "manifest-transform",
@@ -32,6 +34,19 @@ export default defineConfig(({ command }) => ({
             template: "treemap",
           }),
           manifestPlugin(),
+          vitePluginResourceHints(),
+          vitePluginCritical({
+            base: process.cwd(),
+            src: "index.html",
+            dest: "index.html",
+            dimensions: [
+              { width: 1300, height: 900 }, // Desktop
+              { width: 375, height: 667 }, // Mobile
+            ],
+            inline: true,
+            minify: true,
+            baseUrl: command === "build" ? "/HiSMaComp/" : "/",
+          }),
         ]
       : []),
   ],
