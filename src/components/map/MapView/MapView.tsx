@@ -23,15 +23,26 @@ import { isValidNumber } from "@/utils/zoom/zoomHelpers";
 import { TownMarkers } from "./TownMarkers";
 import { handleMapFeatureClick } from "@/utils/map";
 
+/**
+ * Loaded lazily because it is not rendered on mobile and is non-critical for
+ * first paint.
+ */
 const ScreenshotButton = React.lazy(
   () => import("@/components/controls/ScreenshotButton/ScreenshotButton")
 );
 
+/**
+ * Initial map camera values passed from container-level calculations.
+ */
 interface MapViewComponentProps {
   initialPosition: { longitude: number; latitude: number };
   initialZoom: number;
 }
 
+/**
+ * Main interactive map surface: renders base map, layers, markers, and map
+ * controls with accessibility and keyboard support.
+ */
 const MapView: React.FC<MapViewComponentProps> = ({
   initialPosition: { longitude, latitude },
   initialZoom,
@@ -70,6 +81,10 @@ const MapView: React.FC<MapViewComponentProps> = ({
   useMapKeyboardPanning(mapRef, containerRef, isDesktop);
   useNavigationControlAccessibility(isMobile, containerRef);
 
+  /**
+   * Marks map-dependent content as ready once the underlying MapLibre instance
+   * exists.
+   */
   const handleMapLoad = React.useCallback(() => {
     if (!mapRef.current) return;
     const map = mapRef.current.getMap();
