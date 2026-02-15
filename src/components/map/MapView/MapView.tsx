@@ -76,6 +76,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
 
   /**
    * Optimizes tile loading to prioritize visible tiles over off-screen tiles.
+   * Uses device-aware settings: more aggressive optimizations for mobile devices
+   * with limited memory and slower connections.
    *
    * MapLibre GL already prioritizes visible tiles by default, but we can further
    * optimize by reducing cache sizes and parallel requests to ensure visible tiles
@@ -93,6 +95,13 @@ const MapView: React.FC<MapViewComponentProps> = ({
       const map = mapRef.current.getMap();
       if (!map) return;
 
+      // Device-aware optimization settings
+      // Mobile: More aggressive (smaller cache, fewer parallel requests)
+      // Desktop: Moderate optimization (balance between performance and smoothness)
+      const tileCacheSize = isMobile ? 20 : isTablet ? 25 : 30;
+      const parallelRequests = isMobile ? 4 : isTablet ? 5 : 6;
+      const requestsPerTile = isMobile ? 1 : 2;
+
       // Type assertion to access internal MapLibre GL properties for optimization
       // These are internal implementation details, but stable enough for optimization
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -100,26 +109,34 @@ const MapView: React.FC<MapViewComponentProps> = ({
 
       // Reduce tile cache size to limit off-screen tiles
       // Smaller cache = visible tiles prioritized, off-screen tiles load later
-      // Default: 50, Optimized: 30
+      // Default: 50
+      // Mobile: 20 (more aggressive for limited memory)
+      // Tablet: 25 (moderate)
+      // Desktop: 30 (balanced)
       if (
         "_maxTileCacheSize" in mapInstance &&
         typeof mapInstance._maxTileCacheSize === "number"
       ) {
-        mapInstance._maxTileCacheSize = 30;
+        mapInstance._maxTileCacheSize = tileCacheSize;
       }
 
       // Reduce parallel image requests to prioritize visible tiles
       // Lower value = visible tiles load first, others queue
-      // Default: 16, Optimized: 6
+      // Default: 16
+      // Mobile: 4 (more aggressive for slower connections)
+      // Tablet: 5 (moderate)
+      // Desktop: 6 (balanced)
       if (
         "_maxParallelImageRequests" in mapInstance &&
         typeof mapInstance._maxParallelImageRequests === "number"
       ) {
-        mapInstance._maxParallelImageRequests = 6;
+        mapInstance._maxParallelImageRequests = parallelRequests;
       }
 
       // Configure request manager to limit concurrent requests per tile
       // This ensures visible tiles get priority in the request queue
+      // Mobile: 1 (most aggressive)
+      // Desktop/Tablet: 2 (balanced)
       if (
         mapInstance._requestManager &&
         typeof mapInstance._requestManager === "object"
@@ -130,7 +147,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
           "maxRequestsPerTile" in requestManager &&
           typeof requestManager.maxRequestsPerTile === "number"
         ) {
-          requestManager.maxRequestsPerTile = 2;
+          requestManager.maxRequestsPerTile = requestsPerTile;
         }
       }
     } catch (error) {
@@ -138,7 +155,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
       // MapLibre GL will still work with default settings
       logger.warn("Failed to optimize tile loading configuration:", error);
     }
-  }, []);
+  }, [isMobile, isTablet, isDesktop]);
 
   return (
     <>
