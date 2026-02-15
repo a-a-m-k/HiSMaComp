@@ -37,13 +37,22 @@ export function vitePluginFixPaths(): Plugin {
         if (baseUrl !== "/") {
           const basePath = baseUrl.replace(/\/$/, ""); // Remove trailing slash
           
-          // Step 1: Ensure <base> tag exists
-          if (!htmlContent.includes('<base')) {
+          // Step 1: Fix or add <base> tag (critical CSS plugin might have set it to "/")
+          const baseTagRegex = /<base\s+[^>]*href=["']([^"']+)["'][^>]*>/i;
+          if (baseTagRegex.test(htmlContent)) {
+            // Replace existing base tag with correct one
+            htmlContent = htmlContent.replace(
+              baseTagRegex,
+              `<base href="${baseUrl}">`
+            );
+            console.log(`[vite-plugin-fix-paths] ✓ Fixed <base> tag to href="${baseUrl}"`);
+          } else {
+            // Add base tag if it doesn't exist
             htmlContent = htmlContent.replace(
               /<head>/i,
               `<head>\n    <base href="${baseUrl}">`
             );
-            console.log(`[vite-plugin-fix-paths] ✓ Added <base> tag`);
+            console.log(`[vite-plugin-fix-paths] ✓ Added <base> tag with href="${baseUrl}"`);
           }
 
           // Step 2: Fix specific known paths first (more reliable)
