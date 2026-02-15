@@ -36,7 +36,6 @@ export default defineConfig(({ command }) => ({
             template: "treemap",
           }),
           manifestPlugin(),
-          vitePluginCritical(), // Extract and inline critical CSS
           vitePluginResourceHints(), // Adds preload hints
           vitePluginFixPaths(), // Fix paths for GitHub Pages
         ]
