@@ -112,5 +112,7 @@ describe("useScreenshot", () => {
       "Screenshot capture failed:",
       expect.any(Error)
     );
+    expect(mockRestoreMapControls).toHaveBeenCalledTimes(1);
+    expect(overlayRemove).toHaveBeenCalledTimes(1);
   });
 });

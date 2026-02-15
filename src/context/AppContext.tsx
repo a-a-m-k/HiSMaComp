@@ -96,7 +96,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({
   const [center, setCenter] = useState<
     { latitude: number; longitude: number } | undefined
   >();
-  const processedYearsRef = useRef<Set<number>>(new Set());
   const isInitializedRef = useRef<boolean>(false);
   const previousTownsRef = useRef<Town[]>([]);
 
@@ -118,7 +117,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({
             const yearData = yearDataService.getYearData(towns, year);
             setFilteredTowns(yearData.filteredTowns);
             setBounds(yearData.bounds);
-            processedYearsRef.current.add(year);
             setError(null);
             resolve();
           } catch (error) {
@@ -190,7 +188,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({
 
     if (townsChanged) {
       isInitializedRef.current = false;
-      processedYearsRef.current.clear();
     }
 
     setIsLoading(true);

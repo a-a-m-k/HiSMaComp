@@ -28,6 +28,8 @@ interface YearData {
  */
 class YearDataService {
   private yearDataCache = new LRUCache<string, YearData>(50);
+  private townsArrayIds = new WeakMap<Town[], number>();
+  private nextTownsArrayId = 1;
 
   /**
    * Gets processed year data (filtered towns, bounds, center, GeoJSON) for a specific year.
@@ -96,9 +98,9 @@ class YearDataService {
   }
 
   /**
-   * Creates a deterministic cache key based on towns array content and year.
-   * Uses a hash function to prevent collisions when different town arrays
-   * might have similar sampled names.
+   * Creates a cache key based on the towns array identity and year.
+   * This avoids expensive sorting/hashing work on every request while still
+   * producing stable keys for each towns dataset instance.
    *
    * @param towns - Array of town objects
    * @param year - Year to filter by
@@ -109,38 +111,12 @@ class YearDataService {
       return `empty-${year}`;
     }
 
-    const sortedTowns = [...towns].sort((a, b) => {
-      if (a.name !== b.name) {
-        return a.name.localeCompare(b.name);
-      }
-      if (a.latitude !== b.latitude) {
-        return a.latitude - b.latitude;
-      }
-      return a.longitude - b.longitude;
-    });
-
-    const townIdentifiers = sortedTowns
-      .map(t => `${t.name}:${t.latitude.toFixed(4)}:${t.longitude.toFixed(4)}`)
-      .join("|");
-
-    const hash = this.simpleHash(townIdentifiers);
-    return `${hash}-${towns.length}-${year}`;
-  }
-
-  /**
-   * Simple hash function to convert string to hash string.
-   * Based on djb2 algorithm for deterministic hashing.
-   *
-   * @param str - String to hash
-   * @returns Hash string value
-   */
-  private simpleHash(str: string): string {
-    let hash = 5381;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) + hash + str.charCodeAt(i);
-      hash = hash | 0; // Convert to 32-bit integer
+    let townsId = this.townsArrayIds.get(towns);
+    if (!townsId) {
+      townsId = this.nextTownsArrayId++;
+      this.townsArrayIds.set(towns, townsId);
     }
-    return Math.abs(hash).toString(36); // Convert to base36 string for shorter key
+    return `${townsId}-${towns.length}-${year}`;
   }
 }
 

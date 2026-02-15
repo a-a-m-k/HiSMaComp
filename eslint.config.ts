@@ -17,6 +17,7 @@ export default [
       "node_modules/**",
       "dist/**",
       "build/**",
+      ".vite/**",
       "**/*.json",
       "**/*.md",
       "**/*.html",
@@ -40,8 +41,7 @@ export default [
       "**/eslint.config.ts",
       "**/playwright.config.ts",
       "**/*service-worker.js",
-      "tests/**",
-      "scripts/**",
+      "tests/results/**",
       ".github/**",
       "public/**",
     ],
@@ -65,8 +65,10 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       ...tseslint.configs.recommended.rules,
+      "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
+      "react/display-name": "off",
     },
   },
   {
@@ -143,7 +145,12 @@ export default [
     },
   },
   {
-    files: ["src/**/*.test.{ts,tsx}", "src/**/__tests__/**/*", "src/test/**/*"],
+    files: [
+      "src/**/*.test.{ts,tsx}",
+      "src/**/__tests__/**/*",
+      "src/test/**/*",
+      "tests/**/*.{ts,tsx}",
+    ],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
@@ -174,6 +181,35 @@ export default [
       ...tseslint.configs.recommended.rules,
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+  {
+    files: ["scripts/**/*.{ts,tsx}", "vite-plugin-*.ts"],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.node,
+      },
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
+    },
+    plugins: {
+      "@typescript-eslint": tseslint,
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      ...tseslint.configs.recommended.rules,
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
+  {
+    files: ["src/**/*.d.ts", "src/types/**/*.d.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
 ];
