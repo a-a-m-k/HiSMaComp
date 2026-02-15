@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, Suspense } from "react";
+import React, { useMemo, useRef, Suspense, useState } from "react";
 import Map, { NavigationControl, MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -47,6 +47,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const { filteredTowns } = useApp();
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   const safeProps = useMemo(
     () => ({
@@ -94,6 +95,9 @@ const MapView: React.FC<MapViewComponentProps> = ({
     try {
       const map = mapRef.current.getMap();
       if (!map) return;
+
+      // Mark map as ready for LCP - this allows non-critical features to load
+      setMapReady(true);
 
       // Determine device type once to avoid redundant checks
       const deviceType = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
@@ -203,7 +207,13 @@ const MapView: React.FC<MapViewComponentProps> = ({
           touchZoomRotate={true}
           dragPan={true}
         >
-          <MapLayer layerId={MAP_LAYER_ID} data={townsGeojson} />
+          {/* Defer non-critical features until map is ready for better LCP */}
+          {mapReady && (
+            <>
+              <MapLayer layerId={MAP_LAYER_ID} data={townsGeojson} />
+              <TownMarkers towns={filteredTowns} />
+            </>
+          )}
           {!isMobile && (
             <ScreenshotButtonContainer>
               <Suspense fallback={null}>
@@ -212,7 +222,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
             </ScreenshotButtonContainer>
           )}
           {isDesktop && <NavigationControl position="bottom-right" />}
-          <TownMarkers towns={filteredTowns} />
         </Map>
       </div>
     </>
