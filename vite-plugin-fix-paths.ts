@@ -34,11 +34,13 @@ export function vitePluginFixPaths(): Plugin {
         // Step 1: REMOVE <base> tag entirely - we use absolute paths instead
         // The base tag can cause issues when combined with absolute paths
         // Since we're fixing all paths to be absolute with base prefix, we don't need base tag
-        if (htmlContent.includes('<base')) {
-          htmlContent = htmlContent.replace(
-            /<base\s+[^>]*>/i,
-            ''
-          );
+        // Match base tag with any whitespace/newlines around it
+        const baseTagRegex = /<base\s+[^>]*>/gi;
+        if (baseTagRegex.test(htmlContent)) {
+          htmlContent = htmlContent.replace(baseTagRegex, '');
+          // Also remove any trailing newline/whitespace after base tag
+          htmlContent = htmlContent.replace(/\n\s*<base\s+[^>]*>/gi, '');
+          htmlContent = htmlContent.replace(/<base\s+[^>]*>\s*\n/gi, '');
           console.log(`[vite-plugin-fix-paths] [${hookName}] ✓ Removed <base> tag (using absolute paths instead)`);
         }
 
@@ -101,6 +103,16 @@ export function vitePluginFixPaths(): Plugin {
     configResolved(config) {
       outputDir = join(process.cwd(), config.build.outDir || "dist");
       baseUrl = config.base || "/";
+    },
+    transformIndexHtml(html: string) {
+      // Remove base tag that Vite injects - we use absolute paths instead
+      if (baseUrl !== "/") {
+        // Remove base tag with any whitespace
+        html = html.replace(/<base\s+[^>]*>/gi, '');
+        html = html.replace(/\n\s*<base\s+[^>]*>/gi, '');
+        html = html.replace(/<base\s+[^>]*>\s*\n/gi, '');
+      }
+      return html;
     },
     closeBundle() {
       // Run in closeBundle (after critical CSS plugin)
