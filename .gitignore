@@ -37,7 +37,3 @@ lighthouse-scores.json
 .DS_Store
 **/.DS_Store
 
-# Documentation/explanation files (to prevent accidental commits)
-*_OPTIMIZATION_PLAN.md
-*_EXPLANATION.md
-*_README.md
