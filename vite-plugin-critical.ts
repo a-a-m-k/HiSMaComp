@@ -132,11 +132,11 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
             let processedHtml = result.html;
             const basePathNoSlash = basePath.replace(/^\//, ""); // Remove leading slash for comparison
             
-            // CRITICAL: Fix base tag that critical package adds (sets it to "/")
-            // Replace any base tag with the correct one
+            // CRITICAL: Remove base tag that critical package adds
+            // We use absolute paths instead, so base tag is not needed
             processedHtml = processedHtml.replace(
               /<base\s+[^>]*>/i,
-              `<base href="${actualBaseUrl}">`
+              ''
             );
             
             // Restore base paths: href="/assets/..." -> href="/HiSMaComp/assets/..."
@@ -200,14 +200,12 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
 
         if (result && result.html) {
           let processedHtml = result.html;
-          // CRITICAL: Fix base tag that critical package adds (sets it to "/")
-          // Even for root base, ensure it's correct
-          if (viteBaseUrl !== "/") {
-            processedHtml = processedHtml.replace(
-              /<base\s+[^>]*>/i,
-              `<base href="${viteBaseUrl}">`
-            );
-          }
+          // CRITICAL: Remove base tag that critical package adds
+          // We use absolute paths instead, so base tag is not needed
+          processedHtml = processedHtml.replace(
+            /<base\s+[^>]*>/i,
+            ''
+          );
           writeFileSync(htmlPath, processedHtml, "utf-8");
           console.log(
             `[vite-plugin-critical] ✓ Critical CSS extracted and inlined successfully`
@@ -221,13 +219,11 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
             "</head>",
             `${styleTag}\n</head>`
           );
-          // Fix base tag if needed
-          if (viteBaseUrl !== "/") {
-            updatedHtml = updatedHtml.replace(
-              /<base\s+[^>]*>/i,
-              `<base href="${viteBaseUrl}">`
-            );
-          }
+          // Remove base tag - we use absolute paths instead
+          updatedHtml = updatedHtml.replace(
+            /<base\s+[^>]*>/i,
+            ''
+          );
           writeFileSync(htmlPath, updatedHtml, "utf-8");
           console.log(
             `[vite-plugin-critical] ✓ Critical CSS extracted and inlined successfully`
