@@ -1,7 +1,6 @@
 import type { Plugin } from "vite";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
-import { pathToFileURL } from "url";
 
 interface ViteCriticalOptions {
   /**
@@ -44,6 +43,11 @@ interface ViteCriticalOptions {
    * @default '/'
    */
   baseUrl?: string;
+  /**
+   * Skip critical CSS extraction if browser launch fails
+   * @default true
+   */
+  skipOnError?: boolean;
 }
 
 /**
@@ -60,10 +64,12 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
     minify = true,
     css,
     baseUrl = "/",
+    skipOnError = true,
   } = options;
 
   let distDir = "";
   let outputDir = "";
+  let viteBaseUrl = "/";
 
   return {
     name: "vite-plugin-critical",
@@ -85,37 +91,94 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
         }
 
         // Dynamically import critical to avoid requiring it at build time
-        // @ts-expect-error - critical package may not be installed
         const critical = await import("critical");
         const criticalGenerate = critical.generate || critical.default;
 
-        const htmlContent = readFileSync(htmlPath, "utf-8");
+        let htmlContent = readFileSync(htmlPath, "utf-8");
+        const actualBaseUrl = baseUrl !== "/" ? baseUrl : viteBaseUrl;
 
-        // Convert file path to file:// URL for critical package
-        const htmlUrl = pathToFileURL(htmlPath).href;
+        // Temporarily rewrite absolute paths with base to relative paths for critical package
+        // Critical package has trouble resolving paths with base URLs
+        if (actualBaseUrl !== "/") {
+          const basePath = actualBaseUrl.replace(/\/$/, "").replace(/^\//, "");
+          // Replace /HiSMaComp/path with /path (remove base prefix)
+          htmlContent = htmlContent.replace(
+            new RegExp(`/${basePath}/`, "g"),
+            "/"
+          );
+          // Write temporary HTML for critical to process
+          const tempHtmlPath = join(outputDir, "index.temp.html");
+          writeFileSync(tempHtmlPath, htmlContent, "utf-8");
+          
+          // Use temp file for processing
+          const criticalOptions: any = {
+            base: outputDir,
+            src: tempHtmlPath,
+            inline,
+            width: dimensions[0]?.width || 1300,
+            height: dimensions[0]?.height || 900,
+          };
 
-        // Generate critical CSS
-        // Note: critical package uses a headless browser and needs a URL
-        const criticalOptions = {
+          const result = await criticalGenerate(criticalOptions);
+
+          // Read the original HTML again to restore base paths
+          const originalHtml = readFileSync(htmlPath, "utf-8");
+          
+          if (result && result.html) {
+            // Restore base paths in the result
+            let processedHtml = result.html;
+            // Restore base paths: href="/assets/..." -> href="/HiSMaComp/assets/..."
+            processedHtml = processedHtml.replace(
+              /(href|src)=["']\/([^"']+)["']/g,
+              (match, attr, path) => {
+                // Skip external URLs
+                if (path.startsWith("http") || path.startsWith("//")) {
+                  return match;
+                }
+                // Skip if already has base path
+                if (path.startsWith(basePath + "/")) {
+                  return match;
+                }
+                return `${attr}="${actualBaseUrl}${path}"`;
+              }
+            );
+            writeFileSync(htmlPath, processedHtml, "utf-8");
+            console.log(
+              `[vite-plugin-critical] ✓ Critical CSS extracted and inlined successfully`
+            );
+          } else if (result && result.css) {
+            // If HTML wasn't returned, manually inject the CSS
+            const criticalCss = result.css;
+            const styleTag = `<style id="critical-css">${criticalCss}</style>`;
+            const updatedHtml = originalHtml.replace(
+              "</head>",
+              `${styleTag}\n</head>`
+            );
+            writeFileSync(htmlPath, updatedHtml, "utf-8");
+            console.log(
+              `[vite-plugin-critical] ✓ Critical CSS extracted and inlined successfully`
+            );
+          }
+          
+          // Clean up temp file
+          try {
+            const { unlinkSync } = await import("fs");
+            unlinkSync(tempHtmlPath);
+          } catch {
+            // Ignore cleanup errors
+          }
+          
+          return;
+        }
+
+        // Generate critical CSS (for root base path)
+        // Note: critical package uses a headless browser
+        const criticalOptions: any = {
           base: outputDir,
-          src: htmlUrl, // Use file:// URL instead of file path
-          dest: htmlPath,
+          src: htmlPath,
           inline,
-          minify,
-          dimensions,
           width: dimensions[0]?.width || 1300,
           height: dimensions[0]?.height || 900,
-          // Extract only above-the-fold CSS
-          extract: true,
-          // Ignore font-face and keyframes in critical CSS
-          ignore: {
-            atrule: ["@font-face", "@keyframes"],
-          },
-          // Additional options for better performance
-          penthouse: {
-            blockJSRequests: false,
-            timeout: 30000,
-          },
         };
 
         const result = await criticalGenerate(criticalOptions);
@@ -140,13 +203,35 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
           );
         }
       } catch (error) {
-        if (error instanceof Error && error.message.includes("Cannot find module 'critical'")) {
-          console.warn(
-            `[vite-plugin-critical] ⚠ 'critical' package not found. Install it with: npm install --save-dev critical`
-          );
+        if (error instanceof Error) {
+          if (error.message.includes("Cannot find module 'critical'")) {
+            console.warn(
+              `[vite-plugin-critical] ⚠ 'critical' package not found. Install it with: npm install --save-dev critical`
+            );
+          } else if (
+            error.message.includes("Failed to launch the browser") ||
+            error.message.includes("browser process") ||
+            error.message.includes("TROUBLESHOOTING")
+          ) {
+            console.warn(
+              `[vite-plugin-critical] ⚠ Browser launch failed. Critical CSS extraction skipped.`
+            );
+            console.warn(
+              `[vite-plugin-critical] This is usually due to missing Puppeteer dependencies.`
+            );
+            console.warn(
+              `[vite-plugin-critical] To fix: Install Puppeteer dependencies or skip critical CSS extraction.`
+            );
+            console.warn(
+              `[vite-plugin-critical] Build will continue without critical CSS optimization.`
+            );
+          } else {
+            console.error("[vite-plugin-critical] ✗ Error extracting critical CSS:", error);
+            // Don't fail the build if critical CSS extraction fails
+            console.warn("[vite-plugin-critical] Build will continue without critical CSS optimization");
+          }
         } else {
           console.error("[vite-plugin-critical] ✗ Error extracting critical CSS:", error);
-          // Don't fail the build if critical CSS extraction fails
           console.warn("[vite-plugin-critical] Build will continue without critical CSS optimization");
         }
       }
@@ -154,6 +239,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
     configResolved(config) {
       distDir = config.build.outDir || "dist";
       outputDir = join(base, distDir);
+      viteBaseUrl = config.base || "/";
     },
   };
 }
