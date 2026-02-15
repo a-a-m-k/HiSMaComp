@@ -1,6 +1,9 @@
 import { Component, ErrorInfo, ReactNode } from "react";
-import { Box, Typography, Alert, AlertTitle } from "@mui/material";
-import { Error as ErrorIcon } from "@mui/icons-material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
+import ErrorIcon from "@mui/icons-material/Error";
 import { Button } from "@/components/ui/common";
 import { SPACING, TRANSITIONS, Z_INDEX } from "@/constants/ui";
 import { logger } from "@/utils/logger";

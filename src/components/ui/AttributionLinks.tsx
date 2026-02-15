@@ -1,5 +1,8 @@
 import React from "react";
-import { Box, Link, useTheme, useMediaQuery } from "@mui/material";
+import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import { ATTRIBUTION_LINKS } from "@/constants";
 import { SPACING, BORDER_RADIUS } from "@/constants/ui";
 import { getLegendStyles } from "@/constants/sizing";

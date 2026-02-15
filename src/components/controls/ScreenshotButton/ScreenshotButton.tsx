@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import { SaveAltRounded } from "@mui/icons-material";
-import { CircularProgress } from "@mui/material";
+import SaveAltRounded from "@mui/icons-material/SaveAltRounded";
+import CircularProgress from "@mui/material/CircularProgress";
 
 import { ScreenshotButton as StyledScreenshotButton } from "./ScreenshotButton.styles";
 import { TRANSITIONS, OPACITY, SIZES } from "@/constants/ui";

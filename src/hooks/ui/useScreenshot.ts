@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { useTheme, useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import {
   hideMapControls,

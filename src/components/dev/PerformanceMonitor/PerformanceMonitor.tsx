@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Chip,
-  useTheme,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
-import { BugReport, Memory, Speed } from "@mui/icons-material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from "@mui/material/styles";
+import BugReport from "@mui/icons-material/BugReport";
+import Memory from "@mui/icons-material/Memory";
+import Speed from "@mui/icons-material/Speed";
 import { PerformanceMemory } from "@/common/types";
 import { logger } from "@/utils/logger";
 

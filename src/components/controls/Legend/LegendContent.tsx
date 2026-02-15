@@ -1,5 +1,9 @@
 import React, { useMemo } from "react";
-import { Box, Typography, Stack, useTheme, useMediaQuery } from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { AttributionLinks } from "@/components/ui";
 import { useApp } from "@/context/AppContext";

@@ -1,5 +1,5 @@
 import React, { Suspense, useState, useEffect } from "react";
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 
 import { Timeline, Legend as MapLegend } from "@/components/controls";
 import { ErrorBoundary } from "@/components/dev";

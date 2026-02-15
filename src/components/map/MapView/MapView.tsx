@@ -2,7 +2,7 @@ import React, { useMemo, useRef, Suspense } from "react";
 import Map, { NavigationControl, MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useTheme } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
 import MapLayer from "./MapLayer/MapLayer";

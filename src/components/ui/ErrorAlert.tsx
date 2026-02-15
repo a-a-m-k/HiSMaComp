@@ -1,6 +1,9 @@
 import React from "react";
-import { Alert, AlertTitle, Button, Typography } from "@mui/material";
-import { Refresh } from "@mui/icons-material";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Refresh from "@mui/icons-material/Refresh";
 import { SPACING } from "@/constants/ui";
 
 interface ErrorAlertProps {
