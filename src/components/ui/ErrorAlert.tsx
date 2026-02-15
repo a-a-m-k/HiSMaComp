@@ -43,7 +43,8 @@ export const ErrorAlert: React.FC<ErrorAlertProps> = ({
     >
       <AlertTitle>{title}</AlertTitle>
       <Typography variant="body2" component="div">
-        {message}
+        {message ||
+          "An unknown error occurred. Please check the browser console for details."}
       </Typography>
     </Alert>
   );
