@@ -95,60 +95,51 @@ const MapView: React.FC<MapViewComponentProps> = ({
       const map = mapRef.current.getMap();
       if (!map) return;
 
-      // Device-aware optimization settings
-      // Mobile: More aggressive (smaller cache, fewer parallel requests)
-      // Desktop: Moderate optimization (balance between performance and smoothness)
-      const tileCacheSize = isMobile ? 20 : isTablet ? 25 : 30;
-      const parallelRequests = isMobile ? 4 : isTablet ? 5 : 6;
-      const requestsPerTile = isMobile ? 1 : 2;
+      // Determine device type once to avoid redundant checks
+      const deviceType = isMobile ? "mobile" : isTablet ? "tablet" : "desktop";
+
+      // Device-aware optimization settings (defaults: cache=50, parallel=16, perTile=higher)
+      // Mobile: Most aggressive (limited memory, slower connections)
+      // Tablet: Moderate (balanced)
+      // Desktop: Balanced (more resources available)
+      const optimizationSettings = {
+        mobile: { cache: 20, parallel: 4, perTile: 1 },
+        tablet: { cache: 25, parallel: 5, perTile: 2 },
+        desktop: { cache: 30, parallel: 6, perTile: 2 },
+      } as const;
+
+      const settings = optimizationSettings[deviceType];
 
       // Type assertion to access internal MapLibre GL properties for optimization
       // These are internal implementation details, but stable enough for optimization
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mapInstance = map as any;
 
-      // Reduce tile cache size to limit off-screen tiles
-      // Smaller cache = visible tiles prioritized, off-screen tiles load later
-      // Default: 50
-      // Mobile: 20 (more aggressive for limited memory)
-      // Tablet: 25 (moderate)
-      // Desktop: 30 (balanced)
+      // Reduce tile cache size to limit off-screen tiles (default: 50)
       if (
         "_maxTileCacheSize" in mapInstance &&
         typeof mapInstance._maxTileCacheSize === "number"
       ) {
-        mapInstance._maxTileCacheSize = tileCacheSize;
+        mapInstance._maxTileCacheSize = settings.cache;
       }
 
-      // Reduce parallel image requests to prioritize visible tiles
-      // Lower value = visible tiles load first, others queue
-      // Default: 16
-      // Mobile: 4 (more aggressive for slower connections)
-      // Tablet: 5 (moderate)
-      // Desktop: 6 (balanced)
+      // Reduce parallel image requests to prioritize visible tiles (default: 16)
       if (
         "_maxParallelImageRequests" in mapInstance &&
         typeof mapInstance._maxParallelImageRequests === "number"
       ) {
-        mapInstance._maxParallelImageRequests = parallelRequests;
+        mapInstance._maxParallelImageRequests = settings.parallel;
       }
 
       // Configure request manager to limit concurrent requests per tile
-      // This ensures visible tiles get priority in the request queue
-      // Mobile: 1 (most aggressive)
-      // Desktop/Tablet: 2 (balanced)
+      const requestManager = mapInstance._requestManager;
       if (
-        mapInstance._requestManager &&
-        typeof mapInstance._requestManager === "object"
+        requestManager &&
+        typeof requestManager === "object" &&
+        "maxRequestsPerTile" in requestManager &&
+        typeof requestManager.maxRequestsPerTile === "number"
       ) {
-        const requestManager = mapInstance._requestManager;
-        if (
-          requestManager &&
-          "maxRequestsPerTile" in requestManager &&
-          typeof requestManager.maxRequestsPerTile === "number"
-        ) {
-          requestManager.maxRequestsPerTile = requestsPerTile;
-        }
+        requestManager.maxRequestsPerTile = settings.perTile;
       }
     } catch (error) {
       // Gracefully handle errors - tile loading optimization is non-critical
