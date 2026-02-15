@@ -1,5 +1,7 @@
 import React from "react";
-import { Slider, SxProps, Theme, useMediaQuery, useTheme } from "@mui/material";
+import Slider from "@mui/material/Slider";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { SxProps, Theme, useTheme } from "@mui/material/styles";
 
 interface TimelineSliderProps {
   marks: Array<{ value: number; label: string }>;

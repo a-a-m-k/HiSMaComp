@@ -36,11 +36,15 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    
+    <!-- Resource Hints: Preconnect to external domains -->
     <link rel="preconnect" href="https://tiles.stadiamaps.com" />
     <link rel="preconnect" href="https://api.stadiamaps.com" />
+    
+    <!-- Resource Hints: Prefetch likely-next resources -->
+    <link rel="prefetch" href="https://tiles.stadiamaps.com" as="document" />
+    
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#1976d2" />
 
@@ -48,7 +52,6 @@
     <!-- 
       CSP allows:
       - Self-hosted scripts/styles (with unsafe-inline for MUI dynamic styles)
-      - Google Fonts for typography
       - Stadia Maps for map tiles, sprites, and glyphs
       - Blob/data URIs for images (required for html2canvas screenshots)
       - WebGL/WebAssembly via unsafe-eval (required for MapLibre GL)
@@ -56,13 +59,15 @@
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://tiles.stadiamaps.com data:; img-src 'self' data: blob: https://tiles.stadiamaps.com https://*.stadiamaps.com; connect-src 'self' https://tiles.stadiamaps.com https://*.stadiamaps.com; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests;"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' https://tiles.stadiamaps.com data:; img-src 'self' data: blob: https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com; connect-src 'self' https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests;"
     />
 
     <title>HiSMaComp - Historical Map Visualizer</title>
   </head>
   <body>
     <div id="root"></div>
+    <!-- LCP: placeholder injected here by vite-plugin-lcp-legend (from src/constants/legendLcp.ts) -->
+    <!-- LCP_LEGEND_PLACEHOLDER -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

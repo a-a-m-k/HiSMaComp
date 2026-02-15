@@ -1,4 +1,4 @@
-import { Theme } from "@mui/material";
+import { Theme } from "@mui/material/styles";
 import { ATTRIBUTION_TEXT } from "@/constants";
 export function hideMapControls(mapContainer: HTMLElement) {
   const controls = mapContainer.querySelectorAll(

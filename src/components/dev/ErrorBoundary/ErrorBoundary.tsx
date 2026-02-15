@@ -1,6 +1,9 @@
 import { Component, ErrorInfo, ReactNode } from "react";
-import { Box, Typography, Alert, AlertTitle } from "@mui/material";
-import { Error as ErrorIcon } from "@mui/icons-material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import AlertTitle from "@mui/material/AlertTitle";
+import ErrorIcon from "@mui/icons-material/Error";
 import { Button } from "@/components/ui/common";
 import { SPACING, TRANSITIONS, Z_INDEX } from "@/constants/ui";
 import { logger } from "@/utils/logger";
@@ -29,7 +32,7 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error("Error Boundary caught an error:", error, errorInfo);
 
-    if (process.env.NODE_ENV === "development") {
+    if (import.meta.env.DEV) {
       logger.debug("Error Details:", {
         error: error.toString(),
         errorInfo,
@@ -83,11 +86,18 @@ class ErrorBoundary extends Component<Props, State> {
             sx={{ mb: SPACING.XL, maxWidth: 600, width: "90%" }}
           >
             <AlertTitle>Oops! Something went wrong</AlertTitle>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              Here&rsquo;s what happened:
-            </Typography>
+            {this.state.error && (
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {this.state.error.message || this.state.error.toString()}
+              </Typography>
+            )}
+            {!this.state.error && (
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                An unexpected error occurred. Please try reloading the page.
+              </Typography>
+            )}
 
-            {process.env.NODE_ENV === "development" && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <Box
                 sx={{
                   mt: SPACING.LG,
@@ -108,6 +118,13 @@ class ErrorBoundary extends Component<Props, State> {
                   }}
                 >
                   {this.state.error.toString()}
+                  {this.state.errorInfo && (
+                    <>
+                      {"\n\n"}
+                      Component Stack:
+                      {this.state.errorInfo.componentStack}
+                    </>
+                  )}
                 </Typography>
               </Box>
             )}
@@ -131,7 +148,7 @@ class ErrorBoundary extends Component<Props, State> {
             </Button>
           </Box>
 
-          {process.env.NODE_ENV === "development" && (
+          {import.meta.env.DEV && (
             <Typography
               variant="caption"
               sx={{ mt: SPACING.LG, color: "text.secondary" }}

@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { Divider, Typography } from "@mui/material";
+import Divider from "@mui/material/Divider";
+import Typography from "@mui/material/Typography";
 
 import { MobileSheet, MediumSheet, DesktopCard } from "./Timeline.styles";
 import { TimelineSlider } from "./TimelineSlider";

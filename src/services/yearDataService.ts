@@ -96,9 +96,9 @@ class YearDataService {
   }
 
   /**
-   * Creates a deterministic cache key based on towns array content and year.
-   * Uses a hash function to prevent collisions when different town arrays
-   * might have similar sampled names.
+   * Creates a deterministic cache key from town content and year.
+   * Uses a linear-time hash over town fields to avoid expensive O(n log n) sort
+   * while still reflecting in-place data mutations.
    *
    * @param towns - Array of town objects
    * @param year - Year to filter by
@@ -109,38 +109,38 @@ class YearDataService {
       return `empty-${year}`;
     }
 
-    const sortedTowns = [...towns].sort((a, b) => {
-      if (a.name !== b.name) {
-        return a.name.localeCompare(b.name);
-      }
-      if (a.latitude !== b.latitude) {
-        return a.latitude - b.latitude;
-      }
-      return a.longitude - b.longitude;
-    });
+    let hash = 2166136261;
 
-    const townIdentifiers = sortedTowns
-      .map(t => `${t.name}:${t.latitude.toFixed(4)}:${t.longitude.toFixed(4)}`)
-      .join("|");
+    for (const town of towns) {
+      hash = this.fnv1aString(hash, town.name);
+      hash = this.fnv1aString(hash, `${town.latitude.toFixed(4)}`);
+      hash = this.fnv1aString(hash, `${town.longitude.toFixed(4)}`);
 
-    const hash = this.simpleHash(townIdentifiers);
-    return `${hash}-${towns.length}-${year}`;
+      if (town.populationByYear) {
+        for (const [k, v] of Object.entries(town.populationByYear)) {
+          hash = this.fnv1aString(hash, k);
+          hash = this.fnv1aString(hash, `${v}`);
+        }
+      }
+    }
+
+    return `${(hash >>> 0).toString(36)}-${towns.length}-${year}`;
   }
 
   /**
-   * Simple hash function to convert string to hash string.
-   * Based on djb2 algorithm for deterministic hashing.
+   * FNV-1a string hash step.
    *
-   * @param str - String to hash
-   * @returns Hash string value
+   * @param seed - Current hash seed
+   * @param input - Text to hash
+   * @returns Updated hash
    */
-  private simpleHash(str: string): string {
-    let hash = 5381;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) + hash + str.charCodeAt(i);
-      hash = hash | 0; // Convert to 32-bit integer
+  private fnv1aString(seed: number, input: string): number {
+    let hash = seed;
+    for (let i = 0; i < input.length; i++) {
+      hash ^= input.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
     }
-    return Math.abs(hash).toString(36); // Convert to base36 string for shorter key
+    return hash;
   }
 }
 

@@ -1,5 +1,9 @@
 import React, { useMemo } from "react";
-import { Box, Typography, Stack, useTheme, useMediaQuery } from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { AttributionLinks } from "@/components/ui";
 import { useApp } from "@/context/AppContext";
@@ -16,7 +20,7 @@ export interface LegendProps {
 const LegendItem: React.FC<{ layer: string; color: string }> = React.memo(
   ({ layer, color }) => {
     const theme = useTheme();
-    const { isMobile, isTablet } = useResponsive();
+    const { isMobile } = useResponsive();
     const sizingStyles = useMemo(() => getLegendStyles(theme), [theme]);
 
     const indicatorStyles = useMemo(

@@ -1,10 +1,7 @@
 import React from "react";
-import {
-  Card as MuiCard,
-  CardProps as MuiCardProps,
-  CardContent,
-  CardHeader,
-} from "@mui/material";
+import MuiCard, { CardProps as MuiCardProps } from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardHeader from "@mui/material/CardHeader";
 import { BORDER_RADIUS, SHADOWS, TRANSITIONS, SPACING } from "@/constants/ui";
 
 interface CardProps extends Omit<MuiCardProps, "elevation"> {

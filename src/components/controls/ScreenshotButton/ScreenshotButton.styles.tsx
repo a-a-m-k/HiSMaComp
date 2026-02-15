@@ -1,4 +1,6 @@
-import { Box, IconButton, styled } from "@mui/material";
+import Box from "@mui/material/Box";
+import IconButton from "@mui/material/IconButton";
+import { styled } from "@mui/material/styles";
 
 import { FLOATING_BUTTON_SIZE } from "@/constants";
 import { BORDER_RADIUS, OVERLAY_POSITIONS } from "@/constants/ui";

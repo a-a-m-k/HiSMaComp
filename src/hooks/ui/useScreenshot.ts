@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { useTheme, useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import {
   hideMapControls,
@@ -64,11 +65,18 @@ export const useScreenshot = ({
 
     setIsCapturing(true);
 
+    let controls: NodeListOf<Element> | null = null;
+    let prevDisplay: string[] = [];
+    let attributionDiv: HTMLElement | null = null;
+    let link: HTMLAnchorElement | null = null;
+
     try {
       const html2canvas = (await import("html2canvas")).default;
 
-      const { controls, prevDisplay } = hideMapControls(mapContainer);
-      const attributionDiv = addAttributionOverlay(
+      const hiddenControls = hideMapControls(mapContainer);
+      controls = hiddenControls.controls;
+      prevDisplay = hiddenControls.prevDisplay;
+      attributionDiv = addAttributionOverlay(
         mapContainer,
         theme,
         isMobile,
@@ -84,7 +92,7 @@ export const useScreenshot = ({
         foreignObjectRendering: false,
         imageTimeout: 5000,
         onclone: clonedDoc => {
-          if (process.env.NODE_ENV === "development") {
+          if (import.meta.env.DEV) {
             clonedDoc.querySelector("[data-performance-monitor]")?.remove();
           }
           const legendElements = clonedDoc.querySelectorAll(
@@ -99,7 +107,7 @@ export const useScreenshot = ({
       });
 
       const url = canvas.toDataURL("image/png", isMobile ? 1.0 : 0.9);
-      const link = document.createElement("a");
+      link = document.createElement("a");
       link.href = url;
       link.download = filename;
       link.style.display = "none";
@@ -107,14 +115,19 @@ export const useScreenshot = ({
       link.click();
 
       setTimeout(() => {
-        document.body.removeChild(link);
-        attributionDiv.remove();
-        restoreMapControls(controls, prevDisplay);
+        if (link && link.parentNode === document.body) {
+          document.body.removeChild(link);
+        }
       }, 100);
     } catch (error) {
-      logger.error("Screenshot failed:", error);
       logger.error("Screenshot capture failed:", error);
     } finally {
+      if (attributionDiv) {
+        attributionDiv.remove();
+      }
+      if (controls) {
+        restoreMapControls(controls, prevDisplay);
+      }
       setIsCapturing(false);
     }
   }, [isCapturing, mapContainerSelector, filename, theme, isMobile, isTablet]);

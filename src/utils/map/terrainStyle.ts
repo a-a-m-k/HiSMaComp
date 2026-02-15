@@ -20,6 +20,11 @@ function getStadiaApiKey(): string {
     const errorMessage =
       "VITE_STADIA_API_KEY environment variable is not set. " +
       "Please create a .env file with your Stadia Maps API key.";
+    console.error("[Map Error]", errorMessage);
+    console.error("[Map Error] Environment check:", {
+      hasApiKey: !!apiKey,
+      envKeys: Object.keys(import.meta.env).filter(k => k.includes("STADIA")),
+    });
     logger.error(errorMessage);
     throw new Error(errorMessage);
   }
@@ -62,8 +67,7 @@ let cachedTerrainStyle: StyleSpecification | null = null;
  * from environment variables.
  *
  * This ensures the API key is never committed to version control
- * and is loaded from environment variables at build time (for production)
- * or runtime (for development).
+ * and is loaded from environment variables at build/runtime.
  *
  * The result is memoized for performance - the style is only calculated once.
  *

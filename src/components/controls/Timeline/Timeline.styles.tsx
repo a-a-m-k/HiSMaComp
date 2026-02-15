@@ -1,4 +1,5 @@
-import { Paper, Theme } from "@mui/material";
+import Paper from "@mui/material/Paper";
+import { Theme } from "@mui/material/styles";
 import { styled } from "@mui/material/styles";
 import {
   COMPONENT_WIDTHS,

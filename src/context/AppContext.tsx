@@ -96,7 +96,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({
   const [center, setCenter] = useState<
     { latitude: number; longitude: number } | undefined
   >();
-  const processedYearsRef = useRef<Set<number>>(new Set());
   const isInitializedRef = useRef<boolean>(false);
   const previousTownsRef = useRef<Town[]>([]);
 
@@ -113,26 +112,22 @@ export const AppProvider: React.FC<AppProviderProps> = ({
       }
 
       const loadData = async (): Promise<void> => {
-        return new Promise((resolve, reject) => {
-          try {
-            const yearData = yearDataService.getYearData(towns, year);
-            setFilteredTowns(yearData.filteredTowns);
-            setBounds(yearData.bounds);
-            processedYearsRef.current.add(year);
-            setError(null);
-            resolve();
-          } catch (error) {
-            logger.error("Error loading year data:", error);
-            const errorMessage =
-              error instanceof Error
-                ? `Failed to load data for year ${year}: ${error.message}`
-                : `Failed to load data for year ${year}. Please try again.`;
-            setError(errorMessage);
-            setFilteredTowns([]);
-            announce(errorMessage, "assertive");
-            reject(error);
-          }
-        });
+        try {
+          const yearData = yearDataService.getYearData(towns, year);
+          setFilteredTowns(yearData.filteredTowns);
+          setBounds(yearData.bounds);
+          setError(null);
+        } catch (error) {
+          logger.error("Error loading year data:", error);
+          const errorMessage =
+            error instanceof Error
+              ? `Failed to load data for year ${year}: ${error.message}`
+              : `Failed to load data for year ${year}. Please try again.`;
+          setError(errorMessage);
+          setFilteredTowns([]);
+          announce(errorMessage, "assertive");
+          throw error;
+        }
       };
 
       if (useRetry) {
@@ -184,54 +179,30 @@ export const AppProvider: React.FC<AppProviderProps> = ({
       previousTownsRef.current !== towns ||
       previousTownsRef.current.length !== towns.length;
 
-    if (isInitializedRef.current && !townsChanged) {
-      return;
-    }
-
     if (townsChanged) {
-      isInitializedRef.current = false;
-      processedYearsRef.current.clear();
+      setIsLoading(true);
+      try {
+        const globalCenterData = calculateBoundsCenter(towns);
+        setCenter(globalCenterData);
+        isInitializedRef.current = true;
+        previousTownsRef.current = towns;
+      } catch (error) {
+        logger.error("Error initializing app:", error);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to load historical data. Please try refreshing the page.";
+        setError(errorMessage);
+        setBounds(undefined);
+        setCenter(undefined);
+        setFilteredTowns([]);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    setIsLoading(true);
-
-    try {
-      const globalCenterData = calculateBoundsCenter(towns);
-      setCenter(globalCenterData);
-
+    if (isInitializedRef.current) {
       loadYearData(selectedYear, false);
-      isInitializedRef.current = true;
-      previousTownsRef.current = towns;
-    } catch (error) {
-      logger.error("Error initializing app:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to load historical data. Please try refreshing the page.";
-      setError(errorMessage);
-      setBounds(undefined);
-      setCenter(undefined);
-      setFilteredTowns([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [towns, selectedYear, loadYearData]);
-
-  useEffect(() => {
-    if (!towns || towns.length === 0 || !isInitializedRef.current) {
-      return;
-    }
-
-    try {
-      loadYearData(selectedYear, false);
-    } catch (error) {
-      logger.error("Error processing year data:", error);
-      const errorMessage =
-        error instanceof Error
-          ? `Failed to load data for year ${selectedYear}: ${error.message}`
-          : `Failed to load data for year ${selectedYear}. Please try again.`;
-      setError(errorMessage);
-      setFilteredTowns([]);
     }
   }, [selectedYear, loadYearData, towns]);
 

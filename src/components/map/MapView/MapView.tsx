@@ -1,19 +1,19 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, Suspense, useState } from "react";
 import Map, { NavigationControl, MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { useTheme } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
 import MapLayer from "./MapLayer/MapLayer";
-import { getTerrainStyle } from "@/utils/map";
-import { ScreenshotButton } from "@/components/controls";
+import {
+  getTerrainStyle,
+  getMapDescription,
+  handleMapFeatureClick,
+} from "@/utils/map";
 import { MAP_LAYER_ID } from "@/constants";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
-import {
-  getNavigationControlStyles,
-  getMapContainerStyles,
-} from "@/constants/ui";
+import { getMapStyles } from "@/constants/ui";
 import { useApp } from "@/context/AppContext";
 import { useResponsive, useScreenDimensions } from "@/hooks/ui";
 import {
@@ -25,13 +25,27 @@ import {
 } from "@/hooks/map";
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
 import { TownMarkers } from "./TownMarkers";
-import { handleMapFeatureClick } from "@/utils/map";
 
+/**
+ * Loaded lazily because it is not rendered on mobile and is non-critical for
+ * first paint.
+ */
+const ScreenshotButton = React.lazy(
+  () => import("@/components/controls/ScreenshotButton/ScreenshotButton")
+);
+
+/**
+ * Initial map camera values passed from container-level calculations.
+ */
 interface MapViewComponentProps {
   initialPosition: { longitude: number; latitude: number };
   initialZoom: number;
 }
 
+/**
+ * Main interactive map surface: renders base map, layers, markers, and map
+ * controls with accessibility and keyboard support.
+ */
 const MapView: React.FC<MapViewComponentProps> = ({
   initialPosition: { longitude, latitude },
   initialZoom,
@@ -42,6 +56,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const { filteredTowns } = useApp();
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   const safeProps = useMemo(
     () => ({
@@ -68,22 +83,28 @@ const MapView: React.FC<MapViewComponentProps> = ({
   useMapKeyboardShortcuts(mapRef, isDesktop);
   useMapKeyboardPanning(mapRef, containerRef, isDesktop);
   useNavigationControlAccessibility(isMobile, containerRef);
+
+  /**
+   * Marks map-dependent content as ready once the underlying MapLibre instance
+   * exists.
+   */
+  const handleMapLoad = React.useCallback(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current.getMap();
+    if (!map) return;
+    setMapReady(true);
+  }, []);
+
+  const mapDescription = useMemo(
+    () => getMapDescription({ isMobile, isDesktop }),
+    [isMobile, isDesktop]
+  );
+
   return (
     <>
-      <style>{getNavigationControlStyles(theme)}</style>
-      <style>{getMapContainerStyles()}</style>
+      <style>{getMapStyles(theme)}</style>
       <div id="map-description" className="sr-only">
-        Interactive map displaying European towns and their populations. Use Tab
-        to navigate controls: Timeline{!isMobile ? ", Save button" : ""}
-        {isDesktop ? ", Zoom controls" : ""}, map area, and town markers. Click
-        on the map or press Tab to focus the map area, then use arrow keys to
-        pan. When a town marker is focused, use arrow keys to navigate between
-        markers.
-        {!isMobile ? " Press Ctrl+S or Cmd+S to save the map as an image." : ""}
-        {isDesktop
-          ? " Press Ctrl+Plus or Cmd+Plus to zoom in, and Ctrl+Minus or Cmd+Minus to zoom out."
-          : " On tablets, use pinch-to-zoom gestures to zoom."}{" "}
-        Town markers are color-coded by population size.
+        {mapDescription}
       </div>
       <div
         id="map-container-area"
@@ -94,6 +115,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
         style={{
           width: "100%",
           height: "100%",
+          minHeight: "100vh",
           position: "relative",
           outline: "none",
         }}
@@ -103,6 +125,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
           ref={mapRef}
           {...viewState}
           onMove={handleMove}
+          onLoad={handleMapLoad}
           onClick={e => {
             if (e.features && e.features.length > 0) {
               const feature = e.features[0];
@@ -122,14 +145,20 @@ const MapView: React.FC<MapViewComponentProps> = ({
           touchZoomRotate={true}
           dragPan={true}
         >
-          <MapLayer layerId={MAP_LAYER_ID} data={townsGeojson} />
+          {mapReady && (
+            <>
+              <MapLayer layerId={MAP_LAYER_ID} data={townsGeojson} />
+              <TownMarkers towns={filteredTowns} />
+            </>
+          )}
           {!isMobile && (
             <ScreenshotButtonContainer>
-              <ScreenshotButton />
+              <Suspense fallback={null}>
+                <ScreenshotButton />
+              </Suspense>
             </ScreenshotButtonContainer>
           )}
           {isDesktop && <NavigationControl position="bottom-right" />}
-          <TownMarkers towns={filteredTowns} />
         </Map>
       </div>
     </>

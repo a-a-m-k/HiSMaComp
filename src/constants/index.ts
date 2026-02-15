@@ -5,3 +5,4 @@ export * from "./map";
 export * from "./ui";
 export * from "./breakpoints";
 export * from "./keyboard";
+export * from "./legendLcp";

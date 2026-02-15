@@ -2,7 +2,7 @@ name: Simple Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, optimization-v1]
 
 jobs:
   deploy:
@@ -33,6 +33,8 @@ jobs:
           npm list @rollup/rollup-linux-x64-gnu || npm install --no-save @rollup/rollup-linux-x64-gnu
 
       - name: Build application
+        env:
+          VITE_STADIA_API_KEY: ${{ secrets.VITE_STADIA_API_KEY }}
         run: npm run build
 
       - name: Setup Pages

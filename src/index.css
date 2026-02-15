@@ -76,6 +76,11 @@ h1 {
   }
 }
 
+/* Hide LCP placeholder once React has mounted (declarative: no DOM access in app code) */
+[data-app-ready] #legend-heading-placeholder {
+  display: none;
+}
+
 /* Accessibility utilities */
 .sr-only {
   position: absolute;

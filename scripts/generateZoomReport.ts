@@ -181,7 +181,7 @@ interface ZoomReport {
 function generateReport(): ZoomReport[] {
   const reports: ZoomReport[] = [];
 
-  Object.entries(deviceProfiles).forEach(([key, device]) => {
+  Object.values(deviceProfiles).forEach(device => {
     const mapArea = calculateMapArea(device.width, device.height, mockTheme);
     const zoom = calculateResponsiveZoom(
       mockTowns,

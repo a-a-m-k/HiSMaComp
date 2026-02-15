@@ -1,9 +1,6 @@
 import React from "react";
-import {
-  Button as MuiButton,
-  ButtonProps as MuiButtonProps,
-  CircularProgress,
-} from "@mui/material";
+import MuiButton, { ButtonProps as MuiButtonProps } from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import { TRANSITIONS, OPACITY, SIZES } from "@/constants/ui";
 
 interface ButtonProps extends Omit<MuiButtonProps, "size"> {

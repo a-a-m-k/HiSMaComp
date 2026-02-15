@@ -509,6 +509,12 @@ export const getNavigationControlStyles = (theme: Theme): string => {
   `;
 };
 
+/**
+ * Combined map styles: container + navigation controls. Use a single <style> tag in MapView.
+ */
+export const getMapStyles = (theme: Theme): string =>
+  `${getNavigationControlStyles(theme)}\n${getMapContainerStyles()}`;
+
 export const SIZES = {
   ICON_SMALL: 16,
   ICON_MEDIUM: 20,

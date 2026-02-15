@@ -1,20 +1,21 @@
 import React, { Suspense } from "react";
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 
-import towns from "@/assets/history-data/towns.json";
 import { Timeline, Legend as MapLegend } from "@/components/controls";
 import { ErrorBoundary } from "@/components/dev";
-import { LoadingSpinner, ErrorAlert } from "@/components/ui";
-import { MapSkeleton } from "@/components/map/MapSkeleton";
-import { CENTURY_MAP, YEARS, MAX_ZOOM_LEVEL } from "@/constants";
-import { Z_INDEX } from "@/constants/ui";
+import { LoadingSpinner, ErrorOverlay } from "@/components/ui";
+import {
+  CENTURY_MAP,
+  YEARS,
+  MAX_ZOOM_LEVEL,
+  LEGEND_HEADING_LABEL,
+} from "@/constants";
 import { LayerItem, TimelineMark } from "@/common/types";
 import { AppProvider, useApp } from "@/context/AppContext";
-import { useLegendLayers } from "@/hooks";
+import { useLegendLayers, useTownsData } from "@/hooks";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
 
-// Lazy load MapView to improve First Contentful Paint (FCP)
 const MapView = React.lazy(() => import("@/components/map/MapView/MapView"));
 
 const marks: TimelineMark[] = YEARS.map(year => ({
@@ -22,12 +23,36 @@ const marks: TimelineMark[] = YEARS.map(year => ({
   label: CENTURY_MAP[year].toString() + "th ct.",
 }));
 
+const DEFAULT_MAP_CENTER = { latitude: 50.0, longitude: 10.0 };
+const DEFAULT_MAP_ZOOM = 4;
+
 const MapContainer = () => {
   const legendLayers = useLegendLayers();
+  const { towns, isLoading: townsLoading, error: townsError } = useTownsData();
+
+  if (townsError) {
+    return (
+      <Box
+        id="map-container"
+        sx={{ width: "100%", height: "100%", position: "relative" }}
+      >
+        <ErrorOverlay
+          title="Data Loading Error"
+          message={townsError}
+          onRetry={() => window.location.reload()}
+        />
+      </Box>
+    );
+  }
 
   return (
-    <AppProvider towns={towns}>
-      <MapContainerContent legendLayers={legendLayers} marks={marks} />
+    <AppProvider towns={towns.length > 0 ? towns : []}>
+      <MapContainerContent
+        legendLayers={legendLayers}
+        marks={marks}
+        showDefaultMap={townsLoading || towns.length === 0}
+        townsLoading={townsLoading}
+      />
     </AppProvider>
   );
 };
@@ -35,82 +60,83 @@ const MapContainer = () => {
 const MapContainerContent = ({
   legendLayers,
   marks,
+  showDefaultMap,
+  townsLoading,
 }: {
   legendLayers: LayerItem[];
   marks: TimelineMark[];
+  showDefaultMap?: boolean;
+  townsLoading?: boolean;
 }) => {
   const { isLoading, error, retry } = useApp();
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute("data-app-ready", "true");
+  }, []);
 
   return (
     <Box
       id="map-container"
-      sx={{ width: "100%", height: "100%", position: "relative" }}
+      sx={{
+        width: "100%",
+        height: "100%",
+        minHeight: "100vh",
+        position: "relative",
+      }}
     >
       {!error && (
         <>
           <Timeline marks={marks} />
-          <MapLegend
-            label="Town size according to population number"
-            layers={legendLayers}
-          />
+          <MapLegend label={LEGEND_HEADING_LABEL} layers={legendLayers} />
         </>
       )}
       {error && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: Z_INDEX.ERROR,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            backdropFilter: "blur(4px)",
-            padding: 2,
-          }}
-        >
-          <Box
-            sx={{
-              width: "90%",
-              maxWidth: 600,
-              position: "relative",
-            }}
-          >
-            <ErrorAlert
-              title="Data Loading Error"
-              message={error}
-              onRetry={retry}
-            />
-          </Box>
-        </Box>
+        <ErrorOverlay
+          title="Data Loading Error"
+          message={error}
+          onRetry={retry}
+        />
       )}
       <ErrorBoundary>
-        <Suspense fallback={<MapSkeleton />}>
-          <MapViewWithCalculations />
+        <Suspense
+          fallback={
+            <Box
+              sx={{
+                width: "100%",
+                height: "100%",
+                bgcolor: "grey.100",
+              }}
+            />
+          }
+        >
+          <MapViewWithCalculations showDefaultMap={showDefaultMap} />
         </Suspense>
       </ErrorBoundary>
-      {isLoading && <LoadingSpinner message="Processing historical data..." />}
+      {(isLoading || townsLoading) && (
+        <LoadingSpinner message="Loading historical data..." />
+      )}
     </Box>
   );
 };
 
-const MapViewWithCalculations = () => {
+const MapViewWithCalculations = ({
+  showDefaultMap,
+}: {
+  showDefaultMap?: boolean;
+}) => {
   const { center, fitZoom, isLoading } = useApp();
 
-  if (isLoading) {
-    return <MapSkeleton />;
-  }
-
-  if (!center) {
-    return null;
+  if (showDefaultMap || isLoading || !center) {
+    return (
+      <MapView
+        initialPosition={DEFAULT_MAP_CENTER}
+        initialZoom={DEFAULT_MAP_ZOOM}
+      />
+    );
   }
 
   const isValidCenter =
     center && isValidCoordinate(center.latitude, center.longitude);
-
   const isValidZoom =
     fitZoom &&
     isValidNumber(fitZoom) &&
@@ -119,7 +145,12 @@ const MapViewWithCalculations = () => {
 
   if (!isValidCenter || !isValidZoom) {
     logger.error("Invalid map parameters:", { center, fitZoom });
-    return null;
+    return (
+      <MapView
+        initialPosition={DEFAULT_MAP_CENTER}
+        initialZoom={DEFAULT_MAP_ZOOM}
+      />
+    );
   }
 
   return (
