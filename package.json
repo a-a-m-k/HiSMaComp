@@ -9,7 +9,7 @@
     "build": "vite build",
     "build:check": "npm run build && node scripts/check-bundle-size.js",
     "build:analyze": "vite build && echo 'Bundle analysis generated at dist/bundle-analysis.html'",
-    "preview": "vite preview --base /HiSMaComp/",
+    "preview": "vite preview",
     "test:base": "NODE_OPTIONS=--max-old-space-size=4096 vitest",
     "test": "npm run test:base",
     "test:ui": "npm run test:base -- --ui",

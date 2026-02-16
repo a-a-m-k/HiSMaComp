@@ -36,6 +36,7 @@ jobs:
       - name: Build
         env:
           VITE_STADIA_API_KEY: ${{ secrets.VITE_STADIA_API_KEY }}
+          VITE_BASE_PATH: /HiSMaComp/
         run: npm run build
 
       - name: Setup Pages

@@ -4,6 +4,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import MapView from "@/components/map/MapView/MapView";
 import { AppProvider } from "@/context/AppContext";
 import { Town } from "@/common/types";
+import { DEFAULT_MAP_CONTAINER_PROPS } from "@/components/map/MapView/constants";
 
 vi.mock("@mui/material", async importOriginal => {
   const actual = await importOriginal<typeof import("@mui/material")>();
@@ -411,6 +412,9 @@ describe("MapView", () => {
 
     expect(props?.touchZoomRotate).toBe(true);
     expect(props?.dragPan).toBe(true);
+    expect(props?.maxZoom).toBe(DEFAULT_MAP_CONTAINER_PROPS.maxZoom);
+    expect(props?.keyboard).toBe(true);
+    expect(props?.scrollZoom).toBe(true);
   });
 
   it("should defer overlays until first map idle event", async () => {
@@ -453,5 +457,79 @@ describe("MapView", () => {
     });
 
     expect(screen.queryByTestId("screenshot-button")).not.toBeInTheDocument();
+  });
+
+  it("shows zoom buttons on desktop and hides them on tablet/mobile", async () => {
+    const { rerender } = render(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+
+    expect(screen.getByTestId("navigation-control")).toBeInTheDocument();
+
+    responsiveState.isDesktop = false;
+    responsiveState.isTablet = true;
+    responsiveState.isMobile = false;
+    rerender(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+    expect(screen.queryByTestId("navigation-control")).not.toBeInTheDocument();
+
+    responsiveState.isDesktop = false;
+    responsiveState.isTablet = false;
+    responsiveState.isMobile = true;
+    rerender(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+    expect(screen.queryByTestId("navigation-control")).not.toBeInTheDocument();
+  });
+
+  it("keeps touch gestures enabled for tablet and mobile", async () => {
+    responsiveState.isDesktop = false;
+    responsiveState.isTablet = true;
+    responsiveState.isMobile = false;
+
+    const { rerender } = render(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+
+    const { __getLastMapProps } = await import("react-map-gl/maplibre");
+    let props = __getLastMapProps();
+    expect(props?.touchZoomRotate).toBe(true);
+    expect(props?.dragPan).toBe(true);
+
+    responsiveState.isTablet = false;
+    responsiveState.isMobile = true;
+    rerender(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+
+    props = __getLastMapProps();
+    expect(props?.touchZoomRotate).toBe(true);
+    expect(props?.dragPan).toBe(true);
   });
 });

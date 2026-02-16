@@ -134,4 +134,28 @@ describe("useMapViewState", () => {
     // Should handle dimension changes
     expect(true).toBe(true); // Placeholder - actual assertion depends on implementation
   });
+
+  it("preserves user zoom during minor viewport resize jitter", () => {
+    const { result, rerender } = renderHook(props => useMapViewState(props), {
+      initialProps: defaultProps,
+    });
+
+    act(() => {
+      result.current.handleMove({
+        viewState: {
+          longitude: 11,
+          latitude: 51,
+          zoom: 7,
+        },
+      });
+    });
+
+    rerender({
+      ...defaultProps,
+      screenWidth: 1920,
+      screenHeight: 1030, // Minor height change (e.g. browser UI collapse)
+    });
+
+    expect(result.current.viewState.zoom).toBe(7);
+  });
 });
