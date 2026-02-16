@@ -151,7 +151,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
           }}
           interactiveLayerIds={[`${MAP_LAYER_ID}-circle`]}
           canvasContextAttributes={{ preserveDrawingBuffer: true }}
-          minZoom={1}
+          minZoom={safeProps.zoom}
           maxZoom={DEFAULT_MAP_CONTAINER_PROPS.maxZoom}
           style={{ width: "100%", height: "100%" }}
           mapStyle={getTerrainStyle()}
