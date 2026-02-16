@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
@@ -15,6 +15,7 @@ export interface LegendProps {
   label: string;
   layers: LayerItem[];
   style?: React.CSSProperties;
+  isMapIdle?: boolean;
 }
 
 const LegendItem: React.FC<{ layer: string; color: string }> = React.memo(
@@ -67,29 +68,11 @@ const LegendItem: React.FC<{ layer: string; color: string }> = React.memo(
 LegendItem.displayName = "LegendItem";
 
 export const LegendContent: React.FC<LegendProps> = React.memo(
-  ({ layers, label, style }) => {
+  ({ layers, label, style, isMapIdle = true }) => {
     const { selectedYear } = useApp();
     const theme = useTheme();
     const { isTablet, isMobile } = useResponsive();
     const isMediumOrLarger = useMediaQuery(theme.breakpoints.up("md"));
-    const [isMapIdle, setIsMapIdle] = useState<boolean>(
-      () => document.documentElement.getAttribute("data-map-idle") === "true"
-    );
-
-    useEffect(() => {
-      const root = document.documentElement;
-      const syncIdleState = () =>
-        setIsMapIdle(root.getAttribute("data-map-idle") === "true");
-
-      syncIdleState();
-      const observer = new MutationObserver(syncIdleState);
-      observer.observe(root, {
-        attributes: true,
-        attributeFilter: ["data-map-idle"],
-      });
-
-      return () => observer.disconnect();
-    }, []);
 
     const titleStyle = useMemo<React.CSSProperties>(
       () => ({

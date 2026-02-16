@@ -40,6 +40,7 @@ const ScreenshotButton = React.lazy(
 interface MapViewComponentProps {
   initialPosition: { longitude: number; latitude: number };
   initialZoom: number;
+  onFirstIdle?: () => void;
 }
 
 /**
@@ -49,6 +50,7 @@ interface MapViewComponentProps {
 const MapView: React.FC<MapViewComponentProps> = ({
   initialPosition: { longitude, latitude },
   initialZoom,
+  onFirstIdle,
 }) => {
   const theme = useTheme();
   const { isMobile, isTablet, isDesktop } = useResponsive();
@@ -104,9 +106,9 @@ const MapView: React.FC<MapViewComponentProps> = ({
    * visible tiles can finish first.
    */
   const handleMapIdle = React.useCallback(() => {
-    document.documentElement.setAttribute("data-map-idle", "true");
-    setMapReady(prev => (prev ? prev : true));
-  }, []);
+    onFirstIdle?.();
+    setMapReady(true);
+  }, [onFirstIdle]);
 
   const mapDescription = useMemo(
     () => getMapDescription({ isMobile, isDesktop }),

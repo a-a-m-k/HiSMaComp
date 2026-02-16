@@ -70,12 +70,12 @@ const MapContainerContent = ({
   townsLoading?: boolean;
 }) => {
   const { isLoading, error, retry } = useApp();
+  const [isMapIdle, setIsMapIdle] = React.useState(false);
 
   React.useEffect(() => {
     document.documentElement.setAttribute("data-app-ready", "true");
-    document.documentElement.setAttribute("data-map-idle", "false");
     return () => {
-      document.documentElement.removeAttribute("data-map-idle");
+      document.documentElement.removeAttribute("data-app-ready");
     };
   }, []);
 
@@ -92,7 +92,11 @@ const MapContainerContent = ({
       {!error && (
         <>
           <Timeline marks={marks} />
-          <MapLegend label={LEGEND_HEADING_LABEL} layers={legendLayers} />
+          <MapLegend
+            label={LEGEND_HEADING_LABEL}
+            layers={legendLayers}
+            isMapIdle={isMapIdle}
+          />
         </>
       )}
       {error && (
@@ -103,7 +107,10 @@ const MapContainerContent = ({
         />
       )}
       <ErrorBoundary>
-        <MapViewWithCalculations showDefaultMap={showDefaultMap} />
+        <MapViewWithCalculations
+          showDefaultMap={showDefaultMap}
+          onFirstIdle={() => setIsMapIdle(true)}
+        />
       </ErrorBoundary>
       {(isLoading || townsLoading) && (
         <LoadingSpinner message="Loading historical data..." />
@@ -114,8 +121,10 @@ const MapContainerContent = ({
 
 const MapViewWithCalculations = ({
   showDefaultMap,
+  onFirstIdle,
 }: {
   showDefaultMap?: boolean;
+  onFirstIdle: () => void;
 }) => {
   const { center, fitZoom, isLoading } = useApp();
 
@@ -124,6 +133,7 @@ const MapViewWithCalculations = ({
       <MapView
         initialPosition={DEFAULT_MAP_CENTER}
         initialZoom={DEFAULT_MAP_ZOOM}
+        onFirstIdle={onFirstIdle}
       />
     );
   }
@@ -142,6 +152,7 @@ const MapViewWithCalculations = ({
       <MapView
         initialPosition={DEFAULT_MAP_CENTER}
         initialZoom={DEFAULT_MAP_ZOOM}
+        onFirstIdle={onFirstIdle}
       />
     );
   }
@@ -153,6 +164,7 @@ const MapViewWithCalculations = ({
         longitude: center.longitude,
       }}
       initialZoom={fitZoom}
+      onFirstIdle={onFirstIdle}
     />
   );
 };
