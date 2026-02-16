@@ -1,7 +1,8 @@
 import React, { Suspense } from "react";
 import Box from "@mui/material/Box";
 
-import { Timeline, Legend as MapLegend } from "@/components/controls";
+import Timeline from "@/components/controls/Timeline/Timeline";
+import MapLegend from "@/components/controls/Legend/Legend";
 import { ErrorBoundary } from "@/components/dev";
 import { LoadingSpinner, ErrorOverlay } from "@/components/ui";
 import {

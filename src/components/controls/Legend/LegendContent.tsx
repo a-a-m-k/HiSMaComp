@@ -74,10 +74,10 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
     const isMediumOrLarger = useMediaQuery(theme.breakpoints.up("md"));
     const sizingStyles = useMemo(() => getLegendStyles(theme), [theme]);
 
-    const titleStyles = useMemo(
+    const titleStyle = useMemo<React.CSSProperties>(
       () => ({
-        ...sizingStyles.title,
-        mb: isMobile
+        margin: 0,
+        marginBottom: isMobile
           ? theme.spacing(0.5)
           : isTablet
             ? theme.spacing(0.75)
@@ -85,14 +85,18 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
         textAlign: isTablet || isMobile ? "center" : "left",
         width: "100%",
         color: theme.palette.text.primary,
+        fontSize: isMobile ? "0.85rem" : isTablet ? "0.9rem" : "0.95rem",
+        fontWeight: 600,
+        lineHeight: 1.2,
+        letterSpacing: "0.01em",
       }),
-      [sizingStyles.title, isMobile, isTablet, theme]
+      [isMobile, isTablet, theme]
     );
 
-    const subtitleStyles = useMemo(
+    const subtitleStyle = useMemo<React.CSSProperties>(
       () => ({
-        ...sizingStyles.subtitle,
-        mb: isMobile
+        margin: 0,
+        marginBottom: isMobile
           ? theme.spacing(0.5)
           : isTablet
             ? theme.spacing(1)
@@ -101,8 +105,11 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
         width: "100%",
         color: theme.palette.text.secondary,
         opacity: 0.9,
+        fontSize: isMobile ? "0.72rem" : "0.78rem",
+        lineHeight: 1.25,
+        fontWeight: 500,
       }),
-      [sizingStyles.subtitle, isMobile, isTablet, theme]
+      [isMobile, isTablet, theme]
     );
 
     const stackStyles = useMemo(
@@ -133,17 +140,10 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
 
     return (
       <Box sx={style} component="section" aria-labelledby="legend-heading">
-        <Typography
-          id="legend-heading"
-          component="h2"
-          variant="h6"
-          sx={titleStyles}
-        >
+        <h2 id="legend-heading" style={titleStyle}>
           {label}
-        </Typography>
-        <Typography component="p" variant="subtitle2" sx={subtitleStyles}>
-          Time around {selectedYear}
-        </Typography>
+        </h2>
+        <p style={subtitleStyle}>Time around {selectedYear}</p>
         <Stack {...stackStyles}>
           {layers.map(({ layer, color }) => (
             <LegendItem key={layer} layer={layer} color={color} />
