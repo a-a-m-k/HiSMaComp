@@ -73,6 +73,10 @@ const MapContainerContent = ({
 
   React.useEffect(() => {
     document.documentElement.setAttribute("data-app-ready", "true");
+    document.documentElement.setAttribute("data-map-idle", "false");
+    return () => {
+      document.documentElement.removeAttribute("data-map-idle");
+    };
   }, []);
 
   return (

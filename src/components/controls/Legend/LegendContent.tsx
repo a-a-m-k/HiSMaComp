@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
@@ -72,25 +72,44 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
     const theme = useTheme();
     const { isTablet, isMobile } = useResponsive();
     const isMediumOrLarger = useMediaQuery(theme.breakpoints.up("md"));
-    const sizingStyles = useMemo(() => getLegendStyles(theme), [theme]);
+    const [isMapIdle, setIsMapIdle] = useState<boolean>(
+      () => document.documentElement.getAttribute("data-map-idle") === "true"
+    );
+
+    useEffect(() => {
+      const root = document.documentElement;
+      const syncIdleState = () =>
+        setIsMapIdle(root.getAttribute("data-map-idle") === "true");
+
+      syncIdleState();
+      const observer = new MutationObserver(syncIdleState);
+      observer.observe(root, {
+        attributes: true,
+        attributeFilter: ["data-map-idle"],
+      });
+
+      return () => observer.disconnect();
+    }, []);
 
     const titleStyle = useMemo<React.CSSProperties>(
       () => ({
         margin: 0,
-        marginBottom: isMobile
-          ? theme.spacing(0.5)
-          : isTablet
-            ? theme.spacing(0.75)
-            : theme.spacing(1.25),
+        marginBottom: isMapIdle
+          ? isMobile
+            ? theme.spacing(0.5)
+            : isTablet
+              ? theme.spacing(0.75)
+              : theme.spacing(1.25)
+          : 0,
         textAlign: isTablet || isMobile ? "center" : "left",
         width: "100%",
-        color: theme.palette.text.primary,
-        fontSize: isMobile ? "0.85rem" : isTablet ? "0.9rem" : "0.95rem",
-        fontWeight: 600,
-        lineHeight: 1.2,
+        color: "#2f2f2f",
+        fontSize: isMobile ? "0.78rem" : "0.88rem",
+        fontWeight: 500,
+        lineHeight: 1.25,
         letterSpacing: "0.01em",
       }),
-      [isMobile, isTablet, theme]
+      [isMapIdle, isMobile, isTablet, theme]
     );
 
     const subtitleStyle = useMemo<React.CSSProperties>(
@@ -143,13 +162,17 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
         <h2 id="legend-heading" style={titleStyle}>
           {label}
         </h2>
-        <p style={subtitleStyle}>Time around {selectedYear}</p>
-        <Stack {...stackStyles}>
-          {layers.map(({ layer, color }) => (
-            <LegendItem key={layer} layer={layer} color={color} />
-          ))}
-        </Stack>
-        <AttributionLinks />
+        {isMapIdle && (
+          <>
+            <p style={subtitleStyle}>Time around {selectedYear}</p>
+            <Stack {...stackStyles}>
+              {layers.map(({ layer, color }) => (
+                <LegendItem key={layer} layer={layer} color={color} />
+              ))}
+            </Stack>
+            <AttributionLinks />
+          </>
+        )}
       </Box>
     );
   }

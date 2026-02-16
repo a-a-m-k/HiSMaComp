@@ -104,6 +104,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
    * visible tiles can finish first.
    */
   const handleMapIdle = React.useCallback(() => {
+    document.documentElement.setAttribute("data-map-idle", "true");
     setMapReady(prev => (prev ? prev : true));
   }, []);
 
