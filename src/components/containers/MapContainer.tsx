@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React from "react";
 import Box from "@mui/material/Box";
 
 import Timeline from "@/components/controls/Timeline/Timeline";
@@ -17,7 +17,7 @@ import { useLegendLayers, useTownsData } from "@/hooks";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
 
-const MapView = React.lazy(() => import("@/components/map/MapView/MapView"));
+import MapView from "@/components/map/MapView/MapView";
 
 const marks: TimelineMark[] = YEARS.map(year => ({
   value: year,
@@ -99,19 +99,7 @@ const MapContainerContent = ({
         />
       )}
       <ErrorBoundary>
-        <Suspense
-          fallback={
-            <Box
-              sx={{
-                width: "100%",
-                height: "100%",
-                bgcolor: "grey.100",
-              }}
-            />
-          }
-        >
-          <MapViewWithCalculations showDefaultMap={showDefaultMap} />
-        </Suspense>
+        <MapViewWithCalculations showDefaultMap={showDefaultMap} />
       </ErrorBoundary>
       {(isLoading || townsLoading) && (
         <LoadingSpinner message="Loading historical data..." />
