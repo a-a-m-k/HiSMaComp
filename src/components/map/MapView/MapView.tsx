@@ -59,6 +59,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
+  const enableZoomControls = !isMobile;
 
   const safeProps = useMemo(
     () => ({
@@ -82,8 +83,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
 
   const townsGeojson = useTownsGeoJSON(filteredTowns);
 
-  useMapKeyboardShortcuts(mapRef, isDesktop);
-  useMapKeyboardPanning(mapRef, containerRef, isDesktop);
+  useMapKeyboardShortcuts(mapRef, enableZoomControls);
+  useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
   useNavigationControlAccessibility(isMobile, containerRef);
 
   /**
@@ -157,8 +158,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
           mapLib={MaplibreGL}
           attributionControl={false}
           cursor="pointer"
-          keyboard={isDesktop}
-          scrollZoom={isDesktop}
+          keyboard={enableZoomControls}
+          scrollZoom={enableZoomControls}
           touchZoomRotate={true}
           dragPan={true}
           cancelPendingTileRequestsWhileZooming={true}
@@ -176,7 +177,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
               </Suspense>
             </ScreenshotButtonContainer>
           )}
-          {isDesktop && <NavigationControl position="bottom-right" />}
+          {enableZoomControls && <NavigationControl position="bottom-right" />}
         </Map>
       </div>
     </>

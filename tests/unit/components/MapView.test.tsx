@@ -116,6 +116,10 @@ const responsiveState = {
   isTablet: false,
   isDesktop: true,
 };
+const viewportState = {
+  width: 1920,
+  height: 1080,
+};
 
 vi.mock("react-map-gl/maplibre", () => {
   const MockMap = React.forwardRef(
@@ -249,8 +253,8 @@ vi.mock("@/hooks/ui", async () => {
       })
     ),
     useScreenDimensions: vi.fn(() => ({
-      screenWidth: 1920,
-      screenHeight: 1080,
+      screenWidth: viewportState.width,
+      screenHeight: viewportState.height,
     })),
     useResponsiveZoom: vi.fn(() => 4),
     useScreenshot: vi.fn(() => ({
@@ -359,6 +363,8 @@ describe("MapView", () => {
     responsiveState.isMobile = false;
     responsiveState.isTablet = false;
     responsiveState.isDesktop = true;
+    viewportState.width = 1920;
+    viewportState.height = 1080;
   });
 
   it("should render map container with correct initial position and zoom", async () => {
@@ -459,7 +465,7 @@ describe("MapView", () => {
     expect(screen.queryByTestId("screenshot-button")).not.toBeInTheDocument();
   });
 
-  it("shows zoom buttons on desktop and hides them on tablet/mobile", async () => {
+  it("shows zoom buttons on desktop/tablet and hides them on mobile", async () => {
     const { rerender } = render(
       <TestWrapper>
         <MapView
@@ -474,6 +480,8 @@ describe("MapView", () => {
     responsiveState.isDesktop = false;
     responsiveState.isTablet = true;
     responsiveState.isMobile = false;
+    viewportState.width = 768;
+    viewportState.height = 1024;
     rerender(
       <TestWrapper>
         <MapView
@@ -482,11 +490,13 @@ describe("MapView", () => {
         />
       </TestWrapper>
     );
-    expect(screen.queryByTestId("navigation-control")).not.toBeInTheDocument();
+    expect(screen.getByTestId("navigation-control")).toBeInTheDocument();
 
     responsiveState.isDesktop = false;
     responsiveState.isTablet = false;
     responsiveState.isMobile = true;
+    viewportState.width = 375;
+    viewportState.height = 667;
     rerender(
       <TestWrapper>
         <MapView
@@ -502,6 +512,8 @@ describe("MapView", () => {
     responsiveState.isDesktop = false;
     responsiveState.isTablet = true;
     responsiveState.isMobile = false;
+    viewportState.width = 768;
+    viewportState.height = 1024;
 
     const { rerender } = render(
       <TestWrapper>
@@ -519,6 +531,8 @@ describe("MapView", () => {
 
     responsiveState.isTablet = false;
     responsiveState.isMobile = true;
+    viewportState.width = 375;
+    viewportState.height = 667;
     rerender(
       <TestWrapper>
         <MapView

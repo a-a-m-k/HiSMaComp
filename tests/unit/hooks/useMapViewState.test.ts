@@ -158,4 +158,39 @@ describe("useMapViewState", () => {
 
     expect(result.current.viewState.zoom).toBe(7);
   });
+
+  it("does not clear user-interaction state on zoom-only prop changes", () => {
+    const { result, rerender } = renderHook(props => useMapViewState(props), {
+      initialProps: {
+        ...defaultProps,
+        zoom: 4,
+      },
+    });
+
+    act(() => {
+      result.current.handleMove({
+        viewState: {
+          longitude: 11,
+          latitude: 51,
+          zoom: 6,
+        },
+      });
+    });
+
+    // Simulate a significant zoom prop recalculation without any
+    // device/screen change (this used to clear user interaction state).
+    rerender({
+      ...defaultProps,
+      zoom: 2,
+    });
+
+    // Followed by a minor zoom prop change. If interaction state was incorrectly
+    // cleared, this would snap to 2.05. Correct behavior preserves user zoom.
+    rerender({
+      ...defaultProps,
+      zoom: 2.05,
+    });
+
+    expect(result.current.viewState.zoom).toBe(2);
+  });
 });

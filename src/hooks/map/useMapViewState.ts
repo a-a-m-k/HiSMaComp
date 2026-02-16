@@ -130,8 +130,7 @@ export function useMapViewState({
     const zoomDifference = Math.abs(zoom - prevValuesRef.current.zoom);
     const zoomChangedSignificantly = zoomDifference > ZOOM_CHANGE_THRESHOLD;
 
-    const isDeviceChange =
-      deviceTypeChanged || screenSizeChanged || zoomChangedSignificantly;
+    const isDeviceChange = deviceTypeChanged || screenSizeChanged;
 
     return {
       isDeviceChange,
