@@ -85,14 +85,26 @@ const MapView: React.FC<MapViewComponentProps> = ({
   useNavigationControlAccessibility(isMobile, containerRef);
 
   /**
-   * Marks map-dependent content as ready once the underlying MapLibre instance
-   * exists.
+   * Applies a conservative tile-loading strategy so current viewport requests
+   * are prioritized and speculative prefetch is reduced.
    */
   const handleMapLoad = React.useCallback(() => {
     if (!mapRef.current) return;
     const map = mapRef.current.getMap();
     if (!map) return;
-    setMapReady(true);
+
+    const mapWithPrefetchControl = map as typeof map & {
+      setPrefetchZoomDelta?: (delta: number) => void;
+    };
+    mapWithPrefetchControl.setPrefetchZoomDelta?.(0);
+  }, []);
+
+  /**
+   * Defer non-critical overlays until the map reaches its first idle state so
+   * visible tiles can finish first.
+   */
+  const handleMapIdle = React.useCallback(() => {
+    setMapReady(prev => (prev ? prev : true));
   }, []);
 
   const mapDescription = useMemo(
@@ -126,6 +138,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
           {...viewState}
           onMove={handleMove}
           onLoad={handleMapLoad}
+          onIdle={handleMapIdle}
           onClick={e => {
             if (e.features && e.features.length > 0) {
               const feature = e.features[0];
@@ -144,6 +157,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
           keyboard={false}
           touchZoomRotate={true}
           dragPan={true}
+          cancelPendingTileRequestsWhileZooming={true}
         >
           {mapReady && (
             <>

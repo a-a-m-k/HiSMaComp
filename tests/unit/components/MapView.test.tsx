@@ -1,12 +1,12 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import React from "react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import MapView from "@/components/map/MapView/MapView";
 import { AppProvider } from "@/context/AppContext";
 import { Town } from "@/common/types";
 
 vi.mock("@mui/material", async importOriginal => {
   const actual = await importOriginal<typeof import("@mui/material")>();
-  const React = require("react");
   const Paper = ({ children, ...props }: any) =>
     React.createElement("div", props, children);
 
@@ -30,7 +30,6 @@ vi.mock("@mui/material", async importOriginal => {
 
 vi.mock("@mui/material/styles", async importOriginal => {
   const actual = await importOriginal<typeof import("@mui/material/styles")>();
-  const React = require("react");
 
   return {
     ...actual,
@@ -65,9 +64,9 @@ vi.mock("@/constants/ui", async importOriginal => {
 vi.mock(
   "@/components/controls/ScreenshotButton/ScreenshotButton.styles",
   () => {
-    const React = require("react");
     const ScreenshotButton = React.forwardRef((props: any, ref: any) => {
       const { children, disableRipple, ...rest } = props;
+      void disableRipple;
       return React.createElement(
         "button",
         {
@@ -93,9 +92,9 @@ vi.mock(
 );
 
 vi.mock("@/components/controls", () => {
-  const React = require("react");
   const ScreenshotButton = React.forwardRef((props: any, ref: any) => {
     const { disableRipple, ...rest } = props;
+    void disableRipple;
     return React.createElement("button", {
       ref,
       id: "map-screenshot-button",
@@ -111,20 +110,27 @@ vi.mock("@/components/controls", () => {
 });
 
 let lastMapProps: Record<string, unknown> | null = null;
+const responsiveState = {
+  isMobile: false,
+  isTablet: false,
+  isDesktop: true,
+};
 
 vi.mock("react-map-gl/maplibre", () => {
-  const React = require("react");
+  const MockMap = React.forwardRef(
+    (props: { children: React.ReactNode }, ref: React.Ref<any>) => {
+      lastMapProps = props;
+      return (
+        <div data-testid="map-container" ref={ref}>
+          {props.children}
+        </div>
+      );
+    }
+  );
+  MockMap.displayName = "MockMap";
+
   return {
-    default: React.forwardRef(
-      (props: { children: React.ReactNode }, ref: React.Ref<any>) => {
-        lastMapProps = props;
-        return (
-          <div data-testid="map-container" ref={ref}>
-            {props.children}
-          </div>
-        );
-      }
-    ),
+    default: MockMap,
     NavigationControl: () => <div data-testid="navigation-control" />,
     Source: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="map-source">{children}</div>
@@ -147,21 +153,17 @@ vi.mock("@assets/terrain-gl-style/terrain.json", () => ({
   default: { version: 8, sources: {}, layers: [] },
 }));
 
-vi.mock("@/components/controls/Legend", () => {
-  const React = require("react");
-  return {
-    Legend: () => null,
-  };
-});
+vi.mock("@/components/controls/Legend", () => ({
+  Legend: () => null,
+}));
 
 vi.mock("@mui/icons-material", () => ({
   SaveAltRounded: () => {
-    const React = require("react");
     return React.createElement("svg", { "data-testid": "save-icon" });
   },
 }));
 
-vi.mock("../../../../src/components/map/MapView/FocusableMarkers", () => ({
+vi.mock("@/components/map/MapView/FocusableMarkers", () => ({
   FocusableMarkers: () => <div data-testid="focusable-markers" />,
 }));
 
@@ -235,9 +237,9 @@ vi.mock("../MapLayer/MapLayer", () => ({
 
 vi.mock("@/hooks/ui", () => ({
   useResponsive: vi.fn(() => ({
-    isMobile: false,
-    isTablet: false,
-    isDesktop: true,
+    isMobile: responsiveState.isMobile,
+    isTablet: responsiveState.isTablet,
+    isDesktop: responsiveState.isDesktop,
     isXLarge: false,
     theme: {
       breakpoints: { values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 } },
@@ -280,7 +282,6 @@ vi.mock("@/utils/logger", () => ({
 
 vi.mock("@/components/map/MapView/TownMarkers", () => ({
   TownMarkers: ({ towns }: { towns: unknown[] }) => {
-    const React = require("react");
     return React.createElement(
       "div",
       { "data-testid": "town-markers" },
@@ -308,7 +309,6 @@ vi.mock("@/hooks/map", () => ({
 }));
 
 vi.mock("@/context/AppContext", () => {
-  const React = require("react");
   const mockFns = {
     setSelectedYear: vi.fn(),
     clearError: vi.fn(),
@@ -351,6 +351,13 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe("MapView", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    responsiveState.isMobile = false;
+    responsiveState.isTablet = false;
+    responsiveState.isDesktop = true;
+  });
+
   it("should render map container with correct initial position and zoom", async () => {
     const initialPosition = { latitude: 48.8566, longitude: 2.3522 };
     const initialZoom = 8;
@@ -402,5 +409,47 @@ describe("MapView", () => {
 
     expect(props?.touchZoomRotate).toBe(true);
     expect(props?.dragPan).toBe(true);
+  });
+
+  it("should defer overlays until first map idle event", async () => {
+    render(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+
+    expect(screen.queryByTestId("town-markers")).not.toBeInTheDocument();
+
+    const { __getLastMapProps } = await import("react-map-gl/maplibre");
+    const props = __getLastMapProps();
+
+    await act(async () => {
+      (props?.onIdle as (() => void) | undefined)?.();
+    });
+
+    expect(screen.getByTestId("town-markers")).toBeInTheDocument();
+  });
+
+  it("should hide screenshot button on mobile", async () => {
+    responsiveState.isMobile = true;
+    responsiveState.isDesktop = false;
+
+    render(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("map-container")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByTestId("screenshot-button")).not.toBeInTheDocument();
   });
 });
