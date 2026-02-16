@@ -22,17 +22,20 @@ vi.mock("@/context/AppContext", () => ({
   }),
 }));
 
-vi.mock("@/hooks/ui", () => ({
-  useResponsive: () => ({
-    isMobile: state.isMobile,
-    isTablet: state.isTablet,
-    theme: {
-      palette: {
-        text: { primary: "#111111" },
-      },
-    },
-  }),
-}));
+vi.mock("@/hooks/ui", async () => {
+  const { createResponsiveMock: createResponsive } = await import(
+    "../../helpers/mocks/responsive"
+  );
+
+  return {
+    useResponsive: () =>
+      createResponsive({
+        isMobile: state.isMobile,
+        isTablet: state.isTablet,
+        isDesktop: !state.isMobile && !state.isTablet,
+      }),
+  };
+});
 
 vi.mock("@/constants/sizing", () => ({
   getTimelineStyles: () => ({

@@ -22,14 +22,16 @@ const ThrowCustomError = () => {
   throw new TypeError("Custom type error");
 };
 
+const mockLogger = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+
 // Mock logger
 vi.mock("@/utils/logger", () => ({
-  logger: {
-    error: vi.fn(),
-    debug: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-  },
+  logger: mockLogger,
 }));
 
 // Mock console methods to avoid noise in test output

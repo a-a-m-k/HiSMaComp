@@ -8,7 +8,7 @@ const LEGEND_LABEL_FALLBACK = "Town size according to population number";
 
 /**
  * Injects the LCP legend heading placeholder into index.html at build and dev.
- * Reads the heading from the single source of truth (legendLcp.ts) so the
+ * Reads the heading from the single source of truth (legendLcp.json) so the
  * static HTML and the React legend stay in sync.
  */
 export function vitePluginLcpLegend(): Plugin {

@@ -3,6 +3,7 @@ import {
   DEFAULT_SCREEN_DIMENSIONS,
 } from "@/constants/breakpoints";
 import { COORDINATE_LIMITS } from "@/constants/map";
+import { TIMELINE_HEIGHTS } from "@/constants/ui";
 import { Theme } from "@mui/material/styles";
 
 export type { DeviceType };
@@ -20,10 +21,10 @@ export interface UIElementSizes {
 }
 
 const UI_SIZES: Record<DeviceType, Omit<UIElementSizes, "bottomSpacing">> = {
-  mobile: { timeline: 87, legend: 70 },
-  tablet: { timeline: 120, legend: 100 },
-  desktop: { timeline: 100, legend: 90 },
-  largeDesktop: { timeline: 100, legend: 90 },
+  mobile: { timeline: TIMELINE_HEIGHTS.MOBILE, legend: 70 },
+  tablet: { timeline: TIMELINE_HEIGHTS.TABLET, legend: 100 },
+  desktop: { timeline: TIMELINE_HEIGHTS.DESKTOP, legend: 90 },
+  largeDesktop: { timeline: TIMELINE_HEIGHTS.DESKTOP, legend: 90 },
 };
 
 /**

@@ -15,4 +15,3 @@ export const MIN_ZOOM_CALCULATION = 2;
 export const MAX_ZOOM_CALCULATION = 15;
 export const ZOOM_CALCULATION_BASE = 10;
 export const FLOATING_BUTTON_SIZE = 45;
-export const MOBILE_TIMELINE_HEIGHT = 110;

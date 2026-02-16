@@ -4,7 +4,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ThemeProvider } from "@mui/material";
 
-import type { ReactNode } from "react";
 import type { Town } from "@/common/types";
 import theme from "@/theme/theme";
 import MapContainer from "@/components/containers/MapContainer";
@@ -61,23 +60,30 @@ vi.mock("@/components/controls/Legend/Legend", () => ({
   ),
 }));
 
-vi.mock("@/context/AppContext", () => ({
-  AppProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
-  useApp: () => state.appData,
-}));
+vi.mock("@/context/AppContext", async () => {
+  const { createPassthroughAppProvider } = await import(
+    "../../helpers/mocks/appContext"
+  );
+  return {
+    ...createPassthroughAppProvider(),
+    useApp: () => state.appData,
+  };
+});
 
 vi.mock("@/hooks", () => ({
   useLegendLayers: () => state.legendLayers,
   useTownsData: () => state.townsData,
 }));
 
+const mockLogger = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+
 vi.mock("@/utils/logger", () => ({
-  logger: {
-    error: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-    debug: vi.fn(),
-  },
+  logger: mockLogger,
 }));
 
 const renderWithTheme = () =>

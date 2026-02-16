@@ -1,11 +1,12 @@
 import { ExpressionSpecification } from "maplibre-gl";
 import {
-  MAX_MARKER_SIZE,
-  MIN_MARKER_SIZE,
-  NO_DATA_MARKER_SIZE,
-  MAP_LEGEND_COLORS,
-  POPULATION_THRESHOLDS,
-} from "@/constants";
+  getDefaultMarkerScaleConfig,
+  getMarkerColorStops,
+  getMarkerScaleBounds,
+} from "@/utils/markers/markerScale";
+
+const DEFAULT_MARKER_SCALE = getDefaultMarkerScaleConfig();
+const DEFAULT_MARKER_BOUNDS = getMarkerScaleBounds(DEFAULT_MARKER_SCALE);
 
 /**
  * Generates a MapLibre GL expression to retrieve the population value for a given century.
@@ -78,13 +79,11 @@ export const getPopulationSortKey = (
  */
 export const getCircleRadiusExpression = (
   selectedCentury: string,
-  minPopulation: number = POPULATION_THRESHOLDS[0],
-  maxPopulation: number = POPULATION_THRESHOLDS[
-    POPULATION_THRESHOLDS.length - 1
-  ],
-  minMarkerSize: number = MIN_MARKER_SIZE,
-  maxMarkerSize: number = MAX_MARKER_SIZE,
-  noDataMarkerSize: number = NO_DATA_MARKER_SIZE
+  minPopulation: number = DEFAULT_MARKER_BOUNDS.minPopulation,
+  maxPopulation: number = DEFAULT_MARKER_BOUNDS.maxPopulation,
+  minMarkerSize: number = DEFAULT_MARKER_SCALE.minMarkerSize,
+  maxMarkerSize: number = DEFAULT_MARKER_SCALE.maxMarkerSize,
+  noDataMarkerSize: number = DEFAULT_MARKER_SCALE.noDataMarkerSize
 ): ExpressionSpecification => [
   "case",
   getNoDataExpression(selectedCentury),
@@ -115,14 +114,15 @@ export const getCircleRadiusExpression = (
  */
 export const getCircleColorExpression = (
   selectedCentury: string,
-  populationThresholds: number[] = POPULATION_THRESHOLDS,
-  legendColors = MAP_LEGEND_COLORS
+  populationThresholds: number[] = DEFAULT_MARKER_SCALE.populationThresholds,
+  legendColors = DEFAULT_MARKER_SCALE.legendColors
 ): ExpressionSpecification => [
   "step",
   ["coalesce", getPopulationExpression(selectedCentury), 0],
   legendColors[0],
-  ...populationThresholds.flatMap((threshold, i) => [
-    threshold,
-    legendColors[i + 1],
-  ]),
+  ...getMarkerColorStops({
+    ...DEFAULT_MARKER_SCALE,
+    populationThresholds,
+    legendColors,
+  }),
 ];

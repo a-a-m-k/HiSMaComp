@@ -61,27 +61,23 @@ vi.mock("@/services", () => {
   };
 });
 
-vi.mock("@/hooks/ui", () => ({
-  useResponsive: vi.fn(() => ({
-    isMobile: false,
-    isTablet: false,
-    isDesktop: true,
-    isXLarge: false,
-    theme: {
-      breakpoints: { values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 } },
-      spacing: () => 8,
-    },
-  })),
-  useScreenDimensions: vi.fn(() => ({
-    screenWidth: 1920,
-    screenHeight: 1080,
-  })),
-  useResponsiveZoom: vi.fn(() => 4),
-  useScreenshot: vi.fn(() => ({
-    captureScreenshot: vi.fn(),
-    isCapturing: false,
-  })),
-}));
+vi.mock("@/hooks/ui", async () => {
+  const { createResponsiveMock } = await import(
+    "../../helpers/mocks/responsive"
+  );
+  return {
+    useResponsive: vi.fn(() => createResponsiveMock()),
+    useScreenDimensions: vi.fn(() => ({
+      screenWidth: 1920,
+      screenHeight: 1080,
+    })),
+    useResponsiveZoom: vi.fn(() => 4),
+    useScreenshot: vi.fn(() => ({
+      captureScreenshot: vi.fn(),
+      isCapturing: false,
+    })),
+  };
+});
 
 vi.mock("@/hooks/useAccessibility", () => {
   const stableAnnounce = vi.fn();
@@ -105,13 +101,15 @@ vi.mock("@/utils/retry", () => ({
   }),
 }));
 
+const mockLogger = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+
 vi.mock("@/utils/logger", () => ({
-  logger: {
-    error: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-    debug: vi.fn(),
-  },
+  logger: mockLogger,
 }));
 
 const TestComponent = () => {

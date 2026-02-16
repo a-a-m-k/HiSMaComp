@@ -8,11 +8,9 @@
  * Adjust BUDGETS as the app grows.
  */
 import { readFileSync, readdirSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { join } from "path";
 import { gzipSync } from "zlib";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const distDir = join(process.cwd(), "dist");
 const assetsDir = join(distDir, "assets");
 
@@ -24,13 +22,9 @@ const BUDGETS = {
 };
 
 function getGzipSizeKiB(filePath) {
-  try {
-    const content = readFileSync(filePath);
-    const gzip = gzipSync(content);
-    return gzip.length / 1024;
-  } catch {
-    return 0;
-  }
+  const content = readFileSync(filePath);
+  const gzip = gzipSync(content);
+  return gzip.length / 1024;
 }
 
 function main() {
@@ -47,7 +41,15 @@ function main() {
 
   for (const file of files) {
     const path = join(assetsDir, file);
-    const sizeKiB = getGzipSizeKiB(path);
+    let sizeKiB = 0;
+    try {
+      sizeKiB = getGzipSizeKiB(path);
+    } catch (error) {
+      console.error(`[check-bundle-size] Failed to read gzip size for ${file}:`, error);
+      failed = true;
+      continue;
+    }
+
     totalJs += sizeKiB;
     if (file.includes("maplibre")) byName.maplibre = (byName.maplibre || 0) + sizeKiB;
     else if (file.includes("vendor")) byName.vendor = (byName.vendor || 0) + sizeKiB;

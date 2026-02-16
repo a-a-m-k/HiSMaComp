@@ -1,15 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createLoggerMock } from "../helpers/mocks/logger";
 
 const mockRender = vi.fn();
 const mockCreateRoot = vi.fn(() => ({
   render: mockRender,
 }));
-const mockLogger = {
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
-  debug: vi.fn(),
-};
+const mockLogger = createLoggerMock();
 
 vi.mock("react-dom/client", () => ({
   createRoot: (...args: unknown[]) => mockCreateRoot(...args),

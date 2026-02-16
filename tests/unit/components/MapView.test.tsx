@@ -235,27 +235,29 @@ vi.mock("../MapLayer/MapLayer", () => ({
   ),
 }));
 
-vi.mock("@/hooks/ui", () => ({
-  useResponsive: vi.fn(() => ({
-    isMobile: responsiveState.isMobile,
-    isTablet: responsiveState.isTablet,
-    isDesktop: responsiveState.isDesktop,
-    isXLarge: false,
-    theme: {
-      breakpoints: { values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 } },
-      spacing: () => 8,
-    },
-  })),
-  useScreenDimensions: vi.fn(() => ({
-    screenWidth: 1920,
-    screenHeight: 1080,
-  })),
-  useResponsiveZoom: vi.fn(() => 4),
-  useScreenshot: vi.fn(() => ({
-    captureScreenshot: vi.fn(),
-    isCapturing: false,
-  })),
-}));
+vi.mock("@/hooks/ui", async () => {
+  const { createResponsiveMock } = await import(
+    "../../helpers/mocks/responsive"
+  );
+  return {
+    useResponsive: vi.fn(() =>
+      createResponsiveMock({
+        isMobile: responsiveState.isMobile,
+        isTablet: responsiveState.isTablet,
+        isDesktop: responsiveState.isDesktop,
+      })
+    ),
+    useScreenDimensions: vi.fn(() => ({
+      screenWidth: 1920,
+      screenHeight: 1080,
+    })),
+    useResponsiveZoom: vi.fn(() => 4),
+    useScreenshot: vi.fn(() => ({
+      captureScreenshot: vi.fn(),
+      isCapturing: false,
+    })),
+  };
+});
 
 vi.mock("@/hooks/useAccessibility", () => ({
   useAccessibility: vi.fn(() => ({

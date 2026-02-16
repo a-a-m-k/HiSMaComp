@@ -92,7 +92,7 @@ export const TIMELINE_WIDTHS = {
 export const TIMELINE_HEIGHTS = {
   MOBILE: 87,
   TABLET: 120,
-  DESKTOP: 110,
+  DESKTOP: 115,
 } as const;
 
 /**
@@ -214,7 +214,7 @@ export const NAVIGATION_CONTROL_STYLES = {
   /**
    * Control container height - matches timeline height for desktop
    */
-  CONTAINER_HEIGHT_DESKTOP: TIMELINE_HEIGHTS.DESKTOP, // 100px
+  CONTAINER_HEIGHT_DESKTOP: TIMELINE_HEIGHTS.DESKTOP,
 } as const;
 
 /**
@@ -399,7 +399,6 @@ export const getMapContainerStyles = (): string => `
  * Generates CSS styles for MapLibre navigation controls.
  */
 export const getNavigationControlStyles = (theme: Theme): string => {
-  const mdBreakpoint = theme.breakpoints.values.md - 1;
   const timelineBottomSpacing = theme.spacing(
     OVERLAY_POSITIONS.TIMELINE.BOTTOM
   );
@@ -452,60 +451,11 @@ export const getNavigationControlStyles = (theme: Theme): string => {
     .maplibregl-ctrl-group button[title]:focus::before {
       content: none !important;
     }
-    
-    .maplibregl-ctrl-group button[data-tooltip]::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: calc(100% + ${TOOLTIP_STYLES.OFFSET}px);
-      right: 0;
-      background-color: ${COLORS.TOOLTIP_BACKGROUND};
-      color: ${COLORS.TOOLTIP_TEXT};
-      padding: ${TOOLTIP_STYLES.PADDING};
-      border-radius: ${TOOLTIP_STYLES.BORDER_RADIUS};
-      font-size: ${TOOLTIP_STYLES.FONT_SIZE};
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      visibility: hidden;
-      transition: ${TRANSITIONS.TOOLTIP};
-      z-index: ${Z_INDEX.TOOLTIP};
-      box-shadow: ${SHADOWS.TOOLTIP};
-    }
-    
-    .maplibregl-ctrl-group button[data-tooltip]::before {
-      content: '';
-      position: absolute;
-      bottom: calc(100% + ${TOOLTIP_STYLES.OFFSET - 6}px);
-      right: ${TOOLTIP_STYLES.ARROW_OFFSET}px;
-      width: 0;
-      height: 0;
-      border-left: ${TOOLTIP_STYLES.ARROW_SIZE}px solid transparent;
-      border-right: ${TOOLTIP_STYLES.ARROW_SIZE}px solid transparent;
-      border-top: ${TOOLTIP_STYLES.ARROW_SIZE}px solid ${COLORS.TOOLTIP_BACKGROUND};
-      opacity: 0;
-      visibility: hidden;
-      transition: ${TRANSITIONS.TOOLTIP};
-      z-index: ${Z_INDEX.TOOLTIP_ARROW};
-    }
-    
-    .maplibregl-ctrl-group button[data-tooltip]:focus-visible::after,
-    .maplibregl-ctrl-group button[data-tooltip]:hover::after {
-      opacity: 1;
-      visibility: visible;
-    }
-    
-    .maplibregl-ctrl-group button[data-tooltip]:focus-visible::before,
-    .maplibregl-ctrl-group button[data-tooltip]:hover::before {
-      opacity: 1;
-      visibility: visible;
-    }
-    
-    @media (max-width: ${mdBreakpoint}px) {
-      .maplibregl-ctrl-group button[data-tooltip]::after,
-      .maplibregl-ctrl-group button[data-tooltip]::before {
-        display: none !important;
-      }
-    }
+
+    ${getTooltipStyles({
+      position: "top",
+      selector: ".maplibregl-ctrl-group button[data-tooltip]",
+    })}
   `;
 };
 
