@@ -10,8 +10,7 @@ import { vitePluginLcpLegend } from "./vite-plugin-lcp-legend";
 import { vitePluginFixPaths } from "./vite-plugin-fix-paths";
 
 /** Base path for production (e.g. GitHub Pages subpath). Single source for build output. */
-const BUILD_BASE =
-  (process.env.VITE_BASE_PATH as string | undefined) ?? "/HiSMaComp/";
+const BUILD_BASE = (process.env.VITE_BASE_PATH as string | undefined) ?? "/";
 
 const manifestPlugin = (base: string) => ({
   name: "manifest-transform",

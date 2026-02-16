@@ -6,24 +6,29 @@ import { isInputField } from "@/utils/keyboard";
 
 /**
  * Custom hook for handling keyboard shortcuts for map zoom.
- * Supports Cmd/Ctrl + (zoom in) and Cmd/Ctrl - (zoom out).
+ * Supports Cmd/Ctrl + (zoom in) and Cmd/Ctrl - (zoom out) globally.
+ * Also supports plain +/- when focus is inside the map container.
  * Prevents default browser behavior and triggers smooth zoom animations.
  * Only enabled on desktop devices for performance optimization.
  *
  * @param mapRef - Reference to the Map component
+ * @param containerOrEnabled - Optional map container ref or enabled flag (legacy)
  * @param enabled - Whether keyboard shortcuts are enabled (typically desktop only)
  */
 export const useMapKeyboardShortcuts = (
   mapRef: RefObject<MapRef>,
+  containerOrEnabled?: RefObject<HTMLElement> | boolean,
   enabled: boolean = true
 ) => {
+  const shortcutsEnabled =
+    typeof containerOrEnabled === "boolean" ? containerOrEnabled : enabled;
+
   useEffect(() => {
-    if (!enabled) {
+    if (!shortcutsEnabled) {
       return;
     }
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!(e.ctrlKey || e.metaKey)) return;
 
+    const handleKeyDown = (e: KeyboardEvent) => {
       const isZoomIn =
         e.key === "=" ||
         e.key === "+" ||
@@ -39,8 +44,8 @@ export const useMapKeyboardShortcuts = (
 
       if (!isZoomIn && !isZoomOut) return;
 
-      const target = e.target as HTMLElement;
-      if (isInputField(target)) {
+      const target = e.target;
+      if (target instanceof HTMLElement && isInputField(target)) {
         return;
       }
 
@@ -79,5 +84,5 @@ export const useMapKeyboardShortcuts = (
         passive: false,
       } as EventListenerOptions);
     };
-  }, [mapRef, enabled]);
+  }, [mapRef, shortcutsEnabled]);
 };

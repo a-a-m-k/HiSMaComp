@@ -4,6 +4,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import MapView from "@/components/map/MapView/MapView";
 import { AppProvider } from "@/context/AppContext";
 import { Town } from "@/common/types";
+import { DEFAULT_MAP_CONTAINER_PROPS } from "@/components/map/MapView/constants";
 
 vi.mock("@mui/material", async importOriginal => {
   const actual = await importOriginal<typeof import("@mui/material")>();
@@ -114,6 +115,10 @@ const responsiveState = {
   isMobile: false,
   isTablet: false,
   isDesktop: true,
+};
+const viewportState = {
+  width: 1920,
+  height: 1080,
 };
 
 vi.mock("react-map-gl/maplibre", () => {
@@ -248,8 +253,8 @@ vi.mock("@/hooks/ui", async () => {
       })
     ),
     useScreenDimensions: vi.fn(() => ({
-      screenWidth: 1920,
-      screenHeight: 1080,
+      screenWidth: viewportState.width,
+      screenHeight: viewportState.height,
     })),
     useResponsiveZoom: vi.fn(() => 4),
     useScreenshot: vi.fn(() => ({
@@ -358,6 +363,8 @@ describe("MapView", () => {
     responsiveState.isMobile = false;
     responsiveState.isTablet = false;
     responsiveState.isDesktop = true;
+    viewportState.width = 1920;
+    viewportState.height = 1080;
   });
 
   it("should render map container with correct initial position and zoom", async () => {
@@ -411,6 +418,9 @@ describe("MapView", () => {
 
     expect(props?.touchZoomRotate).toBe(true);
     expect(props?.dragPan).toBe(true);
+    expect(props?.maxZoom).toBe(DEFAULT_MAP_CONTAINER_PROPS.maxZoom);
+    expect(props?.keyboard).toBe(true);
+    expect(props?.scrollZoom).toBe(true);
   });
 
   it("should defer overlays until first map idle event", async () => {
@@ -453,5 +463,87 @@ describe("MapView", () => {
     });
 
     expect(screen.queryByTestId("screenshot-button")).not.toBeInTheDocument();
+  });
+
+  it("shows zoom buttons on desktop/tablet and hides them on mobile", async () => {
+    const { rerender } = render(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+
+    expect(screen.getByTestId("navigation-control")).toBeInTheDocument();
+
+    responsiveState.isDesktop = false;
+    responsiveState.isTablet = true;
+    responsiveState.isMobile = false;
+    viewportState.width = 768;
+    viewportState.height = 1024;
+    rerender(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+    expect(screen.getByTestId("navigation-control")).toBeInTheDocument();
+
+    responsiveState.isDesktop = false;
+    responsiveState.isTablet = false;
+    responsiveState.isMobile = true;
+    viewportState.width = 375;
+    viewportState.height = 667;
+    rerender(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+    expect(screen.queryByTestId("navigation-control")).not.toBeInTheDocument();
+  });
+
+  it("keeps touch gestures enabled for tablet and mobile", async () => {
+    responsiveState.isDesktop = false;
+    responsiveState.isTablet = true;
+    responsiveState.isMobile = false;
+    viewportState.width = 768;
+    viewportState.height = 1024;
+
+    const { rerender } = render(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+
+    const { __getLastMapProps } = await import("react-map-gl/maplibre");
+    let props = __getLastMapProps();
+    expect(props?.touchZoomRotate).toBe(true);
+    expect(props?.dragPan).toBe(true);
+
+    responsiveState.isTablet = false;
+    responsiveState.isMobile = true;
+    viewportState.width = 375;
+    viewportState.height = 667;
+    rerender(
+      <TestWrapper>
+        <MapView
+          initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+          initialZoom={5}
+        />
+      </TestWrapper>
+    );
+
+    props = __getLastMapProps();
+    expect(props?.touchZoomRotate).toBe(true);
+    expect(props?.dragPan).toBe(true);
   });
 });

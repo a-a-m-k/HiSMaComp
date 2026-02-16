@@ -5,6 +5,8 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
  * Prevents unnecessary viewState updates for minor zoom differences.
  */
 const ZOOM_CHANGE_THRESHOLD = 0.1;
+const TRANSIENT_RESIZE_HEIGHT_THRESHOLD = 80;
+const TRANSIENT_RESIZE_WIDTH_THRESHOLD = 80;
 
 /**
  * Props for useMapViewState hook.
@@ -106,42 +108,66 @@ export function useMapViewState({
   });
 
   const deviceChangeInfo = useMemo(() => {
+    const widthDelta = Math.abs(
+      prevValuesRef.current.screenWidth - screenWidth
+    );
+    const heightDelta = Math.abs(
+      prevValuesRef.current.screenHeight - screenHeight
+    );
+
     const deviceTypeChanged =
       prevValuesRef.current.isMobile !== isMobile ||
       prevValuesRef.current.isTablet !== isTablet ||
       prevValuesRef.current.isDesktop !== isDesktop;
 
-    const screenSizeChanged =
-      prevValuesRef.current.screenWidth !== screenWidth ||
-      prevValuesRef.current.screenHeight !== screenHeight;
+    const screenSizeChanged = widthDelta > 0 || heightDelta > 0;
+    const transientResizeOnly =
+      !deviceTypeChanged &&
+      screenSizeChanged &&
+      widthDelta <= TRANSIENT_RESIZE_WIDTH_THRESHOLD &&
+      heightDelta <= TRANSIENT_RESIZE_HEIGHT_THRESHOLD;
 
     const zoomDifference = Math.abs(zoom - prevValuesRef.current.zoom);
     const zoomChangedSignificantly = zoomDifference > ZOOM_CHANGE_THRESHOLD;
 
-    const isDeviceChange =
-      deviceTypeChanged || screenSizeChanged || zoomChangedSignificantly;
+    const isDeviceChange = deviceTypeChanged || screenSizeChanged;
 
     return {
       isDeviceChange,
       previousZoom: prevValuesRef.current.zoom,
+      transientResizeOnly,
+      zoomChangedSignificantly,
     };
   }, [isMobile, isTablet, isDesktop, screenWidth, screenHeight, zoom]);
 
   useEffect(() => {
-    const { isDeviceChange, previousZoom } = deviceChangeInfo;
+    const {
+      isDeviceChange,
+      previousZoom,
+      transientResizeOnly,
+      zoomChangedSignificantly,
+    } = deviceChangeInfo;
 
-    if (isDeviceChange && hasUserInteracted) {
+    if (isDeviceChange && hasUserInteracted && !transientResizeOnly) {
       setHasUserInteracted(false);
     }
 
     // Determine if viewState should be updated
     if (isDeviceChange) {
-      // Device changed: always update to new position/zoom
-      setViewState({
-        longitude,
-        latitude,
-        zoom,
-      });
+      if (
+        hasUserInteracted &&
+        transientResizeOnly &&
+        !zoomChangedSignificantly
+      ) {
+        // Preserve user-controlled camera during minor viewport jitter.
+      } else {
+        // Device changed: always update to new position/zoom
+        setViewState({
+          longitude,
+          latitude,
+          zoom,
+        });
+      }
     } else if (!hasUserInteracted) {
       // No user interaction yet: follow prop changes
       setViewState({

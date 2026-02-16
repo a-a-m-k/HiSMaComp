@@ -1,6 +1,14 @@
-const CACHE_VERSION = "v4";
+const CACHE_VERSION = "v5";
 const CACHE_NAME = `hismacomp-app-${CACHE_VERSION}`;
 const MAX_CACHE_SIZE = 100;
+const INDEX_PATH = (() => {
+  try {
+    const scopePath = new URL(self.registration.scope).pathname.replace(/\/$/, "");
+    return `${scopePath || ""}/index.html`;
+  } catch {
+    return "/index.html";
+  }
+})();
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then(() => self.skipWaiting()));
@@ -89,7 +97,7 @@ self.addEventListener("fetch", (event) => {
 
           return fetchPromise.catch(() => {
             if (event.request.destination === "document") {
-              return caches.match("/HiSMaComp/index.html");
+              return caches.match(INDEX_PATH);
             }
             return undefined;
           });
@@ -116,7 +124,7 @@ self.addEventListener("fetch", (event) => {
           return response;
         }).catch(() => {
           if (event.request.destination === "document") {
-            return caches.match("/HiSMaComp/index.html");
+            return caches.match(INDEX_PATH);
           }
           return undefined;
         });

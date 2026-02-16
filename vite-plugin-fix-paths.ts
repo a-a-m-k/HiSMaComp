@@ -34,7 +34,7 @@ export function vitePluginFixPaths(): Plugin {
 
           // Fix absolute paths that don't start with baseUrl (dynamic regex so any base path works)
           const absolutePathRegex = new RegExp(
-            `(href|src)=["']\\/(?!${escapedBase}\\/)([^"']+)["']`,
+            `(href|src)=["']\\/(?!\\/|${escapedBase}\\/)([^"']+)["']`,
             "g"
           );
 

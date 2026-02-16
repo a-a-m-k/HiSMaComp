@@ -33,6 +33,7 @@ vi.mock("@/utils/logger", () => {
 
 describe("useMapKeyboardShortcuts", () => {
   let mapRef: React.RefObject<MapRef>;
+  let containerRef: React.RefObject<HTMLElement>;
   let mockZoomIn: ReturnType<typeof vi.fn>;
   let mockZoomOut: ReturnType<typeof vi.fn>;
   let mockMapInstance: {
@@ -43,6 +44,7 @@ describe("useMapKeyboardShortcuts", () => {
   beforeEach(() => {
     // Create ref
     mapRef = { current: null } as React.RefObject<MapRef>;
+    containerRef = { current: null } as React.RefObject<HTMLElement>;
 
     // Mock map methods
     mockZoomIn = vi.fn();
@@ -59,6 +61,15 @@ describe("useMapKeyboardShortcuts", () => {
       value: {
         getMap: () => mockMapInstance,
       },
+    });
+
+    const container = document.createElement("div");
+    container.id = "map-container-area";
+    container.tabIndex = 0;
+    document.body.appendChild(container);
+    Object.defineProperty(containerRef, "current", {
+      writable: true,
+      value: container,
     });
   });
 
@@ -350,7 +361,7 @@ describe("useMapKeyboardShortcuts", () => {
     expect(mockZoomOut).not.toHaveBeenCalled();
   });
 
-  it("should not zoom when no modifier key is pressed", () => {
+  it("should zoom when plain plus key is pressed", () => {
     renderHook(() => useMapKeyboardShortcuts(mapRef, true));
 
     const event = new KeyboardEvent("keydown", {
@@ -362,7 +373,7 @@ describe("useMapKeyboardShortcuts", () => {
 
     window.dispatchEvent(event);
 
-    expect(mockZoomIn).not.toHaveBeenCalled();
+    expect(mockZoomIn).toHaveBeenCalledTimes(1);
     expect(mockZoomOut).not.toHaveBeenCalled();
   });
 
@@ -389,6 +400,43 @@ describe("useMapKeyboardShortcuts", () => {
     expect(preventDefaultSpy).toHaveBeenCalled();
     expect(stopPropagationSpy).toHaveBeenCalled();
     expect(stopImmediatePropagationSpy).toHaveBeenCalled();
+  });
+
+  it("should zoom in with plus key when map container is focused", () => {
+    renderHook(() => useMapKeyboardShortcuts(mapRef, containerRef, true));
+
+    containerRef.current?.focus();
+    const event = new KeyboardEvent("keydown", {
+      key: "+",
+      code: "Equal",
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.defineProperty(event, "target", {
+      writable: false,
+      value: containerRef.current,
+    });
+
+    window.dispatchEvent(event);
+
+    expect(mockZoomIn).toHaveBeenCalledTimes(1);
+    expect(mockZoomOut).not.toHaveBeenCalled();
+  });
+
+  it("should zoom with plus key even when map is not focused", () => {
+    renderHook(() => useMapKeyboardShortcuts(mapRef, containerRef, true));
+
+    const event = new KeyboardEvent("keydown", {
+      key: "+",
+      code: "Equal",
+      bubbles: true,
+      cancelable: true,
+    });
+
+    window.dispatchEvent(event);
+
+    expect(mockZoomIn).toHaveBeenCalledTimes(1);
+    expect(mockZoomOut).not.toHaveBeenCalled();
   });
 
   it("should handle errors gracefully", async () => {
