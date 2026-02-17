@@ -26,6 +26,13 @@ import {
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
 import { TownMarkers } from "./TownMarkers";
 
+/** Duration for programmatic fit-to-towns animation. */
+const PROGRAMMATIC_FIT_DURATION_MS = 480;
+/** Fallback to sync viewState if moveend never fires after easeTo. */
+const PROGRAMMATIC_FIT_FALLBACK_MS = PROGRAMMATIC_FIT_DURATION_MS + 120;
+const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
 /**
  * Loaded lazily because it is not rendered on mobile and is non-critical for
  * first paint.
@@ -94,12 +101,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
    * Programmatic fit-to-towns: one smooth easeTo to target. Ignoring onMove
    * during the animation prevents React state updates and avoids flicker/jump.
    */
-  const PROGRAMMATIC_FIT_DURATION_MS = 480;
-  /** Fallback to sync viewState if moveend never fires (e.g. after resize/stop). */
-  const PROGRAMMATIC_FIT_FALLBACK_MS = PROGRAMMATIC_FIT_DURATION_MS + 120;
-  const easeInOutCubic = (t: number) =>
-    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
   useEffect(() => {
     if (!programmaticTarget) return;
 
@@ -178,12 +179,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
       map.off("moveend", onMoveEnd);
       map.stop();
       if (programmaticTargetRefForSync.current !== null) {
-        const center = map.getCenter();
-        syncViewStateFromMap({
-          longitude: center.lng,
-          latitude: center.lat,
-          zoom: map.getZoom(),
-        });
+        syncViewStateFromMap(target);
       }
     };
   }, [
@@ -228,8 +224,11 @@ const MapView: React.FC<MapViewComponentProps> = ({
     [isMobile, isDesktop]
   );
 
-  /** When we have a programmatic target, feed it to the Map so it doesn't reset camera to stale viewState. */
-  const effectiveViewState = programmaticTarget ?? viewState;
+  /** When we have a programmatic target, feed it to the Map so it doesn't reset camera to stale viewState. Memoized so Map gets a stable reference when the effective view hasn't changed. */
+  const effectiveViewState = useMemo(
+    () => programmaticTarget ?? viewState,
+    [programmaticTarget, viewState]
+  );
 
   return (
     <>

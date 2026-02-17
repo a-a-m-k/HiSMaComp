@@ -6,6 +6,8 @@ import React, {
   useMemo,
 } from "react";
 
+import { RESIZE_BREAKPOINTS } from "@/constants/breakpoints";
+
 /**
  * Threshold for detecting meaningful zoom level changes.
  * Prevents unnecessary viewState updates for minor zoom differences.
@@ -14,8 +16,6 @@ const ZOOM_CHANGE_THRESHOLD = 0.1;
 /** Skip zoom update only for minor jitter; crossing a breakpoint always updates */
 const TRANSIENT_RESIZE_HEIGHT_THRESHOLD = 50;
 const TRANSIENT_RESIZE_WIDTH_THRESHOLD = 40;
-/** MUI breakpoints (sm=600, md=900, xl=1536); crossing one never counts as transient */
-const RESIZE_BREAKPOINTS = [600, 900, 1200, 1536] as const;
 /** Min change to set a new programmatic target (avoids restarting for same target) */
 const PROGRAMMATIC_TARGET_ZOOM_EPS = 0.05;
 const PROGRAMMATIC_TARGET_LATLNG_EPS = 0.0002;
@@ -126,7 +126,9 @@ export function useMapViewState({
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [programmaticTarget, setProgrammaticTarget] =
     useState<ProgrammaticTarget | null>(null);
+  /** Updated in effect; used for sameTarget check to avoid duplicate programmatic targets. */
   const programmaticTargetRef = useRef<ProgrammaticTarget | null>(null);
+  /** Mirror of programmaticTarget (updated in render); MapView cleanup uses this to decide whether to sync. When null (e.g. cleared for minimal→less minimal), cleanup skips sync. */
   const programmaticTargetRefForSync = useRef<ProgrammaticTarget | null>(null);
   programmaticTargetRefForSync.current = programmaticTarget;
 
@@ -139,6 +141,13 @@ export function useMapViewState({
     screenHeight,
   });
 
+  /** Stable fit target from props; same reference when longitude/latitude/zoom unchanged so we avoid re-running MapView's programmatic effect. */
+  const fitTargetFromProps = useMemo(
+    () => ({ longitude, latitude, zoom }),
+    [longitude, latitude, zoom]
+  );
+
+  /** Compares current props to prevValuesRef (updated in effect) to detect device/size/zoom changes. */
   const deviceChangeInfo = useMemo(() => {
     const widthDelta = Math.abs(
       prevValuesRef.current.screenWidth - screenWidth
@@ -192,7 +201,7 @@ export function useMapViewState({
       setHasUserInteracted(false);
     }
 
-    // Determine if viewState should be updated
+    // Flow: 1) device change → set programmatic target or instant viewState; 2) no user interaction → follow props; 3) user interacted → follow props or preserve zoom.
     if (isDeviceChange) {
       if (
         !isMobile &&
@@ -207,9 +216,9 @@ export function useMapViewState({
         if (fromMinimalToLessMinimal) {
           programmaticTargetRef.current = null;
           setProgrammaticTarget(null);
-          setViewState({ longitude, latitude, zoom });
+          setViewState(fitTargetFromProps);
         } else {
-          const next = { longitude, latitude, zoom };
+          const next = fitTargetFromProps;
           const prev = programmaticTargetRef.current;
           const isShrinking =
             screenWidth < prevValuesRef.current.screenWidth ||
@@ -226,31 +235,26 @@ export function useMapViewState({
               PROGRAMMATIC_TARGET_LATLNG_EPS;
           if (!sameTarget) {
             programmaticTargetRef.current = next;
-            setProgrammaticTarget(next);
+            setProgrammaticTarget(prevTarget =>
+              prevTarget &&
+              prevTarget.zoom === next.zoom &&
+              prevTarget.longitude === next.longitude &&
+              prevTarget.latitude === next.latitude
+                ? prevTarget
+                : next
+            );
           }
         }
       }
     } else if (!hasUserInteracted) {
-      // No user interaction yet: follow prop changes
-      setViewState({
-        longitude,
-        latitude,
-        zoom,
-      });
+      setViewState(fitTargetFromProps);
     } else {
-      // User has interacted: only update on significant zoom changes
       const zoomDiff = Math.abs(zoom - previousZoom);
       if (zoomDiff > ZOOM_CHANGE_THRESHOLD) {
-        setViewState({
-          longitude,
-          latitude,
-          zoom,
-        });
+        setViewState(fitTargetFromProps);
       } else {
-        // Preserve user's zoom level, update position
         setViewState(prev => ({
-          longitude,
-          latitude,
+          ...fitTargetFromProps,
           zoom: prev.zoom,
         }));
       }
@@ -266,9 +270,7 @@ export function useMapViewState({
       screenHeight,
     };
   }, [
-    longitude,
-    latitude,
-    zoom,
+    fitTargetFromProps,
     hasUserInteracted,
     deviceChangeInfo,
     isMobile,

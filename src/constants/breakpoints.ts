@@ -3,6 +3,14 @@ import { createTheme } from "@mui/material/styles";
 const defaultTheme = createTheme();
 const MUI_BREAKPOINTS = defaultTheme.breakpoints.values;
 
+/** Width breakpoints (px); crossing one triggers full map refit. Matches MUI sm/md/lg/xl. */
+export const RESIZE_BREAKPOINTS = [
+  MUI_BREAKPOINTS.sm,
+  MUI_BREAKPOINTS.md,
+  MUI_BREAKPOINTS.lg,
+  MUI_BREAKPOINTS.xl,
+] as const;
+
 export const DEFAULT_SCREEN_DIMENSIONS = {
   width: 1024,
   height: 768,
