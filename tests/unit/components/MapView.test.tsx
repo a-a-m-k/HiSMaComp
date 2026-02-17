@@ -301,6 +301,8 @@ vi.mock("@/hooks/map", () => ({
   useMapViewState: vi.fn(({ longitude, latitude, zoom }) => ({
     viewState: { longitude, latitude, zoom },
     handleMove: vi.fn(),
+    programmaticTarget: null,
+    onProgrammaticAnimationEnd: vi.fn(),
   })),
   useMapKeyboardShortcuts: vi.fn(),
   useMapKeyboardPanning: vi.fn(),

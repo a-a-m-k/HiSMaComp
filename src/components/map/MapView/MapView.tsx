@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, Suspense, useState } from "react";
+import React, { useMemo, useRef, Suspense, useState, useEffect } from "react";
 import Map, { NavigationControl, MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -70,7 +70,12 @@ const MapView: React.FC<MapViewComponentProps> = ({
     [longitude, latitude, initialZoom]
   );
 
-  const { viewState, handleMove } = useMapViewState({
+  const {
+    viewState,
+    handleMove,
+    programmaticTarget,
+    onProgrammaticAnimationEnd,
+  } = useMapViewState({
     longitude: safeProps.longitude,
     latitude: safeProps.latitude,
     zoom: safeProps.zoom,
@@ -80,6 +85,28 @@ const MapView: React.FC<MapViewComponentProps> = ({
     screenWidth,
     screenHeight,
   });
+
+  /** Smooth flyTo when resize/device change sets a programmatic target */
+  const FLY_TO_DURATION_MS = 300;
+  useEffect(() => {
+    if (!programmaticTarget || !mapRef.current) return;
+    const map = mapRef.current.getMap();
+    if (!map) return;
+
+    const endHandler = () => {
+      onProgrammaticAnimationEnd();
+      map.off("moveend", endHandler);
+    };
+    map.once("moveend", endHandler);
+    map.flyTo({
+      center: [programmaticTarget.longitude, programmaticTarget.latitude],
+      zoom: programmaticTarget.zoom,
+      duration: FLY_TO_DURATION_MS,
+    });
+    return () => {
+      map.off("moveend", endHandler);
+    };
+  }, [programmaticTarget, onProgrammaticAnimationEnd]);
 
   const townsGeojson = useTownsGeoJSON(filteredTowns);
 

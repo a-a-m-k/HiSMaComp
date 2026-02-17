@@ -30,11 +30,15 @@ export const useResponsive = () => {
   };
 };
 
+/** Debounce delay (ms) for resize so zoom recalculates after user stops resizing. */
+const RESIZE_DEBOUNCE_MS = 150;
+
 /**
  * Hook for tracking viewport dimensions for map calculations.
  *
  * Monitors window size changes and provides current screen dimensions.
- * Returns device type flags based on MUI breakpoint values.
+ * Resize is debounced to avoid flinching while the window is being resized;
+ * zoom/center recalculate after the user pauses.
  *
  * For UI styling, use useResponsive() hook instead.
  *
@@ -76,14 +80,21 @@ export const useScreenDimensions = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const handleResize = () => {
-      updateDimensions();
+      if (timeoutId !== null) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        timeoutId = null;
+        updateDimensions();
+      }, RESIZE_DEBOUNCE_MS);
     };
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleResize);
 
     return () => {
+      if (timeoutId !== null) clearTimeout(timeoutId);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleResize);
     };

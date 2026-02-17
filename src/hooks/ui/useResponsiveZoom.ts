@@ -37,12 +37,14 @@ export const useResponsiveZoom = (towns: Town[]) => {
       : DEFAULT_SCREEN_DIMENSIONS.height;
 
     try {
-      return calculateResponsiveZoom(
+      const zoom = calculateResponsiveZoom(
         towns,
         validScreenWidth,
         validScreenHeight,
         theme
       );
+      // Round to 2 decimals to avoid jitter from tiny dimension changes
+      return Math.round(zoom * 100) / 100;
     } catch (error) {
       logger.error("Error calculating zoom level:", error);
       return 4;

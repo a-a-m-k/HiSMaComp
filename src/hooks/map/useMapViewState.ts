@@ -30,6 +30,13 @@ interface UseMapViewStateProps {
   screenHeight: number;
 }
 
+/** Target view for programmatic (e.g. resize) camera animation */
+export interface ProgrammaticTarget {
+  longitude: number;
+  latitude: number;
+  zoom: number;
+}
+
 /**
  * Return type for useMapViewState hook.
  */
@@ -42,6 +49,10 @@ interface UseMapViewStateReturn {
   };
   /** Handler for map move/pan events */
   handleMove: (evt: { viewState: UseMapViewStateReturn["viewState"] }) => void;
+  /** When set, map should flyTo this target; clear via onProgrammaticAnimationEnd */
+  programmaticTarget: ProgrammaticTarget | null;
+  /** Call after flyTo(programmaticTarget) completes to sync viewState */
+  onProgrammaticAnimationEnd: () => void;
 }
 
 /**
@@ -97,6 +108,8 @@ export function useMapViewState({
   });
 
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [programmaticTarget, setProgrammaticTarget] =
+    useState<ProgrammaticTarget | null>(null);
 
   const prevValuesRef = useRef<PreviousValues>({
     isMobile,
@@ -161,12 +174,8 @@ export function useMapViewState({
       ) {
         // Preserve user-controlled camera during minor viewport jitter.
       } else {
-        // Device changed: always update to new position/zoom
-        setViewState({
-          longitude,
-          latitude,
-          zoom,
-        });
+        // Device/resize changed: animate to new position/zoom via programmaticTarget
+        setProgrammaticTarget({ longitude, latitude, zoom });
       }
     } else if (!hasUserInteracted) {
       // No user interaction yet: follow prop changes
@@ -225,8 +234,17 @@ export function useMapViewState({
     []
   );
 
+  const onProgrammaticAnimationEnd = useCallback(() => {
+    setProgrammaticTarget(prev => {
+      if (prev) setViewState(prev);
+      return null;
+    });
+  }, []);
+
   return {
     viewState,
     handleMove,
+    programmaticTarget,
+    onProgrammaticAnimationEnd,
   };
 }
