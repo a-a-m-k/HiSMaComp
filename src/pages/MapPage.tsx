@@ -5,6 +5,14 @@ import Typography from "@mui/material/Typography";
 import { MapContainer } from "@/components/containers";
 import { APP_MIN_WIDTH, APP_MIN_HEIGHT } from "@/constants";
 
+/**
+ * Root page layout: full-viewport main with map and overlays.
+ *
+ * Uses fixed positioning and min width/height (APP_MIN_* = 300px) so the app
+ * does not shrink below 300px; when the viewport is smaller, horizontal (and
+ * vertical) scroll appears. Dimensions and zoom logic use the same 300px floor
+ * via useScreenDimensions clamp.
+ */
 const MapPage: React.FC = () => (
   <Box
     component="main"

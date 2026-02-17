@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   getDeviceType,
   DEFAULT_SCREEN_DIMENSIONS,
+  MIN_APP_VIEWPORT,
 } from "@/constants/breakpoints";
 import { isValidPositiveNumber } from "@/utils/zoom/zoomHelpers";
 
@@ -42,6 +43,9 @@ const RESIZE_DEBOUNCE_MS = 320;
  *
  * For UI styling, use useResponsive() hook instead.
  *
+ * Dimensions are clamped to MIN_APP_VIEWPORT (300px) so below 300px the app
+ * and zoom both use the same effective size (layout doesn't shrink, zoom doesn't change).
+ *
  * @returns Object containing current screen width, height, and device type flags
  */
 export const useScreenDimensions = () => {
@@ -51,20 +55,33 @@ export const useScreenDimensions = () => {
       const height = window.innerHeight;
 
       if (isValidPositiveNumber(width) && isValidPositiveNumber(height)) {
-        return { width, height };
+        return {
+          width: Math.max(width, MIN_APP_VIEWPORT.width),
+          height: Math.max(height, MIN_APP_VIEWPORT.height),
+        };
       }
     }
 
-    return DEFAULT_SCREEN_DIMENSIONS;
+    return {
+      width: Math.max(DEFAULT_SCREEN_DIMENSIONS.width, MIN_APP_VIEWPORT.width),
+      height: Math.max(
+        DEFAULT_SCREEN_DIMENSIONS.height,
+        MIN_APP_VIEWPORT.height
+      ),
+    };
   });
 
   const updateDimensions = useCallback(() => {
     if (typeof window === "undefined") return;
 
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    const rawWidth = window.innerWidth;
+    const rawHeight = window.innerHeight;
 
-    if (!isValidPositiveNumber(width) || !isValidPositiveNumber(height)) return;
+    if (!isValidPositiveNumber(rawWidth) || !isValidPositiveNumber(rawHeight))
+      return;
+
+    const width = Math.max(rawWidth, MIN_APP_VIEWPORT.width);
+    const height = Math.max(rawHeight, MIN_APP_VIEWPORT.height);
 
     setScreenSize(prev => {
       if (prev.width !== width || prev.height !== height) {
@@ -101,10 +118,10 @@ export const useScreenDimensions = () => {
 
   const screenWidth = isValidPositiveNumber(screenSize.width)
     ? screenSize.width
-    : DEFAULT_SCREEN_DIMENSIONS.width;
+    : Math.max(DEFAULT_SCREEN_DIMENSIONS.width, MIN_APP_VIEWPORT.width);
   const screenHeight = isValidPositiveNumber(screenSize.height)
     ? screenSize.height
-    : DEFAULT_SCREEN_DIMENSIONS.height;
+    : Math.max(DEFAULT_SCREEN_DIMENSIONS.height, MIN_APP_VIEWPORT.height);
 
   const deviceType = getDeviceType(screenWidth);
 

@@ -29,6 +29,10 @@ const marks: TimelineMark[] = YEARS.map(year => ({
 const DEFAULT_MAP_CENTER = { latitude: 50.0, longitude: 10.0 };
 const DEFAULT_MAP_ZOOM = 4;
 
+/**
+ * Top-level map shell: loads towns, wraps content in AppProvider, and renders
+ * timeline, legend, and map view. Handles loading and error states.
+ */
 const MapContainer = () => {
   const legendLayers = useLegendLayers();
   const { towns, isLoading: townsLoading, error: townsError } = useTownsData();
@@ -60,6 +64,11 @@ const MapContainer = () => {
   );
 };
 
+/**
+ * Inner map layout: timeline and legend as overlays, map view in an
+ * absolutely positioned full-size wrapper so the map fills the container
+ * regardless of overlay layout.
+ */
 const MapContainerContent = ({
   legendLayers,
   marks,
@@ -132,6 +141,10 @@ const MapContainerContent = ({
   );
 };
 
+/**
+ * Chooses MapView props from AppContext (center, fitZoom) or defaults when
+ * loading, no towns, or invalid values.
+ */
 const MapViewWithCalculations = ({
   showDefaultMap,
   onFirstIdle,
