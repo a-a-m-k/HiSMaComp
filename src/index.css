@@ -34,6 +34,8 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   height: 100%;
+  --viewport-height: 100vh;
+  --viewport-height: 100dvh;
 }
 
 html,
@@ -56,9 +58,9 @@ body {
   margin: 0;
   display: flex;
   place-items: stretch;
-  min-width: 300px;
   min-height: 100vh;
-  overflow-x: hidden;
+  min-height: 100dvh;
+  overflow: auto;
 }
 
 h1 {

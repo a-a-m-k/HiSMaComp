@@ -10,6 +10,8 @@ import {
   YEARS,
   MAX_ZOOM_LEVEL,
   LEGEND_HEADING_LABEL,
+  APP_MIN_WIDTH,
+  APP_MIN_HEIGHT,
 } from "@/constants";
 import { LayerItem, TimelineMark } from "@/common/types";
 import { AppProvider, useApp } from "@/context/AppContext";
@@ -84,9 +86,12 @@ const MapContainerContent = ({
       id="map-container"
       sx={{
         width: "100%",
-        height: "100%",
-        minHeight: "100vh",
+        flex: 1,
+        minWidth: APP_MIN_WIDTH,
+        minHeight: 0,
         position: "relative",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       {!error && (
@@ -106,12 +111,20 @@ const MapContainerContent = ({
           onRetry={retry}
         />
       )}
-      <ErrorBoundary>
-        <MapViewWithCalculations
-          showDefaultMap={showDefaultMap}
-          onFirstIdle={() => setIsMapIdle(true)}
-        />
-      </ErrorBoundary>
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          minHeight: 0,
+        }}
+      >
+        <ErrorBoundary>
+          <MapViewWithCalculations
+            showDefaultMap={showDefaultMap}
+            onFirstIdle={() => setIsMapIdle(true)}
+          />
+        </ErrorBoundary>
+      </Box>
       {(isLoading || townsLoading) && (
         <LoadingSpinner message="Loading historical data..." />
       )}

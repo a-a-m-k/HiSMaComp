@@ -10,15 +10,20 @@ const MapPage: React.FC = () => (
     component="main"
     id="main-content"
     sx={{
-      minWidth: { xs: "100vw", sm: APP_MIN_WIDTH },
-      minHeight: APP_MIN_HEIGHT,
+      position: "fixed",
+      inset: 0,
+      boxSizing: "border-box",
       width: "100vw",
-      height: "100vh",
-      overflowX: "hidden",
+      minWidth: APP_MIN_WIDTH,
+      height: "var(--viewport-height, 100vh)",
+      minHeight: APP_MIN_HEIGHT,
+      maxHeight: "var(--viewport-height, 100vh)",
+      overflowX: "auto",
+      overflowY: "hidden",
       display: "flex",
+      flexDirection: "column",
       justifyContent: { xs: "stretch", sm: "center" },
       alignItems: { xs: "stretch", sm: "center" },
-      position: "relative",
     }}
   >
     <Typography component="h1" className="sr-only">

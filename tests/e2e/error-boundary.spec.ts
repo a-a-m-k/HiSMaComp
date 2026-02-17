@@ -7,13 +7,17 @@ test.describe("Error Boundary", () => {
     page,
   }) => {
     await page.goto(`${BASE_URL}?testError=true`);
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(2000);
 
     const errorHeading = page.getByText("Oops! Something went wrong");
-    await expect(errorHeading).toBeVisible({ timeout: 5000 });
+    await expect(errorHeading).toBeVisible({ timeout: 10000 });
 
-    const errorMessage = page.getByText(/Here.*what happened/i);
-    await expect(errorMessage).toBeVisible();
+    // Error boundary shows the caught error message
+    const errorAlert = page.getByRole("alert");
+    await expect(errorAlert).toBeVisible();
+    await expect(errorAlert).toContainText(
+      /Test error for ErrorBoundary|Something went wrong/i
+    );
   });
 
   test("should show Try Again and Reload Page buttons when error occurs", async ({

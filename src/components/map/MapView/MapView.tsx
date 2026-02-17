@@ -243,10 +243,10 @@ const MapView: React.FC<MapViewComponentProps> = ({
         aria-label="Interactive historical map showing town populations. Click on the map or press Tab to focus, then use arrow keys to pan."
         aria-describedby="map-description"
         style={{
+          position: "absolute",
+          inset: 0,
           width: "100%",
           height: "100%",
-          minHeight: "100vh",
-          position: "relative",
           outline: "none",
         }}
         tabIndex={0}

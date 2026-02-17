@@ -55,10 +55,7 @@ export const useScreenDimensions = () => {
       }
     }
 
-    return {
-      width: DEFAULT_SCREEN_DIMENSIONS.width,
-      height: DEFAULT_SCREEN_DIMENSIONS.height,
-    };
+    return DEFAULT_SCREEN_DIMENSIONS;
   });
 
   const updateDimensions = useCallback(() => {
@@ -67,14 +64,14 @@ export const useScreenDimensions = () => {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    if (isValidPositiveNumber(width) && isValidPositiveNumber(height)) {
-      setScreenSize(prev => {
-        if (prev.width !== width || prev.height !== height) {
-          return { width, height };
-        }
-        return prev;
-      });
-    }
+    if (!isValidPositiveNumber(width) || !isValidPositiveNumber(height)) return;
+
+    setScreenSize(prev => {
+      if (prev.width !== width || prev.height !== height) {
+        return { width, height };
+      }
+      return prev;
+    });
   }, []);
 
   useEffect(() => {
@@ -102,18 +99,18 @@ export const useScreenDimensions = () => {
     };
   }, [updateDimensions]);
 
-  const safeWidth = isValidPositiveNumber(screenSize.width)
+  const screenWidth = isValidPositiveNumber(screenSize.width)
     ? screenSize.width
     : DEFAULT_SCREEN_DIMENSIONS.width;
-  const safeHeight = isValidPositiveNumber(screenSize.height)
+  const screenHeight = isValidPositiveNumber(screenSize.height)
     ? screenSize.height
     : DEFAULT_SCREEN_DIMENSIONS.height;
 
-  const deviceType = getDeviceType(safeWidth);
+  const deviceType = getDeviceType(screenWidth);
 
   return {
-    screenWidth: safeWidth,
-    screenHeight: safeHeight,
+    screenWidth,
+    screenHeight,
     isMobile: deviceType === "mobile",
     isTablet: deviceType === "tablet",
     isDesktop: deviceType === "desktop" || deviceType === "largeDesktop",
