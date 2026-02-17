@@ -65,7 +65,7 @@ interface UseMapViewStateReturn {
   programmaticTarget: ProgrammaticTarget | null;
   /** Call after flyTo(programmaticTarget) completes to sync viewState */
   onProgrammaticAnimationEnd: () => void;
-  /** Call when animation is cancelled to sync viewState to map's current position (avoids jump). Does not clear programmaticTarget. */
+  /** Call to sync viewState to a given state (e.g. programmatic target on animation cleanup). Does not clear programmaticTarget. */
   syncViewStateFromMap: (state: ProgrammaticTarget) => void;
   /** Ref mirroring programmaticTarget; when null in MapView cleanup, skip sync (e.g. cleared for minimal→less minimal). */
   programmaticTargetRefForSync: React.RefObject<ProgrammaticTarget | null>;
@@ -182,7 +182,6 @@ export function useMapViewState({
     return {
       isDeviceChange,
       deviceTypeChanged,
-      previousZoom: prevValuesRef.current.zoom,
       transientResizeOnly,
       zoomChangedSignificantly,
     };
@@ -192,7 +191,6 @@ export function useMapViewState({
     const {
       isDeviceChange,
       deviceTypeChanged,
-      previousZoom,
       transientResizeOnly,
       zoomChangedSignificantly,
     } = deviceChangeInfo;
@@ -249,8 +247,7 @@ export function useMapViewState({
     } else if (!hasUserInteracted) {
       setViewState(fitTargetFromProps);
     } else {
-      const zoomDiff = Math.abs(zoom - previousZoom);
-      if (zoomDiff > ZOOM_CHANGE_THRESHOLD) {
+      if (zoomChangedSignificantly) {
         setViewState(fitTargetFromProps);
       } else {
         setViewState(prev => ({
@@ -269,16 +266,7 @@ export function useMapViewState({
       screenWidth,
       screenHeight,
     };
-  }, [
-    fitTargetFromProps,
-    hasUserInteracted,
-    deviceChangeInfo,
-    isMobile,
-    isTablet,
-    isDesktop,
-    screenWidth,
-    screenHeight,
-  ]);
+  }, [fitTargetFromProps, hasUserInteracted, deviceChangeInfo]);
 
   // Handle map move/pan events from user interaction
   const handleMove = useCallback(
