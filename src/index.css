@@ -56,7 +56,7 @@ body {
   margin: 0;
   display: flex;
   place-items: stretch;
-  min-width: 320px;
+  min-width: 300px;
   min-height: 100vh;
   overflow-x: hidden;
 }

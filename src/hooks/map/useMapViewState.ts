@@ -211,7 +211,11 @@ export function useMapViewState({
         } else {
           const next = { longitude, latitude, zoom };
           const prev = programmaticTargetRef.current;
+          const isShrinking =
+            screenWidth < prevValuesRef.current.screenWidth ||
+            screenHeight < prevValuesRef.current.screenHeight;
           const sameTarget =
+            !isShrinking &&
             !deviceTypeChanged &&
             !isMobile &&
             prev &&
@@ -222,7 +226,6 @@ export function useMapViewState({
               PROGRAMMATIC_TARGET_LATLNG_EPS;
           if (!sameTarget) {
             programmaticTargetRef.current = next;
-            setViewState(next);
             setProgrammaticTarget(next);
           }
         }

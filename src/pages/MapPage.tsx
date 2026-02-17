@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { MapContainer } from "@/components/containers";
-import { APP_MIN_WIDTH } from "@/constants";
+import { APP_MIN_WIDTH, APP_MIN_HEIGHT } from "@/constants";
 
 const MapPage: React.FC = () => (
   <Box
@@ -11,6 +11,7 @@ const MapPage: React.FC = () => (
     id="main-content"
     sx={{
       minWidth: { xs: "100vw", sm: APP_MIN_WIDTH },
+      minHeight: APP_MIN_HEIGHT,
       width: "100vw",
       height: "100vh",
       overflowX: "hidden",

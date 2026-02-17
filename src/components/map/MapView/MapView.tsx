@@ -95,6 +95,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
    * during the animation prevents React state updates and avoids flicker/jump.
    */
   const PROGRAMMATIC_FIT_DURATION_MS = 480;
+  /** Fallback to sync viewState if moveend never fires (e.g. after resize/stop). */
+  const PROGRAMMATIC_FIT_FALLBACK_MS = PROGRAMMATIC_FIT_DURATION_MS + 120;
   const easeInOutCubic = (t: number) =>
     t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
@@ -104,7 +106,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
     if (!mapRef.current) {
       const fallbackId = setTimeout(() => {
         onProgrammaticAnimationEnd();
-      }, 150);
+      }, 80);
       return () => clearTimeout(fallbackId);
     }
 
@@ -112,18 +114,31 @@ const MapView: React.FC<MapViewComponentProps> = ({
     if (!map) return;
 
     let cancelled = false;
+    let syncFallbackId: ReturnType<typeof setTimeout> | null = null;
     isProgrammaticAnimatingRef.current = true;
 
     const target = programmaticTarget;
 
     const onMoveEnd = () => {
       map.off("moveend", onMoveEnd);
+      if (syncFallbackId !== null) {
+        clearTimeout(syncFallbackId);
+        syncFallbackId = null;
+      }
       if (cancelled) return;
       isProgrammaticAnimatingRef.current = false;
       onProgrammaticAnimationEnd();
     };
 
     map.once("moveend", onMoveEnd);
+
+    syncFallbackId = setTimeout(() => {
+      syncFallbackId = null;
+      if (cancelled) return;
+      map.off("moveend", onMoveEnd);
+      isProgrammaticAnimatingRef.current = false;
+      onProgrammaticAnimationEnd();
+    }, PROGRAMMATIC_FIT_FALLBACK_MS);
 
     const runEase = () => {
       if (cancelled) return;
@@ -155,6 +170,10 @@ const MapView: React.FC<MapViewComponentProps> = ({
     return () => {
       cancelled = true;
       isProgrammaticAnimatingRef.current = false;
+      if (syncFallbackId !== null) {
+        clearTimeout(syncFallbackId);
+        syncFallbackId = null;
+      }
       cancelAnimationFrame(rafId);
       map.off("moveend", onMoveEnd);
       map.stop();
@@ -209,6 +228,9 @@ const MapView: React.FC<MapViewComponentProps> = ({
     [isMobile, isDesktop]
   );
 
+  /** When we have a programmatic target, feed it to the Map so it doesn't reset camera to stale viewState. */
+  const effectiveViewState = programmaticTarget ?? viewState;
+
   return (
     <>
       <style>{getMapStyles(theme)}</style>
@@ -232,7 +254,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
       >
         <Map
           ref={mapRef}
-          {...viewState}
+          {...effectiveViewState}
           onMove={evt => {
             if (!isProgrammaticAnimatingRef.current) handleMove(evt);
           }}

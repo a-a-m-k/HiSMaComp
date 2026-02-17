@@ -1,4 +1,6 @@
-export const APP_MIN_WIDTH = 400;
+/** Below this width/height the app is fixed and no longer responsive */
+export const APP_MIN_WIDTH = 300;
+export const APP_MIN_HEIGHT = 300;
 export const MAP_LAYER_ID = "towns-population-layer";
 
 export const WORLD_DIMENSIONS = { width: 256, height: 256 };
