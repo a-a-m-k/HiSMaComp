@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { Town } from "@/common/types";
-import { DEFAULT_SCREEN_DIMENSIONS } from "@/constants/breakpoints";
+import {
+  DEFAULT_SCREEN_DIMENSIONS,
+  MIN_APP_VIEWPORT,
+} from "@/constants/breakpoints";
 import { useScreenDimensions, useResponsive } from "@/hooks/ui/useResponsive";
 import { calculateResponsiveZoom } from "@/utils/utils";
 import { isValidPositiveNumber } from "@/utils/zoom/zoomHelpers";
@@ -9,9 +12,8 @@ import { logger } from "@/utils/logger";
 /**
  * Hook that calculates responsive zoom level to fit all towns in the viewport.
  *
- * Uses current screen dimensions and MUI theme to calculate optimal zoom level
- * that ensures all provided towns are visible. The calculation accounts for
- * UI elements (legend, timeline) and device-specific padding.
+ * Uses current screen dimensions (clamped to MIN_APP_VIEWPORT) and MUI theme.
+ * Below the minimum width/height, zoom no longer changes on resize.
  *
  * @param towns - Array of town objects to fit in the viewport
  * @returns Zoom level (typically 1-20) that fits all towns, or 4 as fallback
@@ -29,12 +31,14 @@ export const useResponsiveZoom = (towns: Town[]) => {
   const fitZoom = useMemo(() => {
     if (!towns || towns.length === 0) return 4;
 
-    const validScreenWidth = isValidPositiveNumber(screenWidth)
+    const rawWidth = isValidPositiveNumber(screenWidth)
       ? screenWidth
       : DEFAULT_SCREEN_DIMENSIONS.width;
-    const validScreenHeight = isValidPositiveNumber(screenHeight)
+    const rawHeight = isValidPositiveNumber(screenHeight)
       ? screenHeight
       : DEFAULT_SCREEN_DIMENSIONS.height;
+    const validScreenWidth = Math.max(rawWidth, MIN_APP_VIEWPORT.width);
+    const validScreenHeight = Math.max(rawHeight, MIN_APP_VIEWPORT.height);
 
     try {
       const zoom = calculateResponsiveZoom(

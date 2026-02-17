@@ -1,21 +1,28 @@
 import { useEffect, RefObject } from "react";
+import { MapRef } from "react-map-gl/maplibre";
 import { logger } from "@/utils/logger";
-import { DOM_SETTLE_TIMEOUT_MS } from "@/constants/keyboard";
+import {
+  DOM_SETTLE_TIMEOUT_MS,
+  ZOOM_ANIMATION_DURATION_MS,
+} from "@/constants/keyboard";
 
 /**
- * Custom hook that ensures NavigationControl buttons are accessible and in tab order.
- * Observes the map container for dynamically rendered controls and ensures
- * they have proper tabIndex values. Scoped to map container for better performance.
+ * Custom hook that ensures NavigationControl buttons are accessible and in tab order,
+ * and that zoom in/out use progressive (animated) zoom.
  *
  * @param isMobile - Whether the device is mobile (NavigationControl not shown on mobile)
  * @param containerRef - Optional ref to the map container element for better scoping
+ * @param mapRef - Optional ref to the map; when provided, zoom buttons use animated zoom
  */
 export const useNavigationControlAccessibility = (
   isMobile: boolean,
-  containerRef?: RefObject<HTMLElement>
+  containerRef?: RefObject<HTMLElement>,
+  mapRef?: RefObject<MapRef | null>
 ) => {
   useEffect(() => {
     if (isMobile) return;
+
+    const duration = ZOOM_ANIMATION_DURATION_MS;
 
     const ensureNavigationControlAccessible = () => {
       try {
@@ -46,6 +53,19 @@ export const useNavigationControlAccessibility = (
                   "Zoom in. Press Ctrl+Plus or Cmd+Plus to zoom in."
                 );
               }
+              if (mapRef?.current && !el.dataset.progressiveZoomBound) {
+                el.dataset.progressiveZoomBound = "1";
+                el.addEventListener(
+                  "click",
+                  (e: Event) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const map = mapRef.current?.getMap();
+                    if (map) map.zoomIn({ duration });
+                  },
+                  true
+                );
+              }
             } else if (className.includes("maplibregl-ctrl-zoom-out")) {
               el.setAttribute(
                 "data-tooltip",
@@ -55,6 +75,19 @@ export const useNavigationControlAccessibility = (
                 el.setAttribute(
                   "aria-label",
                   "Zoom out. Press Ctrl+Minus or Cmd+Minus to zoom out."
+                );
+              }
+              if (mapRef?.current && !el.dataset.progressiveZoomBound) {
+                el.dataset.progressiveZoomBound = "1";
+                el.addEventListener(
+                  "click",
+                  (e: Event) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const map = mapRef.current?.getMap();
+                    if (map) map.zoomOut({ duration });
+                  },
+                  true
                 );
               }
             }

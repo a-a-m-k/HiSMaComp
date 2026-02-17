@@ -1,12 +1,24 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+} from "react";
 
 /**
  * Threshold for detecting meaningful zoom level changes.
  * Prevents unnecessary viewState updates for minor zoom differences.
  */
 const ZOOM_CHANGE_THRESHOLD = 0.1;
-const TRANSIENT_RESIZE_HEIGHT_THRESHOLD = 80;
-const TRANSIENT_RESIZE_WIDTH_THRESHOLD = 80;
+/** Skip zoom update only for minor jitter; crossing a breakpoint always updates */
+const TRANSIENT_RESIZE_HEIGHT_THRESHOLD = 50;
+const TRANSIENT_RESIZE_WIDTH_THRESHOLD = 40;
+/** MUI breakpoints (sm=600, md=900, xl=1536); crossing one never counts as transient */
+const RESIZE_BREAKPOINTS = [600, 900, 1200, 1536] as const;
+/** Min change to set a new programmatic target (avoids restarting for same target) */
+const PROGRAMMATIC_TARGET_ZOOM_EPS = 0.05;
+const PROGRAMMATIC_TARGET_LATLNG_EPS = 0.0002;
 
 /**
  * Props for useMapViewState hook.
@@ -53,6 +65,10 @@ interface UseMapViewStateReturn {
   programmaticTarget: ProgrammaticTarget | null;
   /** Call after flyTo(programmaticTarget) completes to sync viewState */
   onProgrammaticAnimationEnd: () => void;
+  /** Call when animation is cancelled to sync viewState to map's current position (avoids jump). Does not clear programmaticTarget. */
+  syncViewStateFromMap: (state: ProgrammaticTarget) => void;
+  /** Ref mirroring programmaticTarget; when null in MapView cleanup, skip sync (e.g. cleared for minimal→less minimal). */
+  programmaticTargetRefForSync: React.RefObject<ProgrammaticTarget | null>;
 }
 
 /**
@@ -110,6 +126,9 @@ export function useMapViewState({
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [programmaticTarget, setProgrammaticTarget] =
     useState<ProgrammaticTarget | null>(null);
+  const programmaticTargetRef = useRef<ProgrammaticTarget | null>(null);
+  const programmaticTargetRefForSync = useRef<ProgrammaticTarget | null>(null);
+  programmaticTargetRefForSync.current = programmaticTarget;
 
   const prevValuesRef = useRef<PreviousValues>({
     isMobile,
@@ -134,9 +153,15 @@ export function useMapViewState({
       prevValuesRef.current.isDesktop !== isDesktop;
 
     const screenSizeChanged = widthDelta > 0 || heightDelta > 0;
+    const crossesBreakpoint = RESIZE_BREAKPOINTS.some(
+      bp =>
+        (prevValuesRef.current.screenWidth < bp && screenWidth >= bp) ||
+        (prevValuesRef.current.screenWidth >= bp && screenWidth < bp)
+    );
     const transientResizeOnly =
       !deviceTypeChanged &&
       screenSizeChanged &&
+      !crossesBreakpoint &&
       widthDelta <= TRANSIENT_RESIZE_WIDTH_THRESHOLD &&
       heightDelta <= TRANSIENT_RESIZE_HEIGHT_THRESHOLD;
 
@@ -147,6 +172,7 @@ export function useMapViewState({
 
     return {
       isDeviceChange,
+      deviceTypeChanged,
       previousZoom: prevValuesRef.current.zoom,
       transientResizeOnly,
       zoomChangedSignificantly,
@@ -156,6 +182,7 @@ export function useMapViewState({
   useEffect(() => {
     const {
       isDeviceChange,
+      deviceTypeChanged,
       previousZoom,
       transientResizeOnly,
       zoomChangedSignificantly,
@@ -168,14 +195,37 @@ export function useMapViewState({
     // Determine if viewState should be updated
     if (isDeviceChange) {
       if (
+        !isMobile &&
         hasUserInteracted &&
         transientResizeOnly &&
         !zoomChangedSignificantly
       ) {
-        // Preserve user-controlled camera during minor viewport jitter.
+        // Preserve user-controlled camera during minor viewport jitter (desktop/tablet only).
       } else {
-        // Device/resize changed: animate to new position/zoom via programmaticTarget
-        setProgrammaticTarget({ longitude, latitude, zoom });
+        const fromMinimalToLessMinimal =
+          prevValuesRef.current.isMobile && !isMobile;
+        if (fromMinimalToLessMinimal) {
+          programmaticTargetRef.current = null;
+          setProgrammaticTarget(null);
+          setViewState({ longitude, latitude, zoom });
+        } else {
+          const next = { longitude, latitude, zoom };
+          const prev = programmaticTargetRef.current;
+          const sameTarget =
+            !deviceTypeChanged &&
+            !isMobile &&
+            prev &&
+            Math.abs(prev.zoom - next.zoom) < PROGRAMMATIC_TARGET_ZOOM_EPS &&
+            Math.abs(prev.longitude - next.longitude) <
+              PROGRAMMATIC_TARGET_LATLNG_EPS &&
+            Math.abs(prev.latitude - next.latitude) <
+              PROGRAMMATIC_TARGET_LATLNG_EPS;
+          if (!sameTarget) {
+            programmaticTargetRef.current = next;
+            setViewState(next);
+            setProgrammaticTarget(next);
+          }
+        }
       }
     } else if (!hasUserInteracted) {
       // No user interaction yet: follow prop changes
@@ -235,10 +285,15 @@ export function useMapViewState({
   );
 
   const onProgrammaticAnimationEnd = useCallback(() => {
+    programmaticTargetRef.current = null;
     setProgrammaticTarget(prev => {
       if (prev) setViewState(prev);
       return null;
     });
+  }, []);
+
+  const syncViewStateFromMap = useCallback((state: ProgrammaticTarget) => {
+    setViewState(state);
   }, []);
 
   return {
@@ -246,5 +301,7 @@ export function useMapViewState({
     handleMove,
     programmaticTarget,
     onProgrammaticAnimationEnd,
+    syncViewStateFromMap,
+    programmaticTargetRefForSync,
   };
 }

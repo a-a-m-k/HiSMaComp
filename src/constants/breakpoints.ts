@@ -8,6 +8,15 @@ export const DEFAULT_SCREEN_DIMENSIONS = {
   height: 768,
 } as const;
 
+/**
+ * Minimum viewport size for responsive zoom. Below this, zoom no longer adjusts on resize.
+ * Width is below iPhone SE (375) so small phones get correct fit; height avoids tiny viewports.
+ */
+export const MIN_APP_VIEWPORT = {
+  width: 320,
+  height: 400,
+} as const;
+
 export type DeviceType = "mobile" | "tablet" | "desktop" | "largeDesktop";
 
 /**

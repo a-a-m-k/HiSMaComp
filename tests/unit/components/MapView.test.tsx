@@ -303,6 +303,8 @@ vi.mock("@/hooks/map", () => ({
     handleMove: vi.fn(),
     programmaticTarget: null,
     onProgrammaticAnimationEnd: vi.fn(),
+    syncViewStateFromMap: vi.fn(),
+    programmaticTargetRefForSync: { current: null },
   })),
   useMapKeyboardShortcuts: vi.fn(),
   useMapKeyboardPanning: vi.fn(),

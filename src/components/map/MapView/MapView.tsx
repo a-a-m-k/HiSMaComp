@@ -59,6 +59,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
+  /** True while programmatic step animation is running; we ignore onMove to avoid redraw conflict */
+  const isProgrammaticAnimatingRef = useRef(false);
   const enableZoomControls = !isMobile;
 
   const safeProps = useMemo(
@@ -75,6 +77,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
     handleMove,
     programmaticTarget,
     onProgrammaticAnimationEnd,
+    syncViewStateFromMap,
+    programmaticTargetRefForSync,
   } = useMapViewState({
     longitude: safeProps.longitude,
     latitude: safeProps.latitude,
@@ -86,33 +90,95 @@ const MapView: React.FC<MapViewComponentProps> = ({
     screenHeight,
   });
 
-  /** Smooth flyTo when resize/device change sets a programmatic target */
-  const FLY_TO_DURATION_MS = 300;
+  /**
+   * Programmatic fit-to-towns: one smooth easeTo to target. Ignoring onMove
+   * during the animation prevents React state updates and avoids flicker/jump.
+   */
+  const PROGRAMMATIC_FIT_DURATION_MS = 480;
+  const easeInOutCubic = (t: number) =>
+    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
   useEffect(() => {
-    if (!programmaticTarget || !mapRef.current) return;
+    if (!programmaticTarget) return;
+
+    if (!mapRef.current) {
+      const fallbackId = setTimeout(() => {
+        onProgrammaticAnimationEnd();
+      }, 150);
+      return () => clearTimeout(fallbackId);
+    }
+
     const map = mapRef.current.getMap();
     if (!map) return;
 
-    const endHandler = () => {
+    let cancelled = false;
+    isProgrammaticAnimatingRef.current = true;
+
+    const target = programmaticTarget;
+
+    const onMoveEnd = () => {
+      map.off("moveend", onMoveEnd);
+      if (cancelled) return;
+      isProgrammaticAnimatingRef.current = false;
       onProgrammaticAnimationEnd();
-      map.off("moveend", endHandler);
     };
-    map.once("moveend", endHandler);
-    map.flyTo({
-      center: [programmaticTarget.longitude, programmaticTarget.latitude],
-      zoom: programmaticTarget.zoom,
-      duration: FLY_TO_DURATION_MS,
+
+    map.once("moveend", onMoveEnd);
+
+    const runEase = () => {
+      if (cancelled) return;
+      map.stop();
+      const targetCenter: [number, number] = [
+        target.longitude,
+        target.latitude,
+      ];
+      map.jumpTo({
+        center: targetCenter,
+        zoom: map.getZoom(),
+      });
+      map.easeTo({
+        center: targetCenter,
+        zoom: target.zoom,
+        duration: PROGRAMMATIC_FIT_DURATION_MS,
+        easing: easeInOutCubic,
+      });
+    };
+
+    const rafId = requestAnimationFrame(() => {
+      if (cancelled) return;
+      requestAnimationFrame(() => {
+        if (cancelled) return;
+        runEase();
+      });
     });
+
     return () => {
-      map.off("moveend", endHandler);
+      cancelled = true;
+      isProgrammaticAnimatingRef.current = false;
+      cancelAnimationFrame(rafId);
+      map.off("moveend", onMoveEnd);
+      map.stop();
+      if (programmaticTargetRefForSync.current !== null) {
+        const center = map.getCenter();
+        syncViewStateFromMap({
+          longitude: center.lng,
+          latitude: center.lat,
+          zoom: map.getZoom(),
+        });
+      }
     };
-  }, [programmaticTarget, onProgrammaticAnimationEnd]);
+  }, [
+    programmaticTarget,
+    onProgrammaticAnimationEnd,
+    syncViewStateFromMap,
+    programmaticTargetRefForSync,
+  ]);
 
   const townsGeojson = useTownsGeoJSON(filteredTowns);
 
   useMapKeyboardShortcuts(mapRef, enableZoomControls);
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
-  useNavigationControlAccessibility(isMobile, containerRef);
+  useNavigationControlAccessibility(isMobile, containerRef, mapRef);
 
   /**
    * Applies a conservative tile-loading strategy so current viewport requests
@@ -167,7 +233,9 @@ const MapView: React.FC<MapViewComponentProps> = ({
         <Map
           ref={mapRef}
           {...viewState}
-          onMove={handleMove}
+          onMove={evt => {
+            if (!isProgrammaticAnimatingRef.current) handleMove(evt);
+          }}
           onLoad={handleMapLoad}
           onIdle={handleMapIdle}
           onClick={e => {

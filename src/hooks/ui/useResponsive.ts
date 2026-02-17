@@ -31,7 +31,9 @@ export const useResponsive = () => {
 };
 
 /** Debounce delay (ms) for resize so zoom recalculates after user stops resizing. */
-const RESIZE_DEBOUNCE_MS = 150;
+const RESIZE_DEBOUNCE_MS = 280;
+/** If width or height change by more than this, update immediately (e.g. DevTools device switch). */
+const LARGE_RESIZE_DELTA_PX = 150;
 
 /**
  * Hook for tracking viewport dimensions for map calculations.
@@ -80,12 +82,35 @@ export const useScreenDimensions = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    updateDimensions();
+
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let lastWidth = window.innerWidth;
+    let lastHeight = window.innerHeight;
 
     const handleResize = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const largeChange =
+        Math.abs(w - lastWidth) > LARGE_RESIZE_DELTA_PX ||
+        Math.abs(h - lastHeight) > LARGE_RESIZE_DELTA_PX;
+
+      if (largeChange) {
+        lastWidth = w;
+        lastHeight = h;
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        updateDimensions();
+        return;
+      }
+
       if (timeoutId !== null) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
         timeoutId = null;
+        lastWidth = window.innerWidth;
+        lastHeight = window.innerHeight;
         updateDimensions();
       }, RESIZE_DEBOUNCE_MS);
     };
