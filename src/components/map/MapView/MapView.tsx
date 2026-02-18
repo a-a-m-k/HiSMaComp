@@ -68,7 +68,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const [mapReady, setMapReady] = useState(false);
   /** True while programmatic step animation is running; we ignore onMove to avoid redraw conflict */
   const isProgrammaticAnimatingRef = useRef(false);
-  const enableZoomControls = !isMobile;
+  const enableZoomControls = isDesktop;
 
   const safeProps = useMemo(
     () => ({
@@ -193,7 +193,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
 
   useMapKeyboardShortcuts(mapRef, enableZoomControls);
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
-  useNavigationControlAccessibility(isMobile, containerRef, mapRef);
+  useNavigationControlAccessibility(!enableZoomControls, containerRef, mapRef);
 
   /**
    * Applies a conservative tile-loading strategy so current viewport requests
@@ -224,12 +224,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
     [isMobile, isDesktop]
   );
 
-  /** When we have a programmatic target, feed it to the Map so it doesn't reset camera to stale viewState. Memoized so Map gets a stable reference when the effective view hasn't changed. */
-  const effectiveViewState = useMemo(
-    () => programmaticTarget ?? viewState,
-    [programmaticTarget, viewState]
-  );
-
   return (
     <>
       <style>{getMapStyles(theme)}</style>
@@ -253,7 +247,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
       >
         <Map
           ref={mapRef}
-          {...effectiveViewState}
+          {...(programmaticTarget ?? viewState)}
           onMove={evt => {
             if (!isProgrammaticAnimatingRef.current) handleMove(evt);
           }}

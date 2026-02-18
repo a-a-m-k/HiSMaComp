@@ -42,32 +42,22 @@ interface UseMapViewStateProps {
   screenHeight: number;
 }
 
-/** Target view for programmatic (e.g. resize) camera animation */
-export interface ProgrammaticTarget {
+/** Map camera: longitude, latitude, zoom. */
+export interface MapViewState {
   longitude: number;
   latitude: number;
   zoom: number;
 }
 
-/**
- * Return type for useMapViewState hook.
- */
+/** Target view for programmatic (e.g. resize) camera animation. Same shape as MapViewState. */
+export type ProgrammaticTarget = MapViewState;
+
 interface UseMapViewStateReturn {
-  /** Current map viewState (longitude, latitude, zoom) */
-  viewState: {
-    longitude: number;
-    latitude: number;
-    zoom: number;
-  };
-  /** Handler for map move/pan events */
-  handleMove: (evt: { viewState: UseMapViewStateReturn["viewState"] }) => void;
-  /** When set, map should flyTo this target; clear via onProgrammaticAnimationEnd */
+  viewState: MapViewState;
+  handleMove: (evt: { viewState: MapViewState }) => void;
   programmaticTarget: ProgrammaticTarget | null;
-  /** Call after flyTo(programmaticTarget) completes to sync viewState */
   onProgrammaticAnimationEnd: () => void;
-  /** Call to sync viewState to a given state (e.g. programmatic target on animation cleanup). Does not clear programmaticTarget. */
   syncViewStateFromMap: (state: ProgrammaticTarget) => void;
-  /** Ref mirroring programmaticTarget; when null in MapView cleanup, skip sync (e.g. cleared for minimal→less minimal). */
   programmaticTargetRefForSync: React.RefObject<ProgrammaticTarget | null>;
 }
 
@@ -84,28 +74,8 @@ interface PreviousValues {
 }
 
 /**
- * Custom hook for managing map viewState with responsive device change detection.
- *
- * Handles automatic viewState updates when device type or screen size changes,
- * while preserving user interactions (pan/zoom). Resets user interaction state
- * on significant device changes to allow automatic repositioning.
- *
- * @param props - Configuration props for the hook
- * @returns Object with viewState and handleMove handler
- *
- * @example
- * ```tsx
- * const { viewState, handleMove } = useMapViewState({
- *   longitude: 10.0,
- *   latitude: 50.0,
- *   zoom: 5,
- *   isMobile: false,
- *   isTablet: false,
- *   isDesktop: true,
- *   screenWidth: 1920,
- *   screenHeight: 1080,
- * });
- * ```
+ * Manages map viewState with responsive device/size handling. Updates view on
+ * device or screen change; preserves pan/zoom when the user has interacted.
  */
 export function useMapViewState({
   longitude,
@@ -126,9 +96,7 @@ export function useMapViewState({
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [programmaticTarget, setProgrammaticTarget] =
     useState<ProgrammaticTarget | null>(null);
-  /** Updated in effect; used for sameTarget check to avoid duplicate programmatic targets. */
   const programmaticTargetRef = useRef<ProgrammaticTarget | null>(null);
-  /** Mirror of programmaticTarget (updated in render); MapView cleanup uses this to decide whether to sync. When null (e.g. cleared for minimal→less minimal), cleanup skips sync. */
   const programmaticTargetRefForSync = useRef<ProgrammaticTarget | null>(null);
   programmaticTargetRefForSync.current = programmaticTarget;
 
@@ -141,13 +109,11 @@ export function useMapViewState({
     screenHeight,
   });
 
-  /** Stable fit target from props; same reference when longitude/latitude/zoom unchanged so we avoid re-running MapView's programmatic effect. */
   const fitTargetFromProps = useMemo(
     () => ({ longitude, latitude, zoom }),
     [longitude, latitude, zoom]
   );
 
-  /** Compares current props to prevValuesRef (updated in effect) to detect device/size/zoom changes. */
   const deviceChangeInfo = useMemo(() => {
     const widthDelta = Math.abs(
       prevValuesRef.current.screenWidth - screenWidth
@@ -199,16 +165,13 @@ export function useMapViewState({
       setHasUserInteracted(false);
     }
 
-    // Flow: 1) device change → set programmatic target or instant viewState; 2) no user interaction → follow props; 3) user interacted → follow props or preserve zoom.
     if (isDeviceChange) {
-      if (
+      const preserveUserView =
         !isMobile &&
         hasUserInteracted &&
         transientResizeOnly &&
-        !zoomChangedSignificantly
-      ) {
-        // Preserve user-controlled camera during minor viewport jitter (desktop/tablet only).
-      } else {
+        !zoomChangedSignificantly;
+      if (!preserveUserView) {
         const fromMinimalToLessMinimal =
           prevValuesRef.current.isMobile && !isMobile;
         if (fromMinimalToLessMinimal) {
@@ -268,14 +231,10 @@ export function useMapViewState({
     };
   }, [fitTargetFromProps, hasUserInteracted, deviceChangeInfo]);
 
-  // Handle map move/pan events from user interaction
-  const handleMove = useCallback(
-    (evt: { viewState: UseMapViewStateReturn["viewState"] }) => {
-      setViewState(evt.viewState);
-      setHasUserInteracted(true);
-    },
-    []
-  );
+  const handleMove = useCallback((evt: { viewState: MapViewState }) => {
+    setViewState(evt.viewState);
+    setHasUserInteracted(true);
+  }, []);
 
   const onProgrammaticAnimationEnd = useCallback(() => {
     programmaticTargetRef.current = null;
