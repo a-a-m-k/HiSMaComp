@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 
 import Timeline from "@/components/controls/Timeline/Timeline";
@@ -11,10 +11,12 @@ import {
   MAX_ZOOM_LEVEL,
   LEGEND_HEADING_LABEL,
   APP_MIN_WIDTH,
+  Z_INDEX,
 } from "@/constants";
 import { LayerItem, TimelineMark } from "@/common/types";
 import { AppProvider, useApp } from "@/context/AppContext";
 import { useInitialMapState } from "@/hooks/map";
+import { useViewport } from "@/hooks/ui";
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/constants/map";
 import { useLegendLayers, useTownsData } from "@/hooks";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
@@ -112,6 +114,16 @@ const MapContainer = () => {
  * absolutely positioned full-size wrapper. Initial map position comes from
  * useInitialMapState(towns), not from context (flattened: no MapViewWithCalculations).
  */
+/** Stable key for map remount when viewport crosses mobile/tablet/desktop breakpoint. */
+function getMapDeviceKey(viewport: {
+  isMobile: boolean;
+  isTablet: boolean;
+}): string {
+  if (viewport.isMobile) return "mobile";
+  if (viewport.isTablet) return "tablet";
+  return "desktop";
+}
+
 const MapContainerContent = ({
   legendLayers,
   marks,
@@ -125,7 +137,29 @@ const MapContainerContent = ({
 }) => {
   const { towns, filteredTowns, selectedYear, isLoading, error, retry } =
     useApp();
+  const viewport = useViewport();
   const [isMapIdle, setIsMapIdle] = React.useState(false);
+
+  const deviceKey = getMapDeviceKey(viewport);
+  const prevDeviceKeyRef = useRef(deviceKey);
+  const [isRemounting, setIsRemounting] = useState(false);
+
+  // Show spinner as soon as breakpoint changes (same frame) so map never visibly resizes without it.
+  const showRemountOverlay =
+    prevDeviceKeyRef.current !== deviceKey || isRemounting;
+
+  // On breakpoint cross: mark remounting and update ref; overlay hides on onFirstIdle.
+  useEffect(() => {
+    if (prevDeviceKeyRef.current !== deviceKey) {
+      prevDeviceKeyRef.current = deviceKey;
+      setIsRemounting(true);
+    }
+  }, [deviceKey]);
+
+  const handleFirstIdle = React.useCallback(() => {
+    setIsMapIdle(true);
+    setIsRemounting(false);
+  }, []);
 
   // Center/fitZoom computed here so they're props to MapView, not in context.
   const initialMapState = useInitialMapState(towns);
@@ -178,17 +212,30 @@ const MapContainerContent = ({
           position: "absolute",
           inset: 0,
           minHeight: 0,
+          zIndex: Z_INDEX.MAP,
         }}
       >
         <ErrorBoundary>
           <MapView
+            key={deviceKey}
             towns={filteredTowns}
             selectedYear={selectedYear}
             initialPosition={initialPosition}
             initialZoom={initialZoom}
-            onFirstIdle={() => setIsMapIdle(true)}
+            onFirstIdle={handleFirstIdle}
           />
         </ErrorBoundary>
+        {showRemountOverlay && (
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 1,
+            }}
+          >
+            <LoadingSpinner message="Resizing map..." />
+          </Box>
+        )}
       </Box>
       {(isLoading || townsLoading) && (
         <LoadingSpinner message="Loading historical data..." />

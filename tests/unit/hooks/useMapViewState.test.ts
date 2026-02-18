@@ -1,11 +1,9 @@
 /**
  * Tests for useMapViewState hook
  *
- * Tests viewState management including:
- * - Initial state setup
- * - ViewState updates on move
- * - Device change detection
- * - Zoom threshold handling
+ * View state syncs to fit-from-props when viewport or initial fit change.
+ * Breakpoint crosses are handled by MapContainer (remount); this hook handles
+ * same-device resize and initial sync.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -39,20 +37,17 @@ describe("useMapViewState", () => {
     expect(result.current.viewState.zoom).toBe(5);
   });
 
-  it("should update viewState when handleMove is called", () => {
+  it("should update viewState when handleMove is called and keep it when props unchanged", () => {
     const { result, rerender } = renderHook(props => useMapViewState(props), {
       initialProps: defaultProps,
     });
 
-    // Wait for initial render/effects to complete
     act(() => {});
 
-    // Initial state from props
     expect(result.current.viewState.longitude).toBe(10.0);
     expect(result.current.viewState.latitude).toBe(50.0);
     expect(result.current.viewState.zoom).toBe(5);
 
-    // Update via handleMove - this sets state directly and marks user interaction
     act(() => {
       result.current.handleMove({
         viewState: {
@@ -63,32 +58,16 @@ describe("useMapViewState", () => {
       });
     });
 
-    // After handleMove, the state is set directly.
-    // However, useEffect runs when dependencies change (including deviceChangeInfo).
-    // When hasUserInteracted is true and props haven't changed significantly,
-    // useEffect preserves user's zoom but may update longitude/latitude from props
-    // if zoom diff is below threshold.
-
-    // Wait for effects to complete
     act(() => {});
-
-    // The key behavior: handleMove sets hasUserInteracted=true
-    // and updates viewState. useEffect then runs and may adjust based on props.
-    // Since props zoom (5) vs previousZoom (5) = 0 < threshold,
-    // it preserves user's zoom (6) but updates longitude/latitude from props (10, 50)
-
-    // Re-render to ensure all effects have completed
     rerender(defaultProps);
 
-    // After handleMove and useEffect:
-    // - Zoom is preserved from handleMove (6)
-    // - Longitude/latitude come from props (10, 50) because zoom diff < threshold
-    expect(result.current.viewState.zoom).toBe(6); // Preserved from handleMove
-    expect(result.current.viewState.longitude).toBe(10.0); // From props (useEffect override)
-    expect(result.current.viewState.latitude).toBe(50.0); // From props (useEffect override)
+    // Props unchanged so effect does not overwrite; viewState stays what handleMove set.
+    expect(result.current.viewState.longitude).toBe(20.0);
+    expect(result.current.viewState.latitude).toBe(60.0);
+    expect(result.current.viewState.zoom).toBe(6);
   });
 
-  it("should update viewState when device type changes", () => {
+  it("should sync viewState to fit when device type changes (viewport change)", () => {
     const { result, rerender } = renderHook(props => useMapViewState(props), {
       initialProps: {
         ...defaultProps,
@@ -96,20 +75,20 @@ describe("useMapViewState", () => {
       },
     });
 
-    const initialViewState = { ...result.current.viewState };
-
-    // Change device type
     rerender({
       ...defaultProps,
       viewport: { ...defaultViewport, isMobile: true, isDesktop: false },
     });
 
-    // ViewState should update to reflect device change
-    // (actual behavior depends on implementation)
-    expect(result.current.viewState).toBeDefined();
+    act(() => {});
+
+    // Syncs to fitTargetFromProps when viewport changes.
+    expect(result.current.viewState.longitude).toBe(10.0);
+    expect(result.current.viewState.latitude).toBe(50.0);
+    expect(result.current.viewState.zoom).toBe(5);
   });
 
-  it("should handle zoom changes below threshold", () => {
+  it("should handle zoom changes from handleMove", () => {
     const { result } = renderHook(() => useMapViewState(defaultProps));
 
     const initialZoom = result.current.viewState.zoom;
@@ -119,34 +98,35 @@ describe("useMapViewState", () => {
         viewState: {
           longitude: 10.0,
           latitude: 50.0,
-          zoom: initialZoom + 0.05, // Below threshold
+          zoom: initialZoom + 0.05,
         },
       });
     });
 
-    // Zoom should update even if small change
     expect(result.current.viewState.zoom).toBe(initialZoom + 0.05);
   });
 
-  it("should update when screen dimensions change", () => {
-    const { rerender } = renderHook(props => useMapViewState(props), {
+  it("should sync viewState to fit when screen dimensions change", () => {
+    const { result, rerender } = renderHook(props => useMapViewState(props), {
       initialProps: {
         ...defaultProps,
         viewport: { ...defaultViewport, screenWidth: 1920, screenHeight: 1080 },
       },
     });
 
-    // Change screen dimensions
     rerender({
       ...defaultProps,
       viewport: { ...defaultViewport, screenWidth: 1024, screenHeight: 768 },
     });
 
-    // Should handle dimension changes
-    expect(true).toBe(true); // Placeholder - actual assertion depends on implementation
+    act(() => {});
+
+    expect(result.current.viewState.longitude).toBe(10.0);
+    expect(result.current.viewState.latitude).toBe(50.0);
+    expect(result.current.viewState.zoom).toBe(5);
   });
 
-  it("preserves user zoom during minor viewport resize jitter", () => {
+  it("syncs to fit on viewport resize (same device); zoom comes from props", () => {
     const { result, rerender } = renderHook(props => useMapViewState(props), {
       initialProps: defaultProps,
     });
@@ -166,14 +146,19 @@ describe("useMapViewState", () => {
       viewport: {
         ...defaultViewport,
         screenWidth: 1920,
-        screenHeight: 1030, // Minor height change (e.g. browser UI collapse)
+        screenHeight: 1030,
       },
     });
 
-    expect(result.current.viewState.zoom).toBe(7);
+    act(() => {});
+
+    // Viewport changed so we sync to fitTargetFromProps (zoom from props).
+    expect(result.current.viewState.zoom).toBe(5);
+    expect(result.current.viewState.longitude).toBe(10.0);
+    expect(result.current.viewState.latitude).toBe(50.0);
   });
 
-  it("does not clear user-interaction state on zoom-only prop changes", () => {
+  it("syncs viewState when zoom (fit) props change", () => {
     const { result, rerender } = renderHook(props => useMapViewState(props), {
       initialProps: {
         ...defaultProps,
@@ -191,20 +176,22 @@ describe("useMapViewState", () => {
       });
     });
 
-    // Simulate a significant zoom prop recalculation without any
-    // device/screen change (this used to clear user interaction state).
     rerender({
       ...defaultProps,
       zoom: 2,
     });
 
-    // Followed by a minor zoom prop change. If interaction state was incorrectly
-    // cleared, this would snap to 2.05. Correct behavior preserves user zoom.
+    act(() => {});
+
+    expect(result.current.viewState.zoom).toBe(2);
+
     rerender({
       ...defaultProps,
       zoom: 2.05,
     });
 
-    expect(result.current.viewState.zoom).toBe(2);
+    act(() => {});
+
+    expect(result.current.viewState.zoom).toBe(2.05);
   });
 });

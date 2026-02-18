@@ -25,7 +25,7 @@ export const FLOATING_BUTTON_SIZE = 45;
 /** Screenshot button size on desktop (md and up); larger than default for easier click. */
 export const SCREENSHOT_BUTTON_DESKTOP_SIZE = 56;
 
-/** View-state / resize thresholds (useMapViewState) */
+/** View-state thresholds (reserved for future use, e.g. programmatic fit or animation) */
 export const ZOOM_CHANGE_THRESHOLD = 0.1;
 export const TRANSIENT_RESIZE_HEIGHT_THRESHOLD = 50;
 export const TRANSIENT_RESIZE_WIDTH_THRESHOLD = 40;

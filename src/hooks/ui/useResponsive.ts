@@ -17,6 +17,9 @@ const RESIZE_DEBOUNCE_MS = 320;
  *
  * Dimensions are clamped to MIN_APP_VIEWPORT (300px) so below 300px the app
  * and zoom both use the same effective size.
+ *
+ * When the viewport crosses a breakpoint (mobile ↔ tablet ↔ desktop), MapContainer
+ * remounts the map with a brief spinner so zoom/camera stay correct.
  */
 export const useViewport = () => {
   const [screenSize, setScreenSize] = useState(() => {
