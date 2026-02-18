@@ -7,18 +7,13 @@ import React, {
 } from "react";
 
 import { RESIZE_BREAKPOINTS } from "@/constants/breakpoints";
-
-/**
- * Threshold for detecting meaningful zoom level changes.
- * Prevents unnecessary viewState updates for minor zoom differences.
- */
-const ZOOM_CHANGE_THRESHOLD = 0.1;
-/** Skip zoom update only for minor jitter; crossing a breakpoint always updates */
-const TRANSIENT_RESIZE_HEIGHT_THRESHOLD = 50;
-const TRANSIENT_RESIZE_WIDTH_THRESHOLD = 40;
-/** Min change to set a new programmatic target (avoids restarting for same target) */
-const PROGRAMMATIC_TARGET_ZOOM_EPS = 0.05;
-const PROGRAMMATIC_TARGET_LATLNG_EPS = 0.0002;
+import {
+  ZOOM_CHANGE_THRESHOLD,
+  TRANSIENT_RESIZE_HEIGHT_THRESHOLD,
+  TRANSIENT_RESIZE_WIDTH_THRESHOLD,
+  PROGRAMMATIC_TARGET_ZOOM_EPS,
+  PROGRAMMATIC_TARGET_LATLNG_EPS,
+} from "@/constants/map";
 
 /**
  * Props for useMapViewState hook.

@@ -7,20 +7,16 @@ import {
 } from "@/constants/keyboard";
 
 /**
- * Custom hook that ensures NavigationControl buttons are accessible and in tab order,
- * and that zoom in/out use progressive (animated) zoom.
- *
- * @param isMobile - Whether the device is mobile (NavigationControl not shown on mobile)
- * @param containerRef - Optional ref to the map container element for better scoping
- * @param mapRef - Optional ref to the map; when provided, zoom buttons use animated zoom
+ * Ensures NavigationControl buttons are accessible and use animated zoom.
+ * Run only when zoom controls are shown (e.g. desktop).
  */
 export const useNavigationControlAccessibility = (
-  isMobile: boolean,
+  enabled: boolean,
   containerRef?: RefObject<HTMLElement>,
   mapRef?: RefObject<MapRef | null>
 ) => {
   useEffect(() => {
-    if (isMobile) return;
+    if (!enabled) return;
 
     const duration = ZOOM_ANIMATION_DURATION_MS;
 
@@ -124,5 +120,5 @@ export const useNavigationControlAccessibility = (
       clearTimeout(timeoutId);
       observer.disconnect();
     };
-  }, [isMobile, containerRef]);
+  }, [enabled, containerRef]);
 };

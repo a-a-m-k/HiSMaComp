@@ -17,3 +17,10 @@ export const MIN_ZOOM_CALCULATION = 2;
 export const MAX_ZOOM_CALCULATION = 15;
 export const ZOOM_CALCULATION_BASE = 10;
 export const FLOATING_BUTTON_SIZE = 45;
+
+/** View-state / resize thresholds (useMapViewState) */
+export const ZOOM_CHANGE_THRESHOLD = 0.1;
+export const TRANSIENT_RESIZE_HEIGHT_THRESHOLD = 50;
+export const TRANSIENT_RESIZE_WIDTH_THRESHOLD = 40;
+export const PROGRAMMATIC_TARGET_ZOOM_EPS = 0.05;
+export const PROGRAMMATIC_TARGET_LATLNG_EPS = 0.0002;

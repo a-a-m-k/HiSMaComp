@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, Suspense, useState, useEffect } from "react";
+import React, { useMemo, useRef, Suspense, useState } from "react";
 import Map, { NavigationControl, MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -18,20 +18,15 @@ import { useApp } from "@/context/AppContext";
 import { useResponsive, useScreenDimensions } from "@/hooks/ui";
 import {
   useMapViewState,
+  useProgrammaticMapFit,
   useMapKeyboardShortcuts,
   useMapKeyboardPanning,
   useNavigationControlAccessibility,
   useTownsGeoJSON,
 } from "@/hooks/map";
+import type { MapViewState } from "@/hooks/map";
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
 import { TownMarkers } from "./TownMarkers";
-
-/** Duration for programmatic fit-to-towns animation. */
-const PROGRAMMATIC_FIT_DURATION_MS = 480;
-/** Fallback to sync viewState if moveend never fires after easeTo. */
-const PROGRAMMATIC_FIT_FALLBACK_MS = PROGRAMMATIC_FIT_DURATION_MS + 120;
-const easeInOutCubic = (t: number) =>
-  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
 /**
  * Loaded lazily because it is not rendered on mobile and is non-critical for
@@ -41,11 +36,8 @@ const ScreenshotButton = React.lazy(
   () => import("@/components/controls/ScreenshotButton/ScreenshotButton")
 );
 
-/**
- * Initial map camera values passed from container-level calculations.
- */
 interface MapViewComponentProps {
-  initialPosition: { longitude: number; latitude: number };
+  initialPosition: Pick<MapViewState, "longitude" | "latitude">;
   initialZoom: number;
   onFirstIdle?: () => void;
 }
@@ -66,8 +58,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
-  /** True while programmatic step animation is running; we ignore onMove to avoid redraw conflict */
-  const isProgrammaticAnimatingRef = useRef(false);
   const enableZoomControls = isDesktop;
 
   const safeProps = useMemo(
@@ -97,103 +87,19 @@ const MapView: React.FC<MapViewComponentProps> = ({
     screenHeight,
   });
 
-  /**
-   * Programmatic fit-to-towns: one smooth easeTo to target. Ignoring onMove
-   * during the animation prevents React state updates and avoids flicker/jump.
-   */
-  useEffect(() => {
-    if (!programmaticTarget) return;
-
-    if (!mapRef.current) {
-      const fallbackId = setTimeout(() => {
-        onProgrammaticAnimationEnd();
-      }, 80);
-      return () => clearTimeout(fallbackId);
-    }
-
-    const map = mapRef.current.getMap();
-    if (!map) return;
-
-    let cancelled = false;
-    let syncFallbackId: ReturnType<typeof setTimeout> | null = null;
-    isProgrammaticAnimatingRef.current = true;
-
-    const target = programmaticTarget;
-
-    const onMoveEnd = () => {
-      map.off("moveend", onMoveEnd);
-      if (syncFallbackId !== null) {
-        clearTimeout(syncFallbackId);
-        syncFallbackId = null;
-      }
-      if (cancelled) return;
-      isProgrammaticAnimatingRef.current = false;
-      onProgrammaticAnimationEnd();
-    };
-
-    map.once("moveend", onMoveEnd);
-
-    syncFallbackId = setTimeout(() => {
-      syncFallbackId = null;
-      if (cancelled) return;
-      map.off("moveend", onMoveEnd);
-      isProgrammaticAnimatingRef.current = false;
-      onProgrammaticAnimationEnd();
-    }, PROGRAMMATIC_FIT_FALLBACK_MS);
-
-    const runEase = () => {
-      if (cancelled) return;
-      map.stop();
-      const targetCenter: [number, number] = [
-        target.longitude,
-        target.latitude,
-      ];
-      map.jumpTo({
-        center: targetCenter,
-        zoom: map.getZoom(),
-      });
-      map.easeTo({
-        center: targetCenter,
-        zoom: target.zoom,
-        duration: PROGRAMMATIC_FIT_DURATION_MS,
-        easing: easeInOutCubic,
-      });
-    };
-
-    const rafId = requestAnimationFrame(() => {
-      if (cancelled) return;
-      requestAnimationFrame(() => {
-        if (cancelled) return;
-        runEase();
-      });
-    });
-
-    return () => {
-      cancelled = true;
-      isProgrammaticAnimatingRef.current = false;
-      if (syncFallbackId !== null) {
-        clearTimeout(syncFallbackId);
-        syncFallbackId = null;
-      }
-      cancelAnimationFrame(rafId);
-      map.off("moveend", onMoveEnd);
-      map.stop();
-      if (programmaticTargetRefForSync.current !== null) {
-        syncViewStateFromMap(target);
-      }
-    };
-  }, [
+  const isProgrammaticAnimatingRef = useProgrammaticMapFit({
+    mapRef,
     programmaticTarget,
     onProgrammaticAnimationEnd,
     syncViewStateFromMap,
     programmaticTargetRefForSync,
-  ]);
+  });
 
   const townsGeojson = useTownsGeoJSON(filteredTowns);
 
   useMapKeyboardShortcuts(mapRef, enableZoomControls);
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
-  useNavigationControlAccessibility(!enableZoomControls, containerRef, mapRef);
+  useNavigationControlAccessibility(enableZoomControls, containerRef, mapRef);
 
   /**
    * Applies a conservative tile-loading strategy so current viewport requests

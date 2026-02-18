@@ -154,14 +154,14 @@ const MapViewWithCalculations = ({
 }) => {
   const { center, fitZoom, isLoading } = useApp();
 
+  const defaultMapProps = {
+    initialPosition: DEFAULT_MAP_CENTER,
+    initialZoom: DEFAULT_MAP_ZOOM,
+    onFirstIdle,
+  };
+
   if (showDefaultMap || isLoading || !center) {
-    return (
-      <MapView
-        initialPosition={DEFAULT_MAP_CENTER}
-        initialZoom={DEFAULT_MAP_ZOOM}
-        onFirstIdle={onFirstIdle}
-      />
-    );
+    return <MapView {...defaultMapProps} />;
   }
 
   const isValidCenter =
@@ -174,13 +174,7 @@ const MapViewWithCalculations = ({
 
   if (!isValidCenter || !isValidZoom) {
     logger.error("Invalid map parameters:", { center, fitZoom });
-    return (
-      <MapView
-        initialPosition={DEFAULT_MAP_CENTER}
-        initialZoom={DEFAULT_MAP_ZOOM}
-        onFirstIdle={onFirstIdle}
-      />
-    );
+    return <MapView {...defaultMapProps} />;
   }
 
   return (
