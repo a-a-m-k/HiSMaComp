@@ -1,12 +1,11 @@
 import { useMemo } from "react";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useTheme } from "@mui/material/styles";
 
 import {
   MAP_LEGEND_COLORS,
   POPULATION_THRESHOLDS,
   POPULATION_THRESHOLDS_MOBILE,
 } from "@/constants";
+import { useViewport } from "@/hooks/ui";
 
 type LegendLayer = {
   color: string;
@@ -36,11 +35,11 @@ const createNoDataLayer = (isMobile: boolean, color: string): LegendLayer => ({
   layer: isMobile ? "No data" : "No data for the current time period",
 });
 
+/** Legend layers from population thresholds; uses useViewport for isMobile (single source). */
 export const useLegendLayers = (
   legendColors: string[] = MAP_LEGEND_COLORS
 ): LegendLayer[] => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { isMobile } = useViewport();
 
   return useMemo(() => {
     const thresholds = getPopulationThresholds(isMobile);

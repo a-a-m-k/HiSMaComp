@@ -43,6 +43,7 @@ export function useProgrammaticMapFit({
     let syncFallbackId: ReturnType<typeof setTimeout> | null = null;
     isAnimatingRef.current = true;
     const target = programmaticTarget;
+    const refForSyncCurrent = programmaticTargetRefForSync.current;
 
     const onMoveEnd = () => {
       map.off("moveend", onMoveEnd);
@@ -92,11 +93,17 @@ export function useProgrammaticMapFit({
       cancelAnimationFrame(rafId);
       map.off("moveend", onMoveEnd);
       map.stop();
-      if (programmaticTargetRefForSync.current !== null) {
+      if (refForSyncCurrent !== null) {
         syncViewStateFromMap(target);
       }
     };
-  }, [programmaticTarget, onProgrammaticAnimationEnd, syncViewStateFromMap]);
+  }, [
+    programmaticTarget,
+    onProgrammaticAnimationEnd,
+    syncViewStateFromMap,
+    mapRef,
+    programmaticTargetRefForSync,
+  ]);
 
   return isAnimatingRef;
 }

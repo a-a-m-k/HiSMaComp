@@ -1,3 +1,7 @@
-export { useResponsive, useScreenDimensions } from "./useResponsive";
+export {
+  useViewport,
+  useScreenDimensions,
+  useResponsive,
+} from "./useResponsive";
 export { useScreenshot } from "./useScreenshot";
 export { useResponsiveZoom } from "./useResponsiveZoom";

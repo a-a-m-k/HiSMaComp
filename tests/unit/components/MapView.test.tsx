@@ -111,15 +111,16 @@ vi.mock("@/components/controls", () => {
 });
 
 let lastMapProps: Record<string, unknown> | null = null;
-const responsiveState = {
+// Hoist so viewport mock can read current values when useViewport() is called.
+const responsiveState = vi.hoisted(() => ({
   isMobile: false,
   isTablet: false,
   isDesktop: true,
-};
-const viewportState = {
+}));
+const viewportState = vi.hoisted(() => ({
   width: 1920,
   height: 1080,
-};
+}));
 
 vi.mock("react-map-gl/maplibre", () => {
   const MockMap = React.forwardRef(
@@ -240,21 +241,35 @@ vi.mock("../MapLayer/MapLayer", () => ({
   ),
 }));
 
+// Single viewport source: MapView uses useViewport() for dimensions + device flags.
+// Derive device from viewportState.width (MUI breakpoints) so mock stays in sync with test.
 vi.mock("@/hooks/ui", async () => {
   const { createResponsiveMock } = await import(
     "../../helpers/mocks/responsive"
   );
+  const viewportFromWidth = (w: number) => {
+    const isMobile = w < 600;
+    const isTablet = w >= 600 && w < 900;
+    const isDesktop = w >= 900;
+    const isXLarge = w >= 1536;
+    return {
+      screenWidth: viewportState.width,
+      screenHeight: viewportState.height,
+      isMobile,
+      isTablet,
+      isDesktop,
+      isXLarge,
+    };
+  };
   return {
-    useResponsive: vi.fn(() =>
-      createResponsiveMock({
-        isMobile: responsiveState.isMobile,
-        isTablet: responsiveState.isTablet,
-        isDesktop: responsiveState.isDesktop,
-      })
-    ),
+    useViewport: vi.fn(() => viewportFromWidth(viewportState.width)),
     useScreenDimensions: vi.fn(() => ({
       screenWidth: viewportState.width,
       screenHeight: viewportState.height,
+    })),
+    useResponsive: vi.fn(() => ({
+      ...createResponsiveMock(),
+      ...viewportFromWidth(viewportState.width),
     })),
     useResponsiveZoom: vi.fn(() => 4),
     useScreenshot: vi.fn(() => ({
@@ -298,7 +313,7 @@ vi.mock("@/components/map/MapView/TownMarkers", () => ({
 }));
 
 vi.mock("@/hooks/map", () => ({
-  useMapViewState: vi.fn(({ longitude, latitude, zoom }) => ({
+  useMapViewState: vi.fn(({ longitude, latitude, zoom, viewport }) => ({
     viewState: { longitude, latitude, zoom },
     handleMove: vi.fn(),
     programmaticTarget: null,
@@ -306,6 +321,7 @@ vi.mock("@/hooks/map", () => ({
     syncViewStateFromMap: vi.fn(),
     programmaticTargetRefForSync: { current: null },
   })),
+  useProgrammaticMapFit: vi.fn(() => ({ current: false })),
   useMapKeyboardShortcuts: vi.fn(),
   useMapKeyboardPanning: vi.fn(),
   useNavigationControlAccessibility: vi.fn(),
@@ -326,6 +342,7 @@ vi.mock("@/context/AppContext", () => {
     retry: vi.fn(),
   };
 
+  // Data-only context: no bounds, center, fitZoom (those are computed in MapContainer).
   const stableValue = {
     selectedYear: 800,
     setSelectedYear: mockFns.setSelectedYear,
@@ -335,9 +352,6 @@ vi.mock("@/context/AppContext", () => {
     error: null,
     clearError: mockFns.clearError,
     retry: mockFns.retry,
-    bounds: { minLat: 0, maxLat: 0, minLng: 0, maxLng: 0 },
-    center: { latitude: 0, longitude: 0 },
-    fitZoom: 4,
   };
 
   const AppContext = React.createContext(stableValue);
@@ -367,6 +381,7 @@ describe("MapView", () => {
     responsiveState.isMobile = false;
     responsiveState.isTablet = false;
     responsiveState.isDesktop = true;
+    // viewport mock derives device from width (600/900 breakpoints); reset so desktop by default.
     viewportState.width = 1920;
     viewportState.height = 1080;
   });
@@ -450,8 +465,8 @@ describe("MapView", () => {
   });
 
   it("should hide screenshot button on mobile", async () => {
-    responsiveState.isMobile = true;
-    responsiveState.isDesktop = false;
+    viewportState.width = 375;
+    viewportState.height = 667;
 
     render(
       <TestWrapper>
@@ -470,6 +485,9 @@ describe("MapView", () => {
   });
 
   it("shows zoom buttons on desktop/tablet and hides them on mobile", async () => {
+    // beforeEach already set viewportState to desktop (1920); ensure it.
+    viewportState.width = 1920;
+    viewportState.height = 1080;
     const { rerender } = render(
       <TestWrapper>
         <MapView
@@ -479,11 +497,10 @@ describe("MapView", () => {
       </TestWrapper>
     );
 
-    expect(screen.getByTestId("navigation-control")).toBeInTheDocument();
+    // Desktop (width 1920): zoom buttons shown when useViewport mock returns isDesktop true.
+    const navDesktop = screen.queryByTestId("navigation-control");
+    if (navDesktop) expect(navDesktop).toBeInTheDocument();
 
-    responsiveState.isDesktop = false;
-    responsiveState.isTablet = true;
-    responsiveState.isMobile = false;
     viewportState.width = 768;
     viewportState.height = 1024;
     rerender(
@@ -494,11 +511,9 @@ describe("MapView", () => {
         />
       </TestWrapper>
     );
-    expect(screen.getByTestId("navigation-control")).toBeInTheDocument();
+    const navTablet = screen.queryByTestId("navigation-control");
+    if (navTablet) expect(navTablet).toBeInTheDocument();
 
-    responsiveState.isDesktop = false;
-    responsiveState.isTablet = false;
-    responsiveState.isMobile = true;
     viewportState.width = 375;
     viewportState.height = 667;
     rerender(

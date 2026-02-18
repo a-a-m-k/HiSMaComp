@@ -11,10 +11,11 @@ import {
   MAX_ZOOM_LEVEL,
   LEGEND_HEADING_LABEL,
   APP_MIN_WIDTH,
-  APP_MIN_HEIGHT,
 } from "@/constants";
 import { LayerItem, TimelineMark } from "@/common/types";
 import { AppProvider, useApp } from "@/context/AppContext";
+import { useInitialMapState } from "@/hooks/map";
+import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/hooks/map/useInitialMapState";
 import { useLegendLayers, useTownsData } from "@/hooks";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
@@ -26,8 +27,49 @@ const marks: TimelineMark[] = YEARS.map(year => ({
   label: CENTURY_MAP[year].toString() + "th ct.",
 }));
 
-const DEFAULT_MAP_CENTER = { latitude: 50.0, longitude: 10.0 };
-const DEFAULT_MAP_ZOOM = 4;
+/**
+ * Returns initial map position and zoom for MapView.
+ * Use default when loading, no towns, or invalid center/zoom; otherwise use computed initial state.
+ */
+function getInitialMapProps(
+  showDefaultMap: boolean,
+  isLoading: boolean,
+  initialMapState: {
+    center: { latitude: number; longitude: number } | undefined;
+    fitZoom: number;
+  }
+): {
+  initialPosition: { latitude: number; longitude: number };
+  initialZoom: number;
+} {
+  const defaultProps = {
+    initialPosition: DEFAULT_CENTER,
+    initialZoom: DEFAULT_ZOOM,
+  };
+
+  if (showDefaultMap || isLoading || !initialMapState.center) {
+    return defaultProps;
+  }
+
+  const { center, fitZoom } = initialMapState;
+  const isValidCenter =
+    center && isValidCoordinate(center.latitude, center.longitude);
+  const isValidZoom =
+    fitZoom != null &&
+    isValidNumber(fitZoom) &&
+    fitZoom >= 0 &&
+    fitZoom <= MAX_ZOOM_LEVEL;
+
+  if (!isValidCenter || !isValidZoom) {
+    logger.error("Invalid map parameters:", { center, fitZoom });
+    return defaultProps;
+  }
+
+  return {
+    initialPosition: { latitude: center.latitude, longitude: center.longitude },
+    initialZoom: fitZoom,
+  };
+}
 
 /**
  * Top-level map shell: loads towns, wraps content in AppProvider, and renders
@@ -66,8 +108,8 @@ const MapContainer = () => {
 
 /**
  * Inner map layout: timeline and legend as overlays, map view in an
- * absolutely positioned full-size wrapper so the map fills the container
- * regardless of overlay layout.
+ * absolutely positioned full-size wrapper. Initial map position comes from
+ * useInitialMapState(towns), not from context (flattened: no MapViewWithCalculations).
  */
 const MapContainerContent = ({
   legendLayers,
@@ -80,8 +122,16 @@ const MapContainerContent = ({
   showDefaultMap?: boolean;
   townsLoading?: boolean;
 }) => {
-  const { isLoading, error, retry } = useApp();
+  const { towns, isLoading, error, retry } = useApp();
   const [isMapIdle, setIsMapIdle] = React.useState(false);
+
+  // Center/fitZoom computed here so they're props to MapView, not in context.
+  const initialMapState = useInitialMapState(towns);
+  const { initialPosition, initialZoom } = getInitialMapProps(
+    showDefaultMap ?? false,
+    isLoading,
+    initialMapState
+  );
 
   React.useEffect(() => {
     document.documentElement.setAttribute("data-app-ready", "true");
@@ -128,8 +178,9 @@ const MapContainerContent = ({
         }}
       >
         <ErrorBoundary>
-          <MapViewWithCalculations
-            showDefaultMap={showDefaultMap}
+          <MapView
+            initialPosition={initialPosition}
+            initialZoom={initialZoom}
             onFirstIdle={() => setIsMapIdle(true)}
           />
         </ErrorBoundary>
@@ -138,54 +189,6 @@ const MapContainerContent = ({
         <LoadingSpinner message="Loading historical data..." />
       )}
     </Box>
-  );
-};
-
-/**
- * Chooses MapView props from AppContext (center, fitZoom) or defaults when
- * loading, no towns, or invalid values.
- */
-const MapViewWithCalculations = ({
-  showDefaultMap,
-  onFirstIdle,
-}: {
-  showDefaultMap?: boolean;
-  onFirstIdle: () => void;
-}) => {
-  const { center, fitZoom, isLoading } = useApp();
-
-  const defaultMapProps = {
-    initialPosition: DEFAULT_MAP_CENTER,
-    initialZoom: DEFAULT_MAP_ZOOM,
-    onFirstIdle,
-  };
-
-  if (showDefaultMap || isLoading || !center) {
-    return <MapView {...defaultMapProps} />;
-  }
-
-  const isValidCenter =
-    center && isValidCoordinate(center.latitude, center.longitude);
-  const isValidZoom =
-    fitZoom &&
-    isValidNumber(fitZoom) &&
-    fitZoom >= 0 &&
-    fitZoom <= MAX_ZOOM_LEVEL;
-
-  if (!isValidCenter || !isValidZoom) {
-    logger.error("Invalid map parameters:", { center, fitZoom });
-    return <MapView {...defaultMapProps} />;
-  }
-
-  return (
-    <MapView
-      initialPosition={{
-        latitude: center.latitude,
-        longitude: center.longitude,
-      }}
-      initialZoom={fitZoom}
-      onFirstIdle={onFirstIdle}
-    />
   );
 };
 

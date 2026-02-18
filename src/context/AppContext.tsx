@@ -14,35 +14,22 @@ import { yearDataService } from "@/services";
 import { calculateBoundsCenter } from "@/utils/utils";
 import { logger } from "@/utils/logger";
 import { retryWithBackoff } from "@/utils/retry";
-import { useResponsiveZoom } from "@/hooks/ui";
 import { announce } from "@/utils/accessibility";
 
 /**
- * Application context type providing global state for the map visualization.
+ * Data-only application context: year, towns, loading, error.
+ * Map initial center/fitZoom are computed in MapContainer via useInitialMapState
+ * and passed as props so context doesn't re-render on viewport resize.
  */
 interface AppContextType {
-  /** Currently selected year for filtering towns (e.g., 800, 1000, 1200) */
   selectedYear: number;
-  /** Function to update the selected year */
   setSelectedYear: (year: number) => void;
-  /** All towns loaded from data source (across all time periods) */
   towns: Town[];
-  /** Towns filtered by selectedYear (only towns with population > 0 for that year) */
   filteredTowns: Town[];
-  /** Whether data is currently being loaded */
   isLoading: boolean;
-  /** Error message if data loading or processing failed, null otherwise */
   error: string | null;
-  /** Clears the current error state */
   clearError: () => void;
-  /** Retries loading town data after an error */
   retry: () => void;
-  /** Geographic bounds of filtered towns (optional, undefined if no towns) */
-  bounds?: { minLat: number; maxLat: number; minLng: number; maxLng: number };
-  /** Geographic center point of filtered towns (optional, undefined if no towns) */
-  center?: { latitude: number; longitude: number };
-  /** Calculated zoom level to fit all filtered towns (optional, undefined if no towns) */
-  fitZoom?: number;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -58,25 +45,14 @@ interface AppProviderProps {
 }
 
 /**
- * React Context Provider that manages global application state.
- * Provides selected year, filtered towns, loading state, error handling,
- * and calculated map bounds/center/zoom to child components.
- *
- * @param props - AppProviderProps with children and towns
- * @returns Provider component wrapping children with AppContext
+ * React Context Provider: data only (year, towns, loading, error).
+ * Map initial position is computed in MapContainer and passed as props.
  */
 export const AppProvider: React.FC<AppProviderProps> = ({
   children,
   towns,
 }) => {
   const [selectedYear, setSelectedYearState] = useState<number>(YEARS[0]);
-
-  /**
-   * Validates and sets the selected year.
-   * Only allows years that exist in the YEARS array.
-   *
-   * @param year - Year to set
-   */
   const setSelectedYear = useCallback((year: number) => {
     if (!YEARS.includes(year as (typeof YEARS)[number])) {
       logger.warn(
@@ -89,13 +65,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({
   const [filteredTowns, setFilteredTowns] = useState<Town[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [bounds, setBounds] = useState<
-    | { minLat: number; maxLat: number; minLng: number; maxLng: number }
-    | undefined
-  >();
-  const [center, setCenter] = useState<
-    { latitude: number; longitude: number } | undefined
-  >();
   const isInitializedRef = useRef<boolean>(false);
   const previousTownsRef = useRef<Town[]>([]);
 
@@ -115,7 +84,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({
         try {
           const yearData = yearDataService.getYearData(towns, year);
           setFilteredTowns(yearData.filteredTowns);
-          setBounds(yearData.bounds);
           setError(null);
         } catch (error) {
           logger.error("Error loading year data:", error);
@@ -163,12 +131,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({
     loadYearData(selectedYear, true);
   }, [selectedYear, loadYearData]);
 
-  const fitZoom = useResponsiveZoom(towns);
-
   useEffect(() => {
     if (!towns || towns.length === 0) {
-      setBounds(undefined);
-      setCenter(undefined);
       setFilteredTowns([]);
       isInitializedRef.current = false;
       previousTownsRef.current = [];
@@ -182,8 +146,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({
     if (townsChanged) {
       setIsLoading(true);
       try {
-        const globalCenterData = calculateBoundsCenter(towns);
-        setCenter(globalCenterData);
+        // Validate that we can compute center (used by MapContainer via useInitialMapState).
+        calculateBoundsCenter(towns);
         isInitializedRef.current = true;
         previousTownsRef.current = towns;
       } catch (error) {
@@ -193,8 +157,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({
             ? error.message
             : "Failed to load historical data. Please try refreshing the page.";
         setError(errorMessage);
-        setBounds(undefined);
-        setCenter(undefined);
         setFilteredTowns([]);
       } finally {
         setIsLoading(false);
@@ -216,9 +178,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({
       error,
       clearError,
       retry,
-      bounds,
-      center,
-      fitZoom,
     }),
     [
       selectedYear,
@@ -229,9 +188,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({
       error,
       clearError,
       retry,
-      bounds,
-      center,
-      fitZoom,
     ]
   );
 
@@ -239,18 +195,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({
 };
 
 /**
- * Hook to access the AppContext.
- *
- * Provides access to global application state including selected year,
- * filtered towns, loading state, error handling, and map bounds/center/zoom.
- *
- * @returns AppContextType with all application state and methods
+ * Hook to access the AppContext (data only: year, towns, loading, error).
  * @throws Error if called outside of an AppProvider
- *
- * @example
- * ```tsx
- * const { selectedYear, setSelectedYear, filteredTowns, isLoading } = useApp();
- * ```
  */
 export const useApp = () => {
   const context = useContext(AppContext);

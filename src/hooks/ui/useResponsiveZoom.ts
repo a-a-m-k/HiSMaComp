@@ -4,7 +4,8 @@ import {
   DEFAULT_SCREEN_DIMENSIONS,
   MIN_APP_VIEWPORT,
 } from "@/constants/breakpoints";
-import { useScreenDimensions, useResponsive } from "@/hooks/ui/useResponsive";
+import { useViewport } from "@/hooks/ui/useResponsive";
+import { useTheme } from "@mui/material/styles";
 import { calculateResponsiveZoom } from "@/utils/utils";
 import { isValidPositiveNumber } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
@@ -25,8 +26,8 @@ import { logger } from "@/utils/logger";
  * ```
  */
 export const useResponsiveZoom = (towns: Town[]) => {
-  const { screenWidth, screenHeight } = useScreenDimensions();
-  const { theme } = useResponsive();
+  const { screenWidth, screenHeight } = useViewport();
+  const theme = useTheme();
 
   const fitZoom = useMemo(() => {
     if (!towns || towns.length === 0) return 4;

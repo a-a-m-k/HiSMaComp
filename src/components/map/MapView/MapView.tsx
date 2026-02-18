@@ -15,7 +15,7 @@ import { MAP_LAYER_ID } from "@/constants";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
 import { getMapStyles } from "@/constants/ui";
 import { useApp } from "@/context/AppContext";
-import { useResponsive, useScreenDimensions } from "@/hooks/ui";
+import { useViewport } from "@/hooks/ui";
 import {
   useMapViewState,
   useProgrammaticMapFit,
@@ -52,8 +52,9 @@ const MapView: React.FC<MapViewComponentProps> = ({
   onFirstIdle,
 }) => {
   const theme = useTheme();
-  const { isMobile, isTablet, isDesktop } = useResponsive();
-  const { screenWidth, screenHeight } = useScreenDimensions();
+  // Single source for viewport: dimensions + device flags (no duplicate useResponsive + useScreenDimensions).
+  const viewport = useViewport();
+  const { isMobile, isDesktop } = viewport;
   const { filteredTowns } = useApp();
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -81,11 +82,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
     longitude: safeProps.longitude,
     latitude: safeProps.latitude,
     zoom: safeProps.zoom,
-    isMobile,
-    isTablet,
-    isDesktop,
-    screenWidth,
-    screenHeight,
+    viewport,
   });
 
   const isProgrammaticAnimatingRef = useProgrammaticMapFit({
@@ -100,7 +97,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
 
   useMapKeyboardShortcuts(mapRef, enableZoomControls);
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
-  useNavigationControlAccessibility(showZoomButtons, containerRef, mapRef);
+  useNavigationControlAccessibility(showZoomButtons, containerRef);
 
   /**
    * Conservative tile-loading: reduce prefetch so viewport loads first.

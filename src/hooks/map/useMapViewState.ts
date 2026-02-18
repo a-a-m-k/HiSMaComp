@@ -15,26 +15,24 @@ import {
   PROGRAMMATIC_TARGET_LATLNG_EPS,
 } from "@/constants/map";
 
+/** Viewport from useViewport(): dimensions + device flags (single source of truth). */
+export interface MapViewport {
+  screenWidth: number;
+  screenHeight: number;
+  isMobile: boolean;
+  isTablet: boolean;
+  isDesktop: boolean;
+}
+
 /**
  * Props for useMapViewState hook.
+ * Viewport is a single object so callers use useViewport() and pass it through.
  */
 interface UseMapViewStateProps {
-  /** Initial longitude value */
   longitude: number;
-  /** Initial latitude value */
   latitude: number;
-  /** Initial zoom level */
   zoom: number;
-  /** Current mobile device flag */
-  isMobile: boolean;
-  /** Current tablet device flag */
-  isTablet: boolean;
-  /** Current desktop device flag */
-  isDesktop: boolean;
-  /** Current screen width in pixels */
-  screenWidth: number;
-  /** Current screen height in pixels */
-  screenHeight: number;
+  viewport: MapViewport;
 }
 
 /** Map camera: longitude, latitude, zoom. */
@@ -69,19 +67,18 @@ interface PreviousValues {
 }
 
 /**
- * Manages map viewState with responsive device/size handling. Updates view on
- * device or screen change; preserves pan/zoom when the user has interacted.
+ * Manages map viewState with responsive device/size handling.
+ * - On device or screen change: either fit to target or preserve user view (see named booleans below).
+ * - Single viewport object keeps API small and aligned with useViewport().
  */
 export function useMapViewState({
   longitude,
   latitude,
   zoom,
-  isMobile,
-  isTablet,
-  isDesktop,
-  screenWidth,
-  screenHeight,
+  viewport,
 }: UseMapViewStateProps): UseMapViewStateReturn {
+  const { isMobile, isTablet, isDesktop, screenWidth, screenHeight } = viewport;
+
   const [viewState, setViewState] = useState({
     longitude,
     latitude,
@@ -109,6 +106,7 @@ export function useMapViewState({
     [longitude, latitude, zoom]
   );
 
+  // Named booleans for "when to fit vs preserve" so the effect is readable.
   const deviceChangeInfo = useMemo(() => {
     const widthDelta = Math.abs(
       prevValuesRef.current.screenWidth - screenWidth
@@ -128,6 +126,7 @@ export function useMapViewState({
         (prevValuesRef.current.screenWidth < bp && screenWidth >= bp) ||
         (prevValuesRef.current.screenWidth >= bp && screenWidth < bp)
     );
+    // Small resize without crossing breakpoint: avoid refit to prevent flinch.
     const transientResizeOnly =
       !deviceTypeChanged &&
       screenSizeChanged &&
@@ -156,17 +155,20 @@ export function useMapViewState({
       zoomChangedSignificantly,
     } = deviceChangeInfo;
 
+    // Reset "user has panned/zoomed" when device actually changed (e.g. mobile → desktop).
     if (isDeviceChange && hasUserInteracted && !transientResizeOnly) {
       setHasUserInteracted(false);
     }
 
     if (isDeviceChange) {
+      // Keep current view on small resizes if user had interacted and zoom didn't change much.
       const preserveUserView =
         !isMobile &&
         hasUserInteracted &&
         transientResizeOnly &&
         !zoomChangedSignificantly;
       if (!preserveUserView) {
+        // Mobile → larger: jump to fit target (no animation).
         const fromMinimalToLessMinimal =
           prevValuesRef.current.isMobile && !isMobile;
         if (fromMinimalToLessMinimal) {
@@ -174,6 +176,7 @@ export function useMapViewState({
           setProgrammaticTarget(null);
           setViewState(fitTargetFromProps);
         } else {
+          // Set programmatic target so useProgrammaticMapFit runs easeTo (or skip if same target).
           const next = fitTargetFromProps;
           const prev = programmaticTargetRef.current;
           const isShrinking =
@@ -215,7 +218,6 @@ export function useMapViewState({
       }
     }
 
-    // Update previous values for next comparison
     prevValuesRef.current = {
       isMobile,
       isTablet,
@@ -224,6 +226,8 @@ export function useMapViewState({
       screenWidth,
       screenHeight,
     };
+    // deviceChangeInfo and fitTargetFromProps already depend on viewport/zoom; listing primitives would duplicate effect runs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fitTargetFromProps, hasUserInteracted, deviceChangeInfo]);
 
   const handleMove = useCallback((evt: { viewState: MapViewState }) => {

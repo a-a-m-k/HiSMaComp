@@ -7,7 +7,6 @@ import { ThemeProvider } from "@mui/material";
 import type { Town } from "@/common/types";
 import theme from "@/theme/theme";
 import MapContainer from "@/components/containers/MapContainer";
-import { logger } from "@/utils/logger";
 
 const mapViewSpy = vi.hoisted(() => vi.fn());
 const retrySpy = vi.hoisted(() => vi.fn());
@@ -26,10 +25,20 @@ const state = vi.hoisted(() => ({
     error: null as string | null,
   },
   appData: {
+    towns: [] as Town[],
     isLoading: false,
     error: null as string | null,
     retry: retrySpy,
-    center: { latitude: 48.8566, longitude: 2.3522 },
+    selectedYear: 800,
+    setSelectedYear: vi.fn(),
+    filteredTowns: [] as Town[],
+    clearError: vi.fn(),
+  },
+  initialMapState: {
+    center: { latitude: 48.8566, longitude: 2.3522 } as {
+      latitude: number;
+      longitude: number;
+    },
     fitZoom: 6,
   },
   legendLayers: [
@@ -75,6 +84,30 @@ vi.mock("@/hooks", () => ({
   useTownsData: () => state.townsData,
 }));
 
+vi.mock("@/hooks/map", () => ({
+  useInitialMapState: vi.fn(() => state.initialMapState),
+  useMapViewState: vi.fn(() => ({
+    viewState: { longitude: 2.3522, latitude: 48.8566, zoom: 6 },
+    handleMove: vi.fn(),
+    programmaticTarget: null,
+    onProgrammaticAnimationEnd: vi.fn(),
+    syncViewStateFromMap: vi.fn(),
+    programmaticTargetRefForSync: { current: null },
+  })),
+  useProgrammaticMapFit: vi.fn(() => ({ current: false })),
+  useMapKeyboardShortcuts: vi.fn(),
+  useMapKeyboardPanning: vi.fn(),
+  useNavigationControlAccessibility: vi.fn(),
+  useTownsGeoJSON: vi.fn(() => ({ type: "FeatureCollection", features: [] })),
+  useMapLayerExpressions: vi.fn(() => ({
+    populationSortKey: "population",
+    circleRadiusExpression: ["get", "radius"],
+    circleColorExpression: ["get", "color"],
+    populationExpression: ["get", "population"],
+  })),
+  useMarkerKeyboardNavigation: vi.fn(() => vi.fn()),
+}));
+
 const mockLogger = vi.hoisted(() => ({
   error: vi.fn(),
   warn: vi.fn(),
@@ -96,22 +129,30 @@ const renderWithTheme = () =>
 describe("MapContainer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    const defaultTowns = [
+      {
+        name: "Paris",
+        latitude: 48.8566,
+        longitude: 2.3522,
+        populationByYear: { "800": 20000, "1000": 35000 },
+      } as Town,
+    ];
     state.townsData = {
-      towns: [
-        {
-          name: "Paris",
-          latitude: 48.8566,
-          longitude: 2.3522,
-          populationByYear: { "800": 20000, "1000": 35000 },
-        } as Town,
-      ],
+      towns: defaultTowns,
       isLoading: false,
       error: null,
     };
     state.appData = {
+      towns: defaultTowns,
       isLoading: false,
       error: null,
       retry: retrySpy,
+      selectedYear: 800,
+      setSelectedYear: vi.fn(),
+      filteredTowns: defaultTowns,
+      clearError: vi.fn(),
+    };
+    state.initialMapState = {
       center: { latitude: 48.8566, longitude: 2.3522 },
       fitZoom: 6,
     };
@@ -156,6 +197,7 @@ describe("MapContainer", () => {
   it("uses default map coordinates while source towns are loading", async () => {
     state.townsData.isLoading = true;
     state.townsData.towns = [];
+    state.appData.towns = [];
 
     renderWithTheme();
     await waitFor(() => expect(mapViewSpy).toHaveBeenCalled());
@@ -172,8 +214,8 @@ describe("MapContainer", () => {
     expect(latestProps.initialZoom).toBe(4);
   });
 
-  it("falls back to default map settings for invalid app map params", async () => {
-    state.appData.fitZoom = Number.NaN;
+  it("falls back to default map settings for invalid initial map params", async () => {
+    state.initialMapState.fitZoom = Number.NaN;
 
     renderWithTheme();
     await waitFor(() => expect(mapViewSpy).toHaveBeenCalled());
@@ -183,7 +225,7 @@ describe("MapContainer", () => {
       initialZoom: number;
     };
 
-    expect(logger.error).toHaveBeenCalledWith("Invalid map parameters:", {
+    expect(mockLogger.error).toHaveBeenCalledWith("Invalid map parameters:", {
       center: { latitude: 48.8566, longitude: 2.3522 },
       fitZoom: Number.NaN,
     });

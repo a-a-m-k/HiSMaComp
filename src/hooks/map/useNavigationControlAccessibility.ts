@@ -1,5 +1,4 @@
 import { useEffect, RefObject } from "react";
-import { MapRef } from "react-map-gl/maplibre";
 import { logger } from "@/utils/logger";
 import { DOM_SETTLE_TIMEOUT_MS } from "@/constants/keyboard";
 
@@ -9,8 +8,7 @@ import { DOM_SETTLE_TIMEOUT_MS } from "@/constants/keyboard";
  */
 export const useNavigationControlAccessibility = (
   enabled: boolean,
-  containerRef?: RefObject<HTMLElement>,
-  _mapRef?: RefObject<MapRef | null>
+  containerRef?: RefObject<HTMLElement>
 ) => {
   useEffect(() => {
     if (!enabled) return;

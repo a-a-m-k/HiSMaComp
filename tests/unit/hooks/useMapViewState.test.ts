@@ -13,15 +13,18 @@ import { renderHook, act } from "@testing-library/react";
 import { useMapViewState } from "@/hooks/map/useMapViewState";
 
 describe("useMapViewState", () => {
+  const defaultViewport = {
+    screenWidth: 1920,
+    screenHeight: 1080,
+    isMobile: false,
+    isTablet: false,
+    isDesktop: true,
+  };
   const defaultProps = {
     longitude: 10.0,
     latitude: 50.0,
     zoom: 5,
-    isMobile: false,
-    isTablet: false,
-    isDesktop: true,
-    screenWidth: 1920,
-    screenHeight: 1080,
+    viewport: defaultViewport,
   };
 
   beforeEach(() => {
@@ -87,13 +90,19 @@ describe("useMapViewState", () => {
 
   it("should update viewState when device type changes", () => {
     const { result, rerender } = renderHook(props => useMapViewState(props), {
-      initialProps: { ...defaultProps, isMobile: false, isDesktop: true },
+      initialProps: {
+        ...defaultProps,
+        viewport: { ...defaultViewport, isMobile: false, isDesktop: true },
+      },
     });
 
     const initialViewState = { ...result.current.viewState };
 
     // Change device type
-    rerender({ ...defaultProps, isMobile: true, isDesktop: false });
+    rerender({
+      ...defaultProps,
+      viewport: { ...defaultViewport, isMobile: true, isDesktop: false },
+    });
 
     // ViewState should update to reflect device change
     // (actual behavior depends on implementation)
@@ -121,14 +130,16 @@ describe("useMapViewState", () => {
 
   it("should update when screen dimensions change", () => {
     const { rerender } = renderHook(props => useMapViewState(props), {
-      initialProps: { ...defaultProps, screenWidth: 1920, screenHeight: 1080 },
+      initialProps: {
+        ...defaultProps,
+        viewport: { ...defaultViewport, screenWidth: 1920, screenHeight: 1080 },
+      },
     });
 
     // Change screen dimensions
     rerender({
       ...defaultProps,
-      screenWidth: 1024,
-      screenHeight: 768,
+      viewport: { ...defaultViewport, screenWidth: 1024, screenHeight: 768 },
     });
 
     // Should handle dimension changes
@@ -152,8 +163,11 @@ describe("useMapViewState", () => {
 
     rerender({
       ...defaultProps,
-      screenWidth: 1920,
-      screenHeight: 1030, // Minor height change (e.g. browser UI collapse)
+      viewport: {
+        ...defaultViewport,
+        screenWidth: 1920,
+        screenHeight: 1030, // Minor height change (e.g. browser UI collapse)
+      },
     });
 
     expect(result.current.viewState.zoom).toBe(7);
