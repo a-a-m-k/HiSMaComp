@@ -1,4 +1,4 @@
-import type { Theme } from "@mui/material/styles";
+import type { SxProps, Theme } from "@mui/material/styles";
 import {
   BORDER_RADIUS,
   COMPONENT_WIDTHS,
@@ -21,7 +21,9 @@ export interface LegendLayoutOptions {
  * Mobile/Tablet: fixed at top with edge spacing.
  * Desktop: absolute (relative to map container) at top-right.
  */
-export function getResponsiveStyles(options: LegendLayoutOptions): object {
+export function getResponsiveStyles(
+  options: LegendLayoutOptions
+): SxProps<Theme> {
   const { isMobile, isTablet, isXLarge, theme, commonStyles } = options;
 
   if (isMobile) {

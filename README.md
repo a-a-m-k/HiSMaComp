@@ -44,7 +44,7 @@ src/
 
 ## Notable implementation details
 
-- Centralized state with React Context for timeline and UI state.
+- App data (year, towns, loading, error) lives in React Context; map view state (center, zoom) is derived in the container and passed as props.
 - Service layer caches computed year data to avoid redundant processing.
 - Custom zoom algorithm based on Mercator projection to keep towns in view.
 

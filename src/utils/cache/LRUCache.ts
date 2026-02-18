@@ -24,14 +24,13 @@ export class LRUCache<K, V> {
    * @returns The cached value or undefined if not found
    */
   get(key: K): V | undefined {
-    if (!this.cache.has(key)) {
+    const value = this.cache.get(key);
+    if (value === undefined) {
       return undefined;
     }
 
-    const value = this.cache.get(key)!;
     this.cache.delete(key);
     this.cache.set(key, value);
-
     return value;
   }
 

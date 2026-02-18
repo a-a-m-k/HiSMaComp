@@ -80,6 +80,7 @@ const MapContainer = () => {
   const { towns, isLoading: townsLoading, error: townsError } = useTownsData();
 
   if (townsError) {
+    // Only one of this error branch or MapContainerContent is ever mounted; same id is intentional.
     return (
       <Box
         id="map-container"
