@@ -107,9 +107,10 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
         width: "100%",
         color: theme.palette.text.secondary,
         opacity: 0.9,
-        fontSize: isMobile ? "0.72rem" : "0.78rem",
+        fontSize: isMobile ? "0.78rem" : "0.88rem",
         lineHeight: 1.25,
         fontWeight: 500,
+        letterSpacing: "0.01em",
       }),
       [isMobile, isTablet, theme]
     );

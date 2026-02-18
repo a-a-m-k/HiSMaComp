@@ -17,6 +17,8 @@ export const MIN_ZOOM_CALCULATION = 2;
 export const MAX_ZOOM_CALCULATION = 15;
 export const ZOOM_CALCULATION_BASE = 10;
 export const FLOATING_BUTTON_SIZE = 45;
+/** Screenshot button size on desktop (md and up); larger than default for easier click. */
+export const SCREENSHOT_BUTTON_DESKTOP_SIZE = 56;
 
 /** View-state / resize thresholds (useMapViewState) */
 export const ZOOM_CHANGE_THRESHOLD = 0.1;

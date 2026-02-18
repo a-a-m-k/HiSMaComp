@@ -2,7 +2,10 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import { styled } from "@mui/material/styles";
 
-import { FLOATING_BUTTON_SIZE } from "@/constants";
+import {
+  FLOATING_BUTTON_SIZE,
+  SCREENSHOT_BUTTON_DESKTOP_SIZE,
+} from "@/constants";
 import { BORDER_RADIUS, OVERLAY_POSITIONS } from "@/constants/ui";
 import { SIZING_CONSTANTS } from "@/constants/sizing";
 
@@ -133,6 +136,12 @@ export const ScreenshotButton = styled(IconButton, {
   "&[data-tooltip]:focus-visible::before, &[data-tooltip]:hover::before": {
     opacity: 1,
     visibility: "visible",
+  },
+  [theme.breakpoints.up("md")]: {
+    width: SCREENSHOT_BUTTON_DESKTOP_SIZE,
+    height: SCREENSHOT_BUTTON_DESKTOP_SIZE,
+    minWidth: SCREENSHOT_BUTTON_DESKTOP_SIZE,
+    minHeight: SCREENSHOT_BUTTON_DESKTOP_SIZE,
   },
   [theme.breakpoints.up("xl")]: {
     width: FLOATING_BUTTON_SIZE * SIZING_CONSTANTS.XL_SIZE_MULTIPLIER,

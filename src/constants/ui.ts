@@ -92,7 +92,7 @@ export const TIMELINE_WIDTHS = {
 export const TIMELINE_HEIGHTS = {
   MOBILE: 87,
   TABLET: 120,
-  DESKTOP: 115,
+  DESKTOP: 120,
 } as const;
 
 /**

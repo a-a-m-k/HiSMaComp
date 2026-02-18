@@ -58,7 +58,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
-  const enableZoomControls = isDesktop;
+  const enableZoomControls = !isMobile;
+  const showZoomButtons = isDesktop;
 
   const safeProps = useMemo(
     () => ({
@@ -99,11 +100,10 @@ const MapView: React.FC<MapViewComponentProps> = ({
 
   useMapKeyboardShortcuts(mapRef, enableZoomControls);
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
-  useNavigationControlAccessibility(enableZoomControls, containerRef, mapRef);
+  useNavigationControlAccessibility(showZoomButtons, containerRef, mapRef);
 
   /**
-   * Applies a conservative tile-loading strategy so current viewport requests
-   * are prioritized and speculative prefetch is reduced.
+   * Conservative tile-loading: reduce prefetch so viewport loads first.
    */
   const handleMapLoad = React.useCallback(() => {
     if (!mapRef.current) return;
@@ -193,7 +193,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
               </Suspense>
             </ScreenshotButtonContainer>
           )}
-          {enableZoomControls && <NavigationControl position="bottom-right" />}
+          {showZoomButtons && <NavigationControl position="bottom-right" />}
         </Map>
       </div>
     </>
