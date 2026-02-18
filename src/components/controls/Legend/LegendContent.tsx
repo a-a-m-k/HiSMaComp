@@ -6,7 +6,6 @@ import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { AttributionLinks } from "@/components/ui";
-import { useApp } from "@/context/AppContext";
 import { useResponsive } from "@/hooks/ui";
 import { LayerItem } from "@/common/types";
 import { getLegendStyles } from "@/constants/sizing";
@@ -14,6 +13,7 @@ import { getLegendStyles } from "@/constants/sizing";
 export interface LegendProps {
   label: string;
   layers: LayerItem[];
+  selectedYear: number;
   style?: React.CSSProperties;
   isMapIdle?: boolean;
 }
@@ -68,8 +68,7 @@ const LegendItem: React.FC<{ layer: string; color: string }> = React.memo(
 LegendItem.displayName = "LegendItem";
 
 export const LegendContent: React.FC<LegendProps> = React.memo(
-  ({ layers, label, style, isMapIdle = true }) => {
-    const { selectedYear } = useApp();
+  ({ layers, label, selectedYear, style, isMapIdle = true }) => {
     const theme = useTheme();
     const { isTablet, isMobile } = useResponsive();
     const isMediumOrLarger = useMediaQuery(theme.breakpoints.up("md"));

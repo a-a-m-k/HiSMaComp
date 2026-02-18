@@ -1,12 +1,12 @@
 import React, { useMemo, useState, useCallback } from "react";
 import { Town } from "@/common/types";
-import { useApp } from "@/context/AppContext";
 import { useMarkerKeyboardNavigation } from "@/hooks/map";
 import { disableTownMarkerFocus } from "@/utils/markers";
 import { TownMarkerItem } from "./TownMarkerItem";
 
 interface TownMarkersProps {
   towns: Town[];
+  selectedYear: number;
 }
 
 /**
@@ -14,8 +14,10 @@ interface TownMarkersProps {
  * Markers are focusable on click and navigable via arrow keys.
  * Uses geographic coordinates directly - MapLibre handles coordinate transformation automatically.
  */
-export const TownMarkers: React.FC<TownMarkersProps> = ({ towns }) => {
-  const { selectedYear } = useApp();
+export const TownMarkers: React.FC<TownMarkersProps> = ({
+  towns,
+  selectedYear,
+}) => {
   const [focusedMarkerId, setFocusedMarkerId] = useState<string | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
 

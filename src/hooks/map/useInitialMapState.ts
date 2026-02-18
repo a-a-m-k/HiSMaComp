@@ -4,14 +4,12 @@ import {
   DEFAULT_SCREEN_DIMENSIONS,
   MIN_APP_VIEWPORT,
 } from "@/constants/breakpoints";
+import { DEFAULT_ZOOM } from "@/constants/map";
 import { useViewport } from "@/hooks/ui";
 import { useTheme } from "@mui/material/styles";
 import { calculateBoundsCenter, calculateResponsiveZoom } from "@/utils/utils";
 import { isValidPositiveNumber } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
-
-const DEFAULT_CENTER = { latitude: 50.0, longitude: 10.0 };
-const DEFAULT_ZOOM = 4;
 
 /**
  * Computes initial map center and fit zoom from towns and current viewport.
@@ -54,5 +52,3 @@ export function useInitialMapState(towns: Town[]): {
     }
   }, [towns, screenWidth, screenHeight, theme]);
 }
-
-export { DEFAULT_CENTER, DEFAULT_ZOOM };

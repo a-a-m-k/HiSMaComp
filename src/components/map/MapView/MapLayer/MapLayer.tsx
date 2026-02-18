@@ -6,13 +6,13 @@ import {
   MAX_MARKER_SIZE,
 } from "@/constants";
 import { GeoJSON } from "geojson";
-import { useApp } from "@/context/AppContext";
 import { useMapLayerExpressions } from "@/hooks/map";
 
 interface MapLayerProps
   extends Omit<LayerProps, "id" | "type" | "layout" | "paint"> {
   layerId: string;
   data: GeoJSON;
+  selectedYear: number;
   minPopulation?: number;
   maxPopulation?: number;
   minMarkerSize?: number;
@@ -22,14 +22,13 @@ interface MapLayerProps
 const MapLayer = ({
   layerId,
   data,
+  selectedYear,
   minPopulation = POPULATION_THRESHOLDS[0],
   maxPopulation = POPULATION_THRESHOLDS[POPULATION_THRESHOLDS.length - 1],
   minMarkerSize = MIN_MARKER_SIZE,
   maxMarkerSize = MAX_MARKER_SIZE,
   ...rest
 }: MapLayerProps) => {
-  const { selectedYear } = useApp();
-
   const {
     populationSortKey,
     circleRadiusExpression,

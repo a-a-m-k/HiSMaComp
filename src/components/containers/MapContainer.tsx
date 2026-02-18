@@ -15,7 +15,7 @@ import {
 import { LayerItem, TimelineMark } from "@/common/types";
 import { AppProvider, useApp } from "@/context/AppContext";
 import { useInitialMapState } from "@/hooks/map";
-import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/hooks/map/useInitialMapState";
+import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/constants/map";
 import { useLegendLayers, useTownsData } from "@/hooks";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
@@ -122,7 +122,8 @@ const MapContainerContent = ({
   showDefaultMap?: boolean;
   townsLoading?: boolean;
 }) => {
-  const { towns, isLoading, error, retry } = useApp();
+  const { towns, filteredTowns, selectedYear, isLoading, error, retry } =
+    useApp();
   const [isMapIdle, setIsMapIdle] = React.useState(false);
 
   // Center/fitZoom computed here so they're props to MapView, not in context.
@@ -160,6 +161,7 @@ const MapContainerContent = ({
             label={LEGEND_HEADING_LABEL}
             layers={legendLayers}
             isMapIdle={isMapIdle}
+            selectedYear={selectedYear}
           />
         </>
       )}
@@ -179,6 +181,8 @@ const MapContainerContent = ({
       >
         <ErrorBoundary>
           <MapView
+            towns={filteredTowns}
+            selectedYear={selectedYear}
             initialPosition={initialPosition}
             initialZoom={initialZoom}
             onFirstIdle={() => setIsMapIdle(true)}

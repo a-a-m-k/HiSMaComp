@@ -14,8 +14,8 @@ import {
 import { MAP_LAYER_ID } from "@/constants";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
 import { getMapStyles } from "@/constants/ui";
-import { useApp } from "@/context/AppContext";
 import { useViewport } from "@/hooks/ui";
+import type { Town } from "@/common/types";
 import {
   useMapViewState,
   useProgrammaticMapFit,
@@ -37,6 +37,8 @@ const ScreenshotButton = React.lazy(
 );
 
 interface MapViewComponentProps {
+  towns: Town[];
+  selectedYear: number;
   initialPosition: Pick<MapViewState, "longitude" | "latitude">;
   initialZoom: number;
   onFirstIdle?: () => void;
@@ -47,6 +49,8 @@ interface MapViewComponentProps {
  * controls with accessibility and keyboard support.
  */
 const MapView: React.FC<MapViewComponentProps> = ({
+  towns,
+  selectedYear,
   initialPosition: { longitude, latitude },
   initialZoom,
   onFirstIdle,
@@ -55,7 +59,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
   // Single source for viewport: dimensions + device flags (no duplicate useResponsive + useScreenDimensions).
   const viewport = useViewport();
   const { isMobile, isDesktop } = viewport;
-  const { filteredTowns } = useApp();
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -93,7 +96,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
     programmaticTargetRefForSync,
   });
 
-  const townsGeojson = useTownsGeoJSON(filteredTowns);
+  const townsGeojson = useTownsGeoJSON(towns);
 
   useMapKeyboardShortcuts(mapRef, enableZoomControls);
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
@@ -179,8 +182,12 @@ const MapView: React.FC<MapViewComponentProps> = ({
         >
           {mapReady && (
             <>
-              <MapLayer layerId={MAP_LAYER_ID} data={townsGeojson} />
-              <TownMarkers towns={filteredTowns} />
+              <MapLayer
+                layerId={MAP_LAYER_ID}
+                data={townsGeojson}
+                selectedYear={selectedYear}
+              />
+              <TownMarkers towns={towns} selectedYear={selectedYear} />
             </>
           )}
           {!isMobile && (

@@ -8,16 +8,6 @@ import type { Town } from "@/common/types";
 const disableTownMarkerFocusSpy = vi.hoisted(() => vi.fn());
 const keyDownSpy = vi.hoisted(() => vi.fn());
 
-const state = vi.hoisted(() => ({
-  selectedYear: 1000,
-}));
-
-vi.mock("@/context/AppContext", () => ({
-  useApp: () => ({
-    selectedYear: state.selectedYear,
-  }),
-}));
-
 vi.mock("@/utils/markers", () => ({
   disableTownMarkerFocus: (element: HTMLElement) =>
     disableTownMarkerFocusSpy(element),
@@ -89,18 +79,21 @@ describe("TownMarkers interactions", () => {
     },
   ];
 
+  const selectedYear = 1000;
+
   beforeEach(() => {
     vi.clearAllMocks();
-    state.selectedYear = 1000;
   });
 
   it("renders nothing when towns are empty", () => {
-    const { container } = render(<TownMarkers towns={[]} />);
+    const { container } = render(
+      <TownMarkers towns={[]} selectedYear={selectedYear} />
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
   it("renders markers sorted by selected-year population (descending)", () => {
-    render(<TownMarkers towns={towns} />);
+    render(<TownMarkers towns={towns} selectedYear={selectedYear} />);
 
     const renderedMarkers = screen.getAllByRole("button");
     const names = renderedMarkers.map(node => node.textContent);
@@ -108,7 +101,7 @@ describe("TownMarkers interactions", () => {
   });
 
   it("tracks focus, hover, blur, and keyboard interactions", () => {
-    render(<TownMarkers towns={towns} />);
+    render(<TownMarkers towns={towns} selectedYear={selectedYear} />);
 
     const bigTownMarker = screen.getByTestId("marker-BigTown");
     const midTownMarker = screen.getByTestId("marker-MidTown");

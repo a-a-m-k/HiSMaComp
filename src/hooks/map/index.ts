@@ -1,8 +1,4 @@
-export {
-  useInitialMapState,
-  DEFAULT_CENTER,
-  DEFAULT_ZOOM,
-} from "./useInitialMapState";
+export { useInitialMapState } from "./useInitialMapState";
 export { useMapLayerExpressions } from "./useMapLayerExpressions";
 export {
   useMapViewState,

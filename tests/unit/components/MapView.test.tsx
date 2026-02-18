@@ -303,11 +303,11 @@ vi.mock("@/utils/logger", () => ({
 }));
 
 vi.mock("@/components/map/MapView/TownMarkers", () => ({
-  TownMarkers: ({ towns }: { towns: unknown[] }) => {
+  TownMarkers: ({ towns = [] }: { towns?: unknown[] }) => {
     return React.createElement(
       "div",
       { "data-testid": "town-markers" },
-      `${towns.length} markers`
+      `${(towns ?? []).length} markers`
     );
   },
 }));
@@ -392,7 +392,12 @@ describe("MapView", () => {
 
     const { container } = render(
       <TestWrapper>
-        <MapView initialPosition={initialPosition} initialZoom={initialZoom} />
+        <MapView
+          towns={[]}
+          selectedYear={800}
+          initialPosition={initialPosition}
+          initialZoom={initialZoom}
+        />
       </TestWrapper>
     );
 
@@ -412,6 +417,8 @@ describe("MapView", () => {
     const { container } = render(
       <TestWrapper>
         <MapView
+          towns={[]}
+          selectedYear={800}
           initialPosition={{ latitude: NaN, longitude: NaN }}
           initialZoom={-1}
         />
@@ -426,6 +433,8 @@ describe("MapView", () => {
     render(
       <TestWrapper>
         <MapView
+          towns={[]}
+          selectedYear={800}
           initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
           initialZoom={5}
         />
@@ -446,6 +455,8 @@ describe("MapView", () => {
     render(
       <TestWrapper>
         <MapView
+          towns={[]}
+          selectedYear={800}
           initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
           initialZoom={5}
         />
@@ -471,6 +482,8 @@ describe("MapView", () => {
     render(
       <TestWrapper>
         <MapView
+          towns={[]}
+          selectedYear={800}
           initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
           initialZoom={5}
         />
@@ -491,6 +504,8 @@ describe("MapView", () => {
     const { rerender } = render(
       <TestWrapper>
         <MapView
+          towns={[]}
+          selectedYear={800}
           initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
           initialZoom={5}
         />
@@ -506,6 +521,8 @@ describe("MapView", () => {
     rerender(
       <TestWrapper>
         <MapView
+          towns={[]}
+          selectedYear={800}
           initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
           initialZoom={5}
         />
@@ -519,6 +536,8 @@ describe("MapView", () => {
     rerender(
       <TestWrapper>
         <MapView
+          towns={[]}
+          selectedYear={800}
           initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
           initialZoom={5}
         />
@@ -537,6 +556,8 @@ describe("MapView", () => {
     const { rerender } = render(
       <TestWrapper>
         <MapView
+          towns={[]}
+          selectedYear={800}
           initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
           initialZoom={5}
         />
@@ -555,6 +576,8 @@ describe("MapView", () => {
     rerender(
       <TestWrapper>
         <MapView
+          towns={[]}
+          selectedYear={800}
           initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
           initialZoom={5}
         />
