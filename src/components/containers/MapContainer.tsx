@@ -115,11 +115,8 @@ const MapContainer = () => {
 };
 
 /**
- * Inner map layout: timeline and legend as overlays, map view in an
- * absolutely positioned full-size wrapper. Initial map position comes from
- * useInitialMapState(towns), not from context (flattened: no MapViewWithCalculations).
+ * Stable key for map remount when viewport crosses mobile/tablet/desktop breakpoint.
  */
-/** Stable key for map remount when viewport crosses mobile/tablet/desktop breakpoint. */
 function getMapDeviceKey(viewport: {
   isMobile: boolean;
   isTablet: boolean;
@@ -143,6 +140,7 @@ function useStableMapKey(viewport: {
   return viewport.isBelowMinViewport ? lastKeyAboveMinRef.current : deviceKey;
 }
 
+/** Renders timeline, legend, and map; handles resize/remount overlays and initial map position from useInitialMapState. */
 const MapContainerContent = ({
   legendLayers,
   marks,
@@ -159,17 +157,18 @@ const MapContainerContent = ({
   const viewport = useViewport();
   const narrowLayout = useNarrowLayout(viewport.rawScreenWidth);
   const [isMapIdle, setIsMapIdle] = React.useState(false);
-  const showOverlayButtons = useOverlayButtonsVisible(isMapIdle);
+  const { showOverlayButtons, isResizing } =
+    useOverlayButtonsVisible(isMapIdle);
 
   const deviceKey = useStableMapKey(viewport);
   const prevDeviceKeyRef = useRef(deviceKey);
   const [isRemounting, setIsRemounting] = useState(false);
 
-  // Show spinner as soon as breakpoint changes (same frame) so map never visibly resizes without it.
-  const showRemountOverlay =
-    prevDeviceKeyRef.current !== deviceKey || isRemounting;
+  /** Spinner when crossing breakpoint (remount) or during resize; hide once user is below min width. */
+  const showResizeSpinner =
+    !viewport.isBelowMinViewport &&
+    (prevDeviceKeyRef.current !== deviceKey || isRemounting || isResizing);
 
-  // On breakpoint cross: mark remounting and update ref; overlay hides on onFirstIdle.
   useEffect(() => {
     if (prevDeviceKeyRef.current !== deviceKey) {
       prevDeviceKeyRef.current = deviceKey;
@@ -226,7 +225,7 @@ const MapContainerContent = ({
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
-            transition: TRANSITIONS.LAYOUT_WIDTH,
+            transition: isResizing ? "none" : TRANSITIONS.LAYOUT_WIDTH,
             ...(narrowLayout && {
               minHeight: 0,
               flex: 1,
@@ -271,7 +270,7 @@ const MapContainerContent = ({
             showOverlayButtons={showOverlayButtons}
           />
         </ErrorBoundary>
-        {showRemountOverlay && (
+        {showResizeSpinner && (
           <Box
             sx={{
               position: "absolute",

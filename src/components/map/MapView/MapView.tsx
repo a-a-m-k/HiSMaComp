@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, Suspense, useState } from "react";
+import React, { useEffect, useMemo, useRef, Suspense, useState } from "react";
 import Map, { NavigationControl, MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -13,6 +13,7 @@ import {
   handleMapFeatureClick,
 } from "@/utils/map";
 import { MAP_LAYER_ID, TRANSITIONS } from "@/constants";
+import { RESIZE_DEBOUNCE_MS } from "@/constants/breakpoints";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
 import { getMapStyles } from "@/constants/ui";
 import { useViewport } from "@/hooks/ui";
@@ -105,6 +106,25 @@ const MapView: React.FC<MapViewComponentProps> = ({
   useMapKeyboardShortcuts(mapRef, enableZoomControls);
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
   useNavigationControlAccessibility(showZoomButtons, containerRef);
+
+  /** Debounced map.resize() after window resize (separate from overlay visibility so map ref stays here). */
+  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    const scheduleResize = () => {
+      if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
+      resizeTimeoutRef.current = setTimeout(() => {
+        resizeTimeoutRef.current = null;
+        mapRef.current?.getMap()?.resize();
+      }, RESIZE_DEBOUNCE_MS);
+    };
+    window.addEventListener("resize", scheduleResize);
+    window.addEventListener("orientationchange", scheduleResize);
+    return () => {
+      if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
+      window.removeEventListener("resize", scheduleResize);
+      window.removeEventListener("orientationchange", scheduleResize);
+    };
+  }, []);
 
   /**
    * Conservative tile-loading: reduce prefetch so viewport loads first.
