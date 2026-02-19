@@ -39,6 +39,8 @@ export const TRANSITIONS = {
   FAST: theme.custom.transitions.fast,
   NORMAL: theme.custom.transitions.normal,
   SLOW: theme.custom.transitions.slow,
+  LAYOUT_WIDTH: theme.custom.transitions.layoutWidth,
+  OVERLAY_FADE: theme.custom.transitions.overlayFade,
   COLOR: theme.custom.transitions.color,
   OPACITY: theme.custom.transitions.opacity,
   TRANSFORM: theme.custom.transitions.transform,

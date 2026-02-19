@@ -31,6 +31,8 @@ declare module "@mui/material/styles" {
         fast: string;
         normal: string;
         slow: string;
+        layoutWidth: string;
+        overlayFade: string;
         color: string;
         opacity: string;
         transform: string;
@@ -93,6 +95,8 @@ declare module "@mui/material/styles" {
         fast?: string;
         normal?: string;
         slow?: string;
+        layoutWidth?: string;
+        overlayFade?: string;
         color?: string;
         opacity?: string;
         transform?: string;

@@ -2,6 +2,7 @@ import React, { useMemo, useRef, Suspense, useState } from "react";
 import Map, { NavigationControl, MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
 
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
@@ -11,7 +12,7 @@ import {
   getMapDescription,
   handleMapFeatureClick,
 } from "@/utils/map";
-import { MAP_LAYER_ID } from "@/constants";
+import { MAP_LAYER_ID, TRANSITIONS } from "@/constants";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
 import { getMapStyles } from "@/constants/ui";
 import { useViewport } from "@/hooks/ui";
@@ -42,6 +43,8 @@ interface MapViewComponentProps {
   initialPosition: Pick<MapViewState, "longitude" | "latitude">;
   initialZoom: number;
   onFirstIdle?: () => void;
+  /** When false, overlay buttons (screenshot, zoom) are hidden (e.g. during resize) until map is idle. */
+  showOverlayButtons?: boolean;
 }
 
 /**
@@ -54,6 +57,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   initialPosition: { longitude, latitude },
   initialZoom,
   onFirstIdle,
+  showOverlayButtons = true,
 }) => {
   const theme = useTheme();
   // Single source for viewport: dimensions + device flags (no duplicate useResponsive + useScreenDimensions).
@@ -142,6 +146,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
         role="application"
         aria-label="Interactive historical map showing town populations. Click on the map or press Tab to focus, then use arrow keys to pan."
         aria-describedby="map-description"
+        data-overlay-buttons-hidden={showOverlayButtons ? undefined : ""}
         style={{
           position: "absolute",
           inset: 0,
@@ -190,14 +195,38 @@ const MapView: React.FC<MapViewComponentProps> = ({
               <TownMarkers towns={towns} selectedYear={selectedYear} />
             </>
           )}
-          {!isMobile && (
-            <ScreenshotButtonContainer>
-              <Suspense fallback={null}>
-                <ScreenshotButton />
-              </Suspense>
-            </ScreenshotButtonContainer>
-          )}
-          {showZoomButtons && <NavigationControl position="bottom-right" />}
+          <Box
+            sx={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              opacity: showOverlayButtons ? 1 : 0,
+              visibility: showOverlayButtons ? "visible" : "hidden",
+              transition: TRANSITIONS.OVERLAY_FADE,
+            }}
+          >
+            {!isMobile && (
+              <ScreenshotButtonContainer
+                sx={{ pointerEvents: showOverlayButtons ? "auto" : "none" }}
+              >
+                <Suspense fallback={null}>
+                  <ScreenshotButton />
+                </Suspense>
+              </ScreenshotButtonContainer>
+            )}
+            {showZoomButtons && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 0,
+                  right: 0,
+                  pointerEvents: showOverlayButtons ? "auto" : "none",
+                }}
+              >
+                <NavigationControl position="bottom-right" />
+              </Box>
+            )}
+          </Box>
         </Map>
       </div>
     </>

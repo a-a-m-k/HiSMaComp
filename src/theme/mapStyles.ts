@@ -240,7 +240,19 @@ export function getNavigationControlStyles(themeArg: Theme): string {
   `;
 }
 
+/** Hide zoom control when overlay buttons are hidden (e.g. during resize). Uses theme overlayFade transition. */
+function getOverlayButtonsHiddenStyles(): string {
+  return `
+  [data-overlay-buttons-hidden] .maplibregl-ctrl-bottom-right {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: ${TRANSITIONS.OVERLAY_FADE};
+  }
+`;
+}
+
 /** Combined map styles: container + navigation controls. Use a single <style> tag in MapView. */
 export function getMapStyles(themeArg: Theme): string {
-  return `${getNavigationControlStyles(themeArg)}\n${getMapContainerStyles()}`;
+  return `${getNavigationControlStyles(themeArg)}\n${getMapContainerStyles()}\n${getOverlayButtonsHiddenStyles()}`;
 }

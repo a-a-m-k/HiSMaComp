@@ -78,6 +78,29 @@ h1 {
   }
 }
 
+/* Narrow layout (hysteresis: enter ≤280px, leave ≥300px) so legend/timeline stay in flow and don't jump during resize.
+   !important overrides fixed positioning from Legend/Timeline so they lay out in-flow when narrow.
+   --app-min-width is set from JS (APP_MIN_WIDTH in breakpoints.ts). */
+body[data-narrow-layout="true"] #legend,
+body[data-narrow-layout="true"] #timeline {
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  min-width: var(--app-min-width, 300px) !important;
+}
+body[data-narrow-layout="true"] #map-container > *:first-child {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+}
+body[data-narrow-layout="true"] #map-container > *:first-child > *:last-child {
+  margin-top: auto !important;
+}
+
 /* Hide LCP placeholder once React has mounted (declarative: no DOM access in app code) */
 [data-app-ready] #legend-heading-placeholder {
   display: none;

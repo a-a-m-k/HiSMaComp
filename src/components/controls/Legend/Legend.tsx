@@ -7,7 +7,8 @@ import { Z_INDEX } from "@/constants/ui";
 import { useResponsive } from "@/hooks/ui";
 
 const Legend: React.FC<LegendProps> = props => {
-  const { isMobile, isTablet, isXLarge, theme } = useResponsive();
+  const { isMobileLayout, isTabletLayout, isXLargeLayout, theme } =
+    useResponsive();
 
   if (!props.layers || props.layers.length === 0) return null;
 
@@ -21,13 +22,16 @@ const Legend: React.FC<LegendProps> = props => {
     <Paper
       id="legend"
       sx={getResponsiveStyles({
-        isMobile,
-        isTablet,
-        isXLarge,
+        isMobile: isMobileLayout,
+        isTablet: isTabletLayout,
+        isXLarge: isXLargeLayout,
         theme,
         commonStyles,
       })}
-      data-testid={getLegendTestId({ isMobile, isTablet })}
+      data-testid={getLegendTestId({
+        isMobile: isMobileLayout,
+        isTablet: isTabletLayout,
+      })}
       tabIndex={-1}
     >
       <LegendContent {...props} />

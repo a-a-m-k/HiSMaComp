@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { MapContainer } from "@/components/containers";
-import { APP_MIN_WIDTH, APP_MIN_HEIGHT } from "@/constants";
+import { APP_MIN_HEIGHT } from "@/constants";
 
 const hasStadiaApiKey = (): boolean =>
   !!(
@@ -39,11 +39,7 @@ const MissingApiKeyMessage: React.FC = () => (
 
 /**
  * Root page layout: full-viewport main with map and overlays.
- *
- * Uses fixed positioning and min width/height (APP_MIN_* = 300px) so the app
- * does not shrink below 300px; when the viewport is smaller, horizontal (and
- * vertical) scroll appears. Dimensions and zoom logic use the same 300px floor
- * via useScreenDimensions clamp.
+ * Min width (300px) is applied only to timeline and legend in MapContainer.
  */
 const MapPage: React.FC = () => (
   <Box
@@ -54,7 +50,6 @@ const MapPage: React.FC = () => (
       inset: 0,
       boxSizing: "border-box",
       width: "100vw",
-      minWidth: APP_MIN_WIDTH,
       height: "var(--viewport-height, 100vh)",
       minHeight: APP_MIN_HEIGHT,
       maxHeight: "var(--viewport-height, 100vh)",

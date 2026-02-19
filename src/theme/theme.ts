@@ -281,6 +281,10 @@ const theme = createTheme({
       fast: "all 0.15s ease-in-out",
       normal: "all 0.2s ease-in-out",
       slow: "all 0.3s ease-in-out",
+      /** Resize layout (e.g. legend/timeline wrapper width); keep in sync with narrow-layout UX. */
+      layoutWidth: "width 0.3s ease-out",
+      /** Overlay buttons (screenshot, zoom) show/hide fade. */
+      overlayFade: "opacity 0.2s ease-out, visibility 0.2s ease-out",
       color: "color 0.2s, background-color 0.2s",
       opacity: "opacity 0.2s ease-in-out",
       transform: "transform 0.2s ease-in-out",

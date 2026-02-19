@@ -15,15 +15,16 @@ interface TimelineProps {
 
 const Timeline: React.FC<TimelineProps> = ({ marks }) => {
   const { selectedYear, setSelectedYear } = useApp();
-  const { isMobile, isTablet, theme } = useResponsive();
+  const { isMobileLayout, isTabletLayout, theme } = useResponsive();
   const sizingStyles = useMemo(() => getTimelineStyles(theme), [theme]);
 
   const min = marks[0]?.value ?? 0;
   const max = marks[marks.length - 1]?.value ?? 100;
 
   const mobileMarks = useMemo(
-    () => (isMobile ? getMobileLabelledMarks(marks, selectedYear) : marks),
-    [isMobile, marks, selectedYear]
+    () =>
+      isMobileLayout ? getMobileLabelledMarks(marks, selectedYear) : marks,
+    [isMobileLayout, marks, selectedYear]
   );
 
   const titleStyles = {
@@ -32,7 +33,7 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
     color: theme.palette.text.primary,
   };
 
-  if (isMobile) {
+  if (isMobileLayout) {
     return (
       <MobileSheet
         id="timeline"
@@ -57,7 +58,7 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
     );
   }
 
-  if (isTablet) {
+  if (isTabletLayout) {
     return (
       <MediumSheet
         id="timeline"

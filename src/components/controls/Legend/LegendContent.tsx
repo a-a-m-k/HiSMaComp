@@ -3,7 +3,6 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { AttributionLinks } from "@/components/ui";
 import { useResponsive } from "@/hooks/ui";
@@ -21,20 +20,20 @@ export interface LegendProps {
 const LegendItem: React.FC<{ layer: string; color: string }> = React.memo(
   ({ layer, color }) => {
     const theme = useTheme();
-    const { isMobile } = useResponsive();
+    const { isMobileLayout } = useResponsive();
     const sizingStyles = useMemo(() => getLegendStyles(theme), [theme]);
 
     const indicatorStyles = useMemo(
       () => ({
-        width: isMobile ? theme.spacing(2) : theme.spacing(2.5),
-        height: isMobile ? theme.spacing(2) : theme.spacing(2.5),
-        mr: isMobile ? theme.spacing(1.25) : theme.spacing(1.75),
+        width: isMobileLayout ? theme.spacing(2) : theme.spacing(2.5),
+        height: isMobileLayout ? theme.spacing(2) : theme.spacing(2.5),
+        mr: isMobileLayout ? theme.spacing(1.25) : theme.spacing(1.75),
         borderRadius: "50%",
         flexShrink: 0,
         border: `1px solid ${theme.palette.divider}`,
         bgcolor: color,
       }),
-      [isMobile, theme, color]
+      [isMobileLayout, theme, color]
     );
 
     const textStyles = useMemo(
@@ -70,70 +69,74 @@ LegendItem.displayName = "LegendItem";
 export const LegendContent: React.FC<LegendProps> = React.memo(
   ({ layers, label, selectedYear, style, isMapIdle = true }) => {
     const theme = useTheme();
-    const { isTablet, isMobile } = useResponsive();
-    const isMediumOrLarger = useMediaQuery(theme.breakpoints.up("md"));
+    const { isTabletLayout, isMobileLayout, isDesktopLayout, isXLargeLayout } =
+      useResponsive();
+    const isMediumOrLargerLayout = isDesktopLayout || isXLargeLayout;
 
     const titleStyle = useMemo<React.CSSProperties>(
       () => ({
         margin: 0,
         marginBottom: isMapIdle
-          ? isMobile
+          ? isMobileLayout
             ? theme.spacing(0.5)
-            : isTablet
+            : isTabletLayout
               ? theme.spacing(0.75)
               : theme.spacing(1.25)
           : 0,
-        textAlign: isTablet || isMobile ? "center" : "left",
+        textAlign: isTabletLayout || isMobileLayout ? "center" : "left",
         width: "100%",
         color: "#2f2f2f",
-        fontSize: isMobile ? "0.78rem" : "0.88rem",
+        fontSize: isMobileLayout ? "0.78rem" : "0.88rem",
         fontWeight: 500,
         lineHeight: 1.25,
         letterSpacing: "0.01em",
       }),
-      [isMapIdle, isMobile, isTablet, theme]
+      [isMapIdle, isMobileLayout, isTabletLayout, theme]
     );
 
     const subtitleStyle = useMemo<React.CSSProperties>(
       () => ({
         margin: 0,
-        marginBottom: isMobile
+        marginBottom: isMobileLayout
           ? theme.spacing(0.5)
-          : isTablet
+          : isTabletLayout
             ? theme.spacing(1)
             : theme.spacing(2),
-        textAlign: isTablet || isMobile ? "center" : "left",
+        textAlign: isTabletLayout || isMobileLayout ? "center" : "left",
         width: "100%",
         color: theme.palette.text.secondary,
         opacity: 0.9,
-        fontSize: isMobile ? "0.78rem" : "0.88rem",
+        fontSize: isMobileLayout ? "0.78rem" : "0.88rem",
         lineHeight: 1.25,
         fontWeight: 500,
         letterSpacing: "0.01em",
       }),
-      [isMobile, isTablet, theme]
+      [isMobileLayout, isTabletLayout, theme]
     );
 
     const stackStyles = useMemo(
       () => ({
-        spacing: isMobile
+        spacing: isMobileLayout
           ? theme.spacing(0.5)
-          : isTablet
+          : isTabletLayout
             ? theme.spacing(2.5)
-            : isMediumOrLarger
+            : isMediumOrLargerLayout
               ? theme.spacing(1.25)
               : theme.spacing(1.5),
-        direction: (isMediumOrLarger ? "column" : "row") as "row" | "column",
-        alignItems: (isTablet || isMobile ? "center" : "flex-start") as
-          | "center"
-          | "flex-start",
+        direction: (isMediumOrLargerLayout ? "column" : "row") as
+          | "row"
+          | "column",
+        alignItems: (isTabletLayout || isMobileLayout
+          ? "center"
+          : "flex-start") as "center" | "flex-start",
         sx: {
-          flexWrap: isMediumOrLarger ? "nowrap" : "wrap",
-          justifyContent: isTablet || isMobile ? "space-evenly" : "flex-start",
-          overflowX: isTablet ? "auto" : "visible",
+          flexWrap: isMediumOrLargerLayout ? "nowrap" : "wrap",
+          justifyContent:
+            isTabletLayout || isMobileLayout ? "space-evenly" : "flex-start",
+          overflowX: isTabletLayout ? "auto" : "visible",
         },
       }),
-      [isMobile, isTablet, isMediumOrLarger, theme]
+      [isMobileLayout, isTabletLayout, isMediumOrLargerLayout, theme]
     );
 
     if (!layers?.length) {

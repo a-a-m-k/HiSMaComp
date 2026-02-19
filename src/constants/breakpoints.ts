@@ -17,13 +17,28 @@ export const DEFAULT_SCREEN_DIMENSIONS = {
 } as const;
 
 /**
- * Minimum viewport size for responsive zoom. Below this, zoom no longer adjusts on resize.
- * Matches APP_MIN_WIDTH / APP_MIN_HEIGHT so layout and zoom stop at the same size.
+ * Minimum viewport size for responsive zoom and layout. Below this, zoom no longer adjusts on resize
+ * and the app uses a fixed-width layout. Single source for the 300px value.
  */
 export const MIN_APP_VIEWPORT = {
   width: 300,
   height: 300,
 } as const;
+
+/** Below this width/height the app is fixed and no longer responsive (derived from MIN_APP_VIEWPORT). */
+export const APP_MIN_WIDTH = MIN_APP_VIEWPORT.width;
+export const APP_MIN_HEIGHT = MIN_APP_VIEWPORT.height;
+
+/** Delay (ms) after last resize event before considering resize "ended" (viewport updates, overlay buttons re-show). */
+export const RESIZE_DEBOUNCE_MS = 320;
+
+/**
+ * Hysteresis for narrow layout (legend/timeline in flow).
+ * - Enter narrow when we go well below the app min width (300px) so the layout is already narrow by 300px.
+ * - Leave narrow as soon as we reach the app min width so legend goes back to its overlay position quickly.
+ */
+export const NARROW_LAYOUT_ENTER_PX = MIN_APP_VIEWPORT.width - 20; // 280px
+export const NARROW_LAYOUT_LEAVE_PX = MIN_APP_VIEWPORT.width; // 300px
 
 export type DeviceType = "mobile" | "tablet" | "desktop" | "largeDesktop";
 

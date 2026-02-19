@@ -1,19 +1,30 @@
 import { useTheme } from "@mui/material/styles";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   getDeviceType,
   DEFAULT_SCREEN_DIMENSIONS,
   MIN_APP_VIEWPORT,
+  RESIZE_DEBOUNCE_MS,
 } from "@/constants/breakpoints";
 import { isValidPositiveNumber } from "@/utils/zoom/zoomHelpers";
 
-/** Debounce delay (ms) for resize so zoom recalculates after user stops resizing. */
-const RESIZE_DEBOUNCE_MS = 320;
+type ViewportState = {
+  width: number;
+  height: number;
+  isBelowMinViewport: boolean;
+  rawWidth: number;
+  rawHeight: number;
+};
 
 /**
  * Single source of truth for viewport: dimensions + device type from window size.
  * Use this everywhere you need screen dimensions or isMobile/isTablet/isDesktop
  * so we don't maintain two parallel notions (MUI media queries vs getDeviceType).
+ *
+ * - **Raw dimensions** (rawScreenWidth, rawScreenHeight) and **isBelowMinViewport**
+ *   update on every resize so layout (e.g. narrow layout, min width) can react immediately.
+ * - **Clamped dimensions** (screenWidth, screenHeight) and **deviceType** update after
+ *   a short debounce so zoom/map recalculate only when resize settles.
  *
  * Dimensions are clamped to MIN_APP_VIEWPORT (300px) so below 300px the app
  * and zoom both use the same effective size.
@@ -22,7 +33,7 @@ const RESIZE_DEBOUNCE_MS = 320;
  * remounts the map with a brief spinner so zoom/camera stay correct.
  */
 export const useViewport = () => {
-  const [screenSize, setScreenSize] = useState(() => {
+  const [screenSize, setScreenSize] = useState<ViewportState>(() => {
     if (typeof window !== "undefined") {
       const rawWidth = window.innerWidth;
       const rawHeight = window.innerHeight;
@@ -33,7 +44,7 @@ export const useViewport = () => {
         const isBelowMinViewport =
           rawWidth < MIN_APP_VIEWPORT.width ||
           rawHeight < MIN_APP_VIEWPORT.height;
-        return { width, height, isBelowMinViewport };
+        return { width, height, isBelowMinViewport, rawWidth, rawHeight };
       }
     }
 
@@ -44,10 +55,12 @@ export const useViewport = () => {
         MIN_APP_VIEWPORT.height
       ),
       isBelowMinViewport: false,
+      rawWidth: DEFAULT_SCREEN_DIMENSIONS.width,
+      rawHeight: DEFAULT_SCREEN_DIMENSIONS.height,
     };
   });
 
-  const updateDimensions = useCallback(() => {
+  const updateDimensions = useCallback((options?: { immediate?: boolean }) => {
     if (typeof window === "undefined") return;
 
     const rawWidth = window.innerWidth;
@@ -62,28 +75,38 @@ export const useViewport = () => {
       rawWidth < MIN_APP_VIEWPORT.width || rawHeight < MIN_APP_VIEWPORT.height;
 
     setScreenSize(prev => {
-      if (
-        prev.width !== width ||
-        prev.height !== height ||
-        prev.isBelowMinViewport !== isBelowMinViewport
-      ) {
-        return { width, height, isBelowMinViewport };
+      const same =
+        prev.width === width &&
+        prev.height === height &&
+        prev.isBelowMinViewport === isBelowMinViewport &&
+        prev.rawWidth === rawWidth &&
+        prev.rawHeight === rawHeight;
+      if (same) return prev;
+      if (options?.immediate) {
+        return { ...prev, rawWidth, rawHeight, isBelowMinViewport };
       }
-      return prev;
+      return { width, height, isBelowMinViewport, rawWidth, rawHeight };
     });
   }, []);
+
+  const rafIdRef = useRef<number | null>(null);
+  const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     updateDimensions();
 
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
     const handleResize = () => {
-      if (timeoutId !== null) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        timeoutId = null;
+      if (rafIdRef.current === null) {
+        rafIdRef.current = requestAnimationFrame(() => {
+          rafIdRef.current = null;
+          updateDimensions({ immediate: true });
+        });
+      }
+      if (timeoutIdRef.current !== null) clearTimeout(timeoutIdRef.current);
+      timeoutIdRef.current = setTimeout(() => {
+        timeoutIdRef.current = null;
         updateDimensions();
       }, RESIZE_DEBOUNCE_MS);
     };
@@ -92,7 +115,8 @@ export const useViewport = () => {
     window.addEventListener("orientationchange", handleResize);
 
     return () => {
-      if (timeoutId !== null) clearTimeout(timeoutId);
+      if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
+      if (timeoutIdRef.current !== null) clearTimeout(timeoutIdRef.current);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleResize);
     };
@@ -104,21 +128,43 @@ export const useViewport = () => {
   const screenHeight = isValidPositiveNumber(screenSize.height)
     ? screenSize.height
     : Math.max(DEFAULT_SCREEN_DIMENSIONS.height, MIN_APP_VIEWPORT.height);
+  const rawScreenWidth = isValidPositiveNumber(screenSize.rawWidth)
+    ? screenSize.rawWidth
+    : screenWidth;
+  const rawScreenHeight = isValidPositiveNumber(screenSize.rawHeight)
+    ? screenSize.rawHeight
+    : screenHeight;
 
   const deviceType = getDeviceType(screenWidth);
+  const layoutDeviceType = getDeviceType(rawScreenWidth);
   const isBelowMinViewport = Boolean(screenSize.isBelowMinViewport);
 
   return useMemo(
     () => ({
       screenWidth,
       screenHeight,
+      rawScreenWidth,
+      rawScreenHeight,
       isMobile: deviceType === "mobile",
       isTablet: deviceType === "tablet",
       isDesktop: deviceType === "desktop" || deviceType === "largeDesktop",
       isXLarge: deviceType === "largeDesktop",
+      isMobileLayout: layoutDeviceType === "mobile",
+      isTabletLayout: layoutDeviceType === "tablet",
+      isDesktopLayout:
+        layoutDeviceType === "desktop" || layoutDeviceType === "largeDesktop",
+      isXLargeLayout: layoutDeviceType === "largeDesktop",
       isBelowMinViewport,
     }),
-    [screenWidth, screenHeight, deviceType, isBelowMinViewport]
+    [
+      screenWidth,
+      screenHeight,
+      rawScreenWidth,
+      rawScreenHeight,
+      deviceType,
+      layoutDeviceType,
+      isBelowMinViewport,
+    ]
   );
 };
 

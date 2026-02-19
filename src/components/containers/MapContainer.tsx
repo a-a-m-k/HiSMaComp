@@ -12,11 +12,16 @@ import {
   LEGEND_HEADING_LABEL,
   APP_MIN_WIDTH,
   Z_INDEX,
+  TRANSITIONS,
 } from "@/constants";
 import { LayerItem, TimelineMark } from "@/common/types";
 import { AppProvider, useApp } from "@/context/AppContext";
 import { useInitialMapState } from "@/hooks/map";
-import { useViewport } from "@/hooks/ui";
+import {
+  useViewport,
+  useNarrowLayout,
+  useOverlayButtonsVisible,
+} from "@/hooks/ui";
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/constants/map";
 import { useLegendLayers, useTownsData } from "@/hooks";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
@@ -152,7 +157,9 @@ const MapContainerContent = ({
   const { towns, filteredTowns, selectedYear, isLoading, error, retry } =
     useApp();
   const viewport = useViewport();
+  const narrowLayout = useNarrowLayout(viewport.rawScreenWidth);
   const [isMapIdle, setIsMapIdle] = React.useState(false);
+  const showOverlayButtons = useOverlayButtonsVisible(isMapIdle);
 
   const deviceKey = useStableMapKey(viewport);
   const prevDeviceKeyRef = useRef(deviceKey);
@@ -185,8 +192,13 @@ const MapContainerContent = ({
 
   React.useEffect(() => {
     document.documentElement.setAttribute("data-app-ready", "true");
+    document.documentElement.style.setProperty(
+      "--app-min-width",
+      `${APP_MIN_WIDTH}px`
+    );
     return () => {
       document.documentElement.removeAttribute("data-app-ready");
+      document.documentElement.style.removeProperty("--app-min-width");
     };
   }, []);
 
@@ -196,23 +208,41 @@ const MapContainerContent = ({
       sx={{
         width: "100%",
         flex: 1,
-        minWidth: APP_MIN_WIDTH,
         minHeight: 0,
+        minWidth: viewport.isBelowMinViewport ? APP_MIN_WIDTH : undefined,
         position: "relative",
         display: "flex",
         flexDirection: "column",
+        overflowX: "auto",
       }}
     >
       {!error && (
-        <>
-          <Timeline marks={marks} />
+        <Box
+          sx={{
+            minWidth: APP_MIN_WIDTH,
+            width: narrowLayout ? APP_MIN_WIDTH : "100%",
+            flexShrink: 0,
+            alignSelf: "stretch",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            transition: TRANSITIONS.LAYOUT_WIDTH,
+            ...(narrowLayout && {
+              minHeight: 0,
+              flex: 1,
+            }),
+          }}
+        >
           <MapLegend
             label={LEGEND_HEADING_LABEL}
             layers={legendLayers}
             isMapIdle={isMapIdle}
             selectedYear={selectedYear}
           />
-        </>
+          <Box sx={narrowLayout ? { marginTop: "auto" } : undefined}>
+            <Timeline marks={marks} />
+          </Box>
+        </Box>
       )}
       {error && (
         <ErrorOverlay
@@ -227,6 +257,7 @@ const MapContainerContent = ({
           inset: 0,
           minHeight: 0,
           zIndex: Z_INDEX.MAP,
+          overflowX: "auto",
         }}
       >
         <ErrorBoundary>
@@ -237,6 +268,7 @@ const MapContainerContent = ({
             initialPosition={initialPosition}
             initialZoom={initialZoom}
             onFirstIdle={handleFirstIdle}
+            showOverlayButtons={showOverlayButtons}
           />
         </ErrorBoundary>
         {showRemountOverlay && (
