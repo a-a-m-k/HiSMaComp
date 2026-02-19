@@ -11,6 +11,15 @@ import MapContainer from "@/components/containers/MapContainer";
 const mapViewSpy = vi.hoisted(() => vi.fn());
 const retrySpy = vi.hoisted(() => vi.fn());
 
+const viewportState = vi.hoisted(() => ({
+  isBelowMinViewport: false,
+  rawScreenWidth: 1024,
+}));
+const overlayState = vi.hoisted(() => ({
+  showOverlayButtons: true,
+  isResizing: false,
+}));
+
 const state = vi.hoisted(() => ({
   townsData: {
     towns: [
@@ -84,6 +93,19 @@ vi.mock("@/hooks", () => ({
   useTownsData: () => state.townsData,
 }));
 
+vi.mock("@/hooks/ui", () => ({
+  useViewport: () => ({
+    isBelowMinViewport: viewportState.isBelowMinViewport,
+    rawScreenWidth: viewportState.rawScreenWidth,
+    isMobile: false,
+    isTablet: false,
+    screenWidth: 1024,
+    screenHeight: 768,
+  }),
+  useNarrowLayout: () => false,
+  useOverlayButtonsVisible: () => overlayState,
+}));
+
 vi.mock("@/hooks/map", () => ({
   useInitialMapState: vi.fn(() => state.initialMapState),
   useMapViewState: vi.fn(() => ({
@@ -129,6 +151,10 @@ const renderWithTheme = () =>
 describe("MapContainer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    viewportState.isBelowMinViewport = false;
+    viewportState.rawScreenWidth = 1024;
+    overlayState.showOverlayButtons = true;
+    overlayState.isResizing = false;
     const defaultTowns = [
       {
         name: "Paris",
@@ -234,5 +260,37 @@ describe("MapContainer", () => {
       longitude: 10,
     });
     expect(latestProps.initialZoom).toBe(4);
+  });
+
+  it("passes showOverlayButtons from useOverlayButtonsVisible to MapView", async () => {
+    overlayState.showOverlayButtons = false;
+    overlayState.isResizing = true;
+
+    renderWithTheme();
+    await waitFor(() => expect(mapViewSpy).toHaveBeenCalled());
+
+    const latestProps = mapViewSpy.mock.calls.at(-1)?.[0] as {
+      showOverlayButtons: boolean;
+    };
+    expect(latestProps.showOverlayButtons).toBe(false);
+  });
+
+  it("does not show resize spinner when viewport is below min width", async () => {
+    viewportState.isBelowMinViewport = true;
+    overlayState.isResizing = true;
+    overlayState.showOverlayButtons = false;
+
+    renderWithTheme();
+
+    expect(screen.queryByText("Resizing map...")).not.toBeInTheDocument();
+  });
+
+  it("shows resize spinner when resizing and viewport above min", async () => {
+    viewportState.isBelowMinViewport = false;
+    overlayState.isResizing = true;
+
+    renderWithTheme();
+
+    expect(await screen.findByText("Resizing map...")).toBeInTheDocument();
   });
 });

@@ -55,6 +55,10 @@ test.describe("Accessibility Tests", () => {
   test("should have keyboard accessible controls", async ({ page }) => {
     await page.goto("/");
     await page.waitForSelector("#map-container-area", { timeout: 10000 });
+    // Overlay buttons (screenshot, zoom) only become focusable after map is idle
+    await page
+      .locator("#map-screenshot-button")
+      .waitFor({ state: "visible", timeout: 15000 });
 
     // Check that timeline is focusable
     const timeline = page.locator("#timeline");
@@ -123,9 +127,13 @@ test.describe("Accessibility Tests", () => {
   test("should have skip links or logical tab order", async ({ page }) => {
     await page.goto("/");
     await page.waitForSelector("#map-container-area", { timeout: 10000 });
+    // Overlay buttons only appear after map is idle; wait so they are in tab order
+    await page
+      .locator("#map-screenshot-button")
+      .waitFor({ state: "visible", timeout: 15000 });
 
     // Tab through and verify we can reach timeline, screenshot button, and map (focus may land on child elements)
-    const maxTabs = 20;
+    const maxTabs = 35;
     let timelineReached = false;
     let screenshotReached = false;
     let mapReached = false;
