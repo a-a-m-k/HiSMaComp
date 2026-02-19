@@ -124,6 +124,20 @@ function getMapDeviceKey(viewport: {
   return "desktop";
 }
 
+/** When viewport is below app min size, keep last key so the map does not remount. */
+function useStableMapKey(viewport: {
+  isMobile: boolean;
+  isTablet: boolean;
+  isBelowMinViewport: boolean;
+}): string {
+  const deviceKey = getMapDeviceKey(viewport);
+  const lastKeyAboveMinRef = React.useRef(deviceKey);
+  if (!viewport.isBelowMinViewport) {
+    lastKeyAboveMinRef.current = deviceKey;
+  }
+  return viewport.isBelowMinViewport ? lastKeyAboveMinRef.current : deviceKey;
+}
+
 const MapContainerContent = ({
   legendLayers,
   marks,
@@ -140,7 +154,7 @@ const MapContainerContent = ({
   const viewport = useViewport();
   const [isMapIdle, setIsMapIdle] = React.useState(false);
 
-  const deviceKey = getMapDeviceKey(viewport);
+  const deviceKey = useStableMapKey(viewport);
   const prevDeviceKeyRef = useRef(deviceKey);
   const [isRemounting, setIsRemounting] = useState(false);
 

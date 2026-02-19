@@ -24,14 +24,16 @@ const RESIZE_DEBOUNCE_MS = 320;
 export const useViewport = () => {
   const [screenSize, setScreenSize] = useState(() => {
     if (typeof window !== "undefined") {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+      const rawWidth = window.innerWidth;
+      const rawHeight = window.innerHeight;
 
-      if (isValidPositiveNumber(width) && isValidPositiveNumber(height)) {
-        return {
-          width: Math.max(width, MIN_APP_VIEWPORT.width),
-          height: Math.max(height, MIN_APP_VIEWPORT.height),
-        };
+      if (isValidPositiveNumber(rawWidth) && isValidPositiveNumber(rawHeight)) {
+        const width = Math.max(rawWidth, MIN_APP_VIEWPORT.width);
+        const height = Math.max(rawHeight, MIN_APP_VIEWPORT.height);
+        const isBelowMinViewport =
+          rawWidth < MIN_APP_VIEWPORT.width ||
+          rawHeight < MIN_APP_VIEWPORT.height;
+        return { width, height, isBelowMinViewport };
       }
     }
 
@@ -41,6 +43,7 @@ export const useViewport = () => {
         DEFAULT_SCREEN_DIMENSIONS.height,
         MIN_APP_VIEWPORT.height
       ),
+      isBelowMinViewport: false,
     };
   });
 
@@ -55,10 +58,16 @@ export const useViewport = () => {
 
     const width = Math.max(rawWidth, MIN_APP_VIEWPORT.width);
     const height = Math.max(rawHeight, MIN_APP_VIEWPORT.height);
+    const isBelowMinViewport =
+      rawWidth < MIN_APP_VIEWPORT.width || rawHeight < MIN_APP_VIEWPORT.height;
 
     setScreenSize(prev => {
-      if (prev.width !== width || prev.height !== height) {
-        return { width, height };
+      if (
+        prev.width !== width ||
+        prev.height !== height ||
+        prev.isBelowMinViewport !== isBelowMinViewport
+      ) {
+        return { width, height, isBelowMinViewport };
       }
       return prev;
     });
@@ -97,6 +106,7 @@ export const useViewport = () => {
     : Math.max(DEFAULT_SCREEN_DIMENSIONS.height, MIN_APP_VIEWPORT.height);
 
   const deviceType = getDeviceType(screenWidth);
+  const isBelowMinViewport = Boolean(screenSize.isBelowMinViewport);
 
   return useMemo(
     () => ({
@@ -106,8 +116,9 @@ export const useViewport = () => {
       isTablet: deviceType === "tablet",
       isDesktop: deviceType === "desktop" || deviceType === "largeDesktop",
       isXLarge: deviceType === "largeDesktop",
+      isBelowMinViewport,
     }),
-    [screenWidth, screenHeight, deviceType]
+    [screenWidth, screenHeight, deviceType, isBelowMinViewport]
   );
 };
 
