@@ -176,6 +176,33 @@ export function calculateFitZoom(
 }
 
 /**
+ * Zoom level at which the given bounds exactly fit in the viewport (no padding).
+ * Used to compute the effective minimum zoom when maxBounds is set.
+ *
+ * @param bounds - Geographic bounds { minLat, maxLat, minLng, maxLng }
+ * @param mapWidth - Viewport width in pixels
+ * @param mapHeight - Viewport height in pixels
+ * @returns Zoom level (0.1–20) that fits the bounds
+ */
+export function getZoomToFitBounds(
+  bounds: Bounds,
+  mapWidth: number,
+  mapHeight: number
+): number {
+  const WORLD_DIM = WORLD_DIMENSIONS;
+  const latFraction =
+    (mercatorLatitude(bounds.maxLat) - mercatorLatitude(bounds.minLat)) /
+    Math.PI;
+  const lngDiff = bounds.maxLng - bounds.minLng;
+  const lngFraction =
+    (lngDiff < 0 ? lngDiff + DEGREES_IN_CIRCLE : lngDiff) / DEGREES_IN_CIRCLE;
+  const latZoom = calculateZoomLevel(mapHeight, WORLD_DIM.height, latFraction);
+  const lngZoom = calculateZoomLevel(mapWidth, WORLD_DIM.width, lngFraction);
+  const finalZoom = Math.min(latZoom, lngZoom);
+  return Math.max(finalZoom, 0.1);
+}
+
+/**
  * Calculates effective map area after accounting for UI elements (legend, timeline, spacing).
  * Layout differs by device type:
  * - Mobile: Legend at top, timeline at bottom (vertical stack)

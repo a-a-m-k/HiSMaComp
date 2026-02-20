@@ -12,6 +12,7 @@ import {
   getMapDescription,
   handleMapFeatureClick,
 } from "@/utils/map";
+import { getZoomToFitBounds } from "@/utils/mapZoom";
 import { MAP_LAYER_ID, TRANSITIONS } from "@/constants";
 import { RESIZE_DEBOUNCE_MS } from "@/constants/breakpoints";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
@@ -73,6 +74,10 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [containerSize, setContainerSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const enableZoomControls = !isMobile;
   const showZoomButtons = isDesktop;
 
@@ -112,6 +117,40 @@ const MapView: React.FC<MapViewComponentProps> = ({
   useMapKeyboardShortcuts(mapRef, enableZoomControls);
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
   useNavigationControlAccessibility(showZoomButtons, containerRef);
+
+  /** Track container size for effective min zoom when maxBounds is set. */
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const entry = entries[0];
+      if (entry?.contentRect) {
+        const { width, height } = entry.contentRect;
+        setContainerSize(w =>
+          w?.width === width && w?.height === height ? w : { width, height }
+        );
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  /** Effective min zoom: when maxBounds is set, at least the zoom that fits bounds in the container. */
+  const effectiveMinZoom = useMemo(() => {
+    if (!maxBounds || !containerSize) return safeProps.zoom;
+    const bounds = {
+      minLat: maxBounds[0][1],
+      maxLat: maxBounds[1][1],
+      minLng: maxBounds[0][0],
+      maxLng: maxBounds[1][0],
+    };
+    const zoomToFit = getZoomToFitBounds(
+      bounds,
+      containerSize.width,
+      containerSize.height
+    );
+    return Math.max(safeProps.zoom, zoomToFit);
+  }, [maxBounds, containerSize, safeProps.zoom]);
 
   /** Debounced map.resize() after window resize (separate from overlay visibility so map ref stays here). */
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -160,7 +199,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
     [isMobile, isDesktop]
   );
 
-  const atMinZoom = viewState.zoom <= safeProps.zoom;
+  const atMinZoom = viewState.zoom <= effectiveMinZoom;
 
   return (
     <div
@@ -196,12 +235,15 @@ const MapView: React.FC<MapViewComponentProps> = ({
           })}
           onMove={evt => {
             if (!isProgrammaticAnimatingRef.current) {
-              const minZoomAllowed = safeProps.zoom;
               const z = evt.viewState.zoom;
-              const viewState =
-                z < minZoomAllowed
-                  ? { ...evt.viewState, zoom: minZoomAllowed }
-                  : evt.viewState;
+              // Snap to effective min when at or near minimum so zoom reliably returns to min
+              const ZOOM_SNAP_EPSILON = 1e-6;
+              const atOrNearMin = z <= effectiveMinZoom + ZOOM_SNAP_EPSILON;
+              const effectiveZoom = atOrNearMin ? effectiveMinZoom : z;
+              const viewState = {
+                ...evt.viewState,
+                zoom: effectiveZoom,
+              };
               handleMove({ viewState });
             }
           }}
@@ -215,7 +257,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
           }}
           interactiveLayerIds={[`${MAP_LAYER_ID}-circle`]}
           canvasContextAttributes={{ preserveDrawingBuffer: true }}
-          minZoom={safeProps.zoom}
+          minZoom={effectiveMinZoom}
           maxZoom={DEFAULT_MAP_CONTAINER_PROPS.maxZoom}
           style={{ width: "100%", height: "100%" }}
           mapStyle={getTerrainStyle()}
