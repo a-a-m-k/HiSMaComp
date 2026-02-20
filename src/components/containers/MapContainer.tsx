@@ -181,13 +181,28 @@ const MapContainerContent = ({
     setIsRemounting(false);
   }, []);
 
-  // Center/fitZoom computed here so they're props to MapView, not in context.
+  // Center/fitZoom and viewport bounds (for maxBounds) from useInitialMapState.
   const initialMapState = useInitialMapState(towns);
   const { initialPosition, initialZoom } = getInitialMapProps(
     showDefaultMap ?? false,
     isLoading,
     initialMapState
   );
+
+  const maxBounds = React.useMemo(() => {
+    const b = initialMapState.bounds;
+    if (!b) return undefined;
+    const valid =
+      Number.isFinite(b.minLat) &&
+      Number.isFinite(b.maxLat) &&
+      Number.isFinite(b.minLng) &&
+      Number.isFinite(b.maxLng);
+    if (!valid) return undefined;
+    return [
+      [b.minLng, b.minLat],
+      [b.maxLng, b.maxLat],
+    ] as [[number, number], [number, number]];
+  }, [initialMapState.bounds]);
 
   React.useEffect(() => {
     document.documentElement.setAttribute("data-app-ready", "true");
@@ -266,6 +281,7 @@ const MapContainerContent = ({
             selectedYear={selectedYear}
             initialPosition={initialPosition}
             initialZoom={initialZoom}
+            maxBounds={maxBounds}
             onFirstIdle={handleFirstIdle}
             showOverlayButtons={showOverlayButtons}
           />

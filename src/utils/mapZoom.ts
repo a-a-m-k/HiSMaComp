@@ -8,12 +8,14 @@ import {
   validateDimensions,
   getUIElementSizes,
   mercatorLatitude,
+  latToMercatorY,
+  mercatorYToLat,
   calculateZoomLevel,
   isValidNumber,
   type DeviceType,
 } from "./zoom/zoomHelpers";
 import { logger } from "./logger";
-import { getBounds } from "./geo";
+import { getBounds, type Bounds } from "./geo";
 
 /**
  * Effective map area dimensions after accounting for UI elements.
@@ -314,4 +316,41 @@ export function calculateResponsiveZoom(
   );
 
   return calculateFitZoom(towns, effectiveWidth, effectiveHeight, baseMargin);
+}
+
+/** MapLibre tile size (world size at zoom 0). Must match the map library. */
+const MAPLIBRE_TILE_SIZE = 512;
+
+/**
+ * Geographical bounds visible in the viewport at the given center and zoom.
+ * Uses MapLibre's Mercator formulas and 512 tile size so the box matches what the map shows.
+ *
+ * @param center - Map center { longitude, latitude } in degrees
+ * @param zoom - Map zoom level
+ * @param widthPx - Viewport width in pixels (e.g. effectiveWidth from calculateMapArea)
+ * @param heightPx - Viewport height in pixels (e.g. effectiveHeight from calculateMapArea)
+ * @returns Bounds { minLat, maxLat, minLng, maxLng } for the visible box
+ */
+export function getGeographicalBoxFromViewport(
+  center: { longitude: number; latitude: number },
+  zoom: number,
+  widthPx: number,
+  heightPx: number
+): Bounds {
+  const worldSize = MAPLIBRE_TILE_SIZE * Math.pow(2, zoom);
+  const halfW = widthPx / 2;
+  const halfH = heightPx / 2;
+
+  const cx = (center.longitude + 180) / 360;
+  const cy = latToMercatorY(center.latitude);
+
+  const minLng = (cx - halfW / worldSize) * DEGREES_IN_CIRCLE - 180;
+  const maxLng = (cx + halfW / worldSize) * DEGREES_IN_CIRCLE - 180;
+
+  const topY = Math.max(0, Math.min(1, cy - halfH / worldSize));
+  const bottomY = Math.max(0, Math.min(1, cy + halfH / worldSize));
+  const maxLat = mercatorYToLat(topY);
+  const minLat = mercatorYToLat(bottomY);
+
+  return { minLat, maxLat, minLng, maxLng };
 }

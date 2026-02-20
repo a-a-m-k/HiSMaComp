@@ -4,28 +4,34 @@ import {
   DEFAULT_SCREEN_DIMENSIONS,
   MIN_APP_VIEWPORT,
 } from "@/constants/breakpoints";
-import { DEFAULT_ZOOM } from "@/constants/map";
+import { DEFAULT_ZOOM, INITIAL_ZOOM_OUT_OFFSET } from "@/constants/map";
 import { useViewport } from "@/hooks/ui";
 import { useTheme } from "@mui/material/styles";
-import { calculateBoundsCenter, calculateResponsiveZoom } from "@/utils/utils";
+import {
+  calculateBoundsCenter,
+  calculateResponsiveZoom,
+  calculateMapArea,
+  getGeographicalBoxFromViewport,
+} from "@/utils/utils";
+import type { Bounds } from "@/utils/geo";
 import { isValidPositiveNumber } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
 
 /**
- * Computes initial map center and fit zoom from towns and current viewport.
- * Used in MapContainer so center/fitZoom are props to MapView, not in AppContext
- * (avoids context re-renders on resize and keeps "map camera" out of global state).
+ * Computes initial map center, fit zoom, and viewport bounds (for maxBounds).
+ * Bounds = geographical box visible at (center, fitZoom) so panning is clamped to that view.
  */
 export function useInitialMapState(towns: Town[]): {
   center: { latitude: number; longitude: number } | undefined;
   fitZoom: number;
+  bounds: Bounds | undefined;
 } {
   const { screenWidth, screenHeight } = useViewport();
   const theme = useTheme();
 
   return useMemo(() => {
     if (!towns || towns.length === 0) {
-      return { center: undefined, fitZoom: DEFAULT_ZOOM };
+      return { center: undefined, fitZoom: DEFAULT_ZOOM, bounds: undefined };
     }
 
     try {
@@ -44,11 +50,27 @@ export function useInitialMapState(towns: Town[]): {
         validScreenHeight,
         theme
       );
-      const fitZoom = Math.round(zoom * 100) / 100;
-      return { center, fitZoom };
+      const fitZoom = Math.max(
+        1,
+        Math.round(zoom * 100) / 100 - INITIAL_ZOOM_OUT_OFFSET
+      );
+
+      const mapArea = calculateMapArea(
+        validScreenWidth,
+        validScreenHeight,
+        theme
+      );
+      const bounds = getGeographicalBoxFromViewport(
+        { longitude: center.longitude, latitude: center.latitude },
+        fitZoom,
+        mapArea.effectiveWidth,
+        mapArea.effectiveHeight
+      );
+
+      return { center, fitZoom, bounds };
     } catch (error) {
       logger.error("Error computing initial map state:", error);
-      return { center: undefined, fitZoom: DEFAULT_ZOOM };
+      return { center: undefined, fitZoom: DEFAULT_ZOOM, bounds: undefined };
     }
   }, [towns, screenWidth, screenHeight, theme]);
 }

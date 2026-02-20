@@ -162,6 +162,32 @@ export function mercatorLatitude(lat: number): number {
   return Math.log((1 + sin) / (1 - sin)) / 2;
 }
 
+/** Max latitude for Mercator (avoids infinity at poles). Match MapLibre. */
+const MAX_MERCATOR_LAT = 85.05;
+
+/**
+ * Latitude → Mercator Y in [0,1]. Matches MapLibre mercatorYfromLat (0 = north, 1 = south).
+ */
+export function latToMercatorY(lat: number): number {
+  const clamped = Math.max(-MAX_MERCATOR_LAT, Math.min(MAX_MERCATOR_LAT, lat));
+  return (
+    (180 -
+      (180 / Math.PI) *
+        Math.log(Math.tan(Math.PI / 4 + (clamped * Math.PI) / 360))) /
+    360
+  );
+}
+
+/**
+ * Mercator Y in [0,1] → latitude. Matches MapLibre latFromMercatorY.
+ */
+export function mercatorYToLat(y: number): number {
+  const clamped = Math.max(0, Math.min(1, y));
+  const y2 = 180 - clamped * 360;
+  const lat = (360 / Math.PI) * Math.atan(Math.exp((y2 * Math.PI) / 180)) - 90;
+  return Math.max(-MAX_MERCATOR_LAT, Math.min(MAX_MERCATOR_LAT, lat));
+}
+
 /**
  * Calculates zoom level using logarithmic scale based on map and world pixel dimensions.
  * Formula: log2(mapPixels / worldPixels / fraction)

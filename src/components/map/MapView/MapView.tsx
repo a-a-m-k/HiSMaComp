@@ -38,11 +38,16 @@ const ScreenshotButton = React.lazy(
   () => import("@/components/controls/ScreenshotButton/ScreenshotButton")
 );
 
+/** MapLibre maxBounds: [[minLng, minLat], [maxLng, maxLat]]. */
+type MapLibreMaxBounds = [[number, number], [number, number]];
+
 interface MapViewComponentProps {
   towns: Town[];
   selectedYear: number;
   initialPosition: Pick<MapViewState, "longitude" | "latitude">;
   initialZoom: number;
+  /** Restrict panning to viewport bounds (from getGeographicalBoxFromViewport). */
+  maxBounds?: MapLibreMaxBounds;
   onFirstIdle?: () => void;
   /** When false, overlay buttons (screenshot, zoom) are hidden (e.g. during resize) until map is idle. */
   showOverlayButtons?: boolean;
@@ -57,6 +62,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   selectedYear,
   initialPosition: { longitude, latitude },
   initialZoom,
+  maxBounds,
   onFirstIdle,
   showOverlayButtons = true,
 }) => {
@@ -154,8 +160,13 @@ const MapView: React.FC<MapViewComponentProps> = ({
     [isMobile, isDesktop]
   );
 
+  const atMinZoom = viewState.zoom <= safeProps.zoom;
+
   return (
-    <>
+    <div
+      data-zoom-at-min={atMinZoom ? "" : undefined}
+      style={{ position: "relative", width: "100%", height: "100%" }}
+    >
       <style>{getMapStyles(theme)}</style>
       <div id="map-description" className="sr-only">
         {mapDescription}
@@ -179,8 +190,20 @@ const MapView: React.FC<MapViewComponentProps> = ({
         <Map
           ref={mapRef}
           {...(programmaticTarget ?? viewState)}
+          {...(maxBounds && {
+            maxBounds,
+            maxBoundsViscosity: 1,
+          })}
           onMove={evt => {
-            if (!isProgrammaticAnimatingRef.current) handleMove(evt);
+            if (!isProgrammaticAnimatingRef.current) {
+              const minZoomAllowed = safeProps.zoom;
+              const z = evt.viewState.zoom;
+              const viewState =
+                z < minZoomAllowed
+                  ? { ...evt.viewState, zoom: minZoomAllowed }
+                  : evt.viewState;
+              handleMove({ viewState });
+            }
           }}
           onLoad={handleMapLoad}
           onIdle={handleMapIdle}
@@ -249,7 +272,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
           </Box>
         </Map>
       </div>
-    </>
+    </div>
   );
 };
 

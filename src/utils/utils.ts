@@ -15,6 +15,7 @@ export {
   calculateFitZoom,
   calculateMapArea,
   calculateResponsiveZoom,
+  getGeographicalBoxFromViewport,
 } from "./mapZoom";
 
 export { townsToGeoJSON, filterTownsByYear } from "./geojson";

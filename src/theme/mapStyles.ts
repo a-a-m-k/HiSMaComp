@@ -233,6 +233,13 @@ export function getNavigationControlStyles(themeArg: Theme): string {
       content: none !important;
     }
 
+    /* Zoom-out button styled as disabled when at min zoom */
+    [data-zoom-at-min] .maplibregl-ctrl-zoom-out {
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+    }
+
     ${getTooltipStyles({
       position: "top",
       selector: ".maplibregl-ctrl-group button[data-tooltip]",

@@ -3,6 +3,9 @@ export const DEFAULT_CENTER = { latitude: 50.0, longitude: 10.0 };
 /** Default zoom when no towns or loading */
 export const DEFAULT_ZOOM = 4;
 
+/** Subtract this from fit zoom so initial view is slightly more zoomed out. */
+export const INITIAL_ZOOM_OUT_OFFSET = 0.25;
+
 export const MAP_LAYER_ID = "towns-population-layer";
 
 export const WORLD_DIMENSIONS = { width: 256, height: 256 };
