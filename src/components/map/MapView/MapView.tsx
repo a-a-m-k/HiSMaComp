@@ -4,7 +4,7 @@ import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "@mui/material/styles";
 
-import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
+import { DEFAULT_MAP_CONTAINER_PROPS, TILE_LOADING_OPTIONS } from "./constants";
 import MapLayer from "./MapLayer/MapLayer";
 import { MapOverlays } from "./MapOverlays";
 import {
@@ -139,7 +139,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
   }, [maxBounds, containerSize, safeProps.zoom, fallbackMapSize]);
 
   /**
-   * Conservative tile-loading: reduce prefetch so viewport loads first.
+   * Conservative tile-loading: disable prefetch at other zoom levels so only
+   * viewport tiles load first (works with maxTileCacheZoomLevels/maxTileCacheSize).
    */
   const handleMapLoad = React.useCallback(() => {
     if (!mapRef.current) return;
@@ -235,6 +236,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
           touchZoomRotate={true}
           dragPan={true}
           cancelPendingTileRequestsWhileZooming={true}
+          maxTileCacheZoomLevels={TILE_LOADING_OPTIONS.maxTileCacheZoomLevels}
+          maxTileCacheSize={TILE_LOADING_OPTIONS.maxTileCacheSize}
         >
           {mapReady && (
             <>
