@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { CSSProperties } from "react";
 import type { Theme } from "@mui/material/styles";
 
 export interface LegendLayoutFlags {
@@ -8,14 +9,14 @@ export interface LegendLayoutFlags {
 }
 
 export interface LegendContentStylesResult {
-  titleStyle: React.CSSProperties;
-  subtitleStyle: React.CSSProperties;
+  titleStyle: CSSProperties;
+  subtitleStyle: CSSProperties;
   stackStyles: {
-    spacing: number;
+    spacing: number | string;
     direction: "row" | "column";
     alignItems: "center" | "flex-start";
     sx: {
-      flexWrap: "nowrap" | "wrap";
+      flexWrap: string;
       justifyContent: string;
       overflowX: string;
     };
@@ -32,7 +33,7 @@ export function useLegendContentStyles(
 ): LegendContentStylesResult {
   const { isMobileLayout, isTabletLayout, isMediumOrLargerLayout } = layout;
 
-  const titleStyle = useMemo<React.CSSProperties>(
+  const titleStyle = useMemo<CSSProperties>(
     () => ({
       margin: 0,
       marginBottom: isMapIdle
@@ -53,7 +54,7 @@ export function useLegendContentStyles(
     [isMapIdle, isMobileLayout, isTabletLayout, theme]
   );
 
-  const subtitleStyle = useMemo<React.CSSProperties>(
+  const subtitleStyle = useMemo<CSSProperties>(
     () => ({
       margin: 0,
       marginBottom: isMobileLayout

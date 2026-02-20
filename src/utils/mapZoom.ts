@@ -1,9 +1,12 @@
 import { Theme } from "@mui/material/styles";
 
 import { Town } from "@/common/types";
-import { WORLD_DIMENSIONS, DEGREES_IN_CIRCLE } from "@/constants/map";
-import { LEGEND_WIDTH_CALCULATIONS } from "@/constants/ui";
-import { getDeviceType } from "@/constants/breakpoints";
+import {
+  WORLD_DIMENSIONS,
+  DEGREES_IN_CIRCLE,
+  getDeviceType,
+  LEGEND_WIDTH_CALCULATIONS,
+} from "@/constants";
 import {
   validateDimensions,
   getUIElementSizes,

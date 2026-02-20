@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
 
-import Timeline from "@/components/controls/Timeline/Timeline";
-import MapLegend from "@/components/controls/Legend/Legend";
 import { ErrorBoundary } from "@/components/dev";
+import { Legend, Timeline } from "@/components/controls";
+import { MapView } from "@/components/map";
 import { LoadingSpinner, ErrorOverlay } from "@/components/ui";
 import {
   LEGEND_HEADING_LABEL,
@@ -21,8 +21,6 @@ import {
   useOverlayButtonsVisible,
 } from "@/hooks/ui";
 import { calculateMapArea } from "@/utils/utils";
-
-import MapView from "@/components/map/MapView/MapView";
 import {
   getInitialMapProps,
   getMapDeviceKey,
@@ -144,7 +142,7 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
             }),
           }}
         >
-          <MapLegend
+          <Legend
             label={LEGEND_HEADING_LABEL}
             layers={legendLayers}
             isMapIdle={isMapIdle}

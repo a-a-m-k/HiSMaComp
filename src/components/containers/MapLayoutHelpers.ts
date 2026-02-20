@@ -1,7 +1,11 @@
 import React, { useRef } from "react";
-import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/constants/map";
-import { MAX_ZOOM_LEVEL } from "@/constants";
-import { CENTURY_MAP, YEARS } from "@/constants/data";
+import {
+  DEFAULT_CENTER,
+  DEFAULT_ZOOM,
+  MAX_ZOOM_LEVEL,
+  CENTURY_MAP,
+  YEARS,
+} from "@/constants";
 import type { TimelineMark } from "@/common/types";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";

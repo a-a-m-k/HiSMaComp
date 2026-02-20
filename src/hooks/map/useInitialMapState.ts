@@ -3,8 +3,9 @@ import { Town } from "@/common/types";
 import {
   DEFAULT_SCREEN_DIMENSIONS,
   MIN_APP_VIEWPORT,
-} from "@/constants/breakpoints";
-import { DEFAULT_ZOOM, INITIAL_ZOOM_OUT_OFFSET } from "@/constants/map";
+  DEFAULT_ZOOM,
+  INITIAL_ZOOM_OUT_OFFSET,
+} from "@/constants";
 import { useViewport } from "@/hooks/ui";
 import { useTheme } from "@mui/material/styles";
 import {

@@ -10,10 +10,7 @@ import {
   SHADOWS,
   TOOLTIP_STYLES,
 } from "./themeValues";
-import {
-  OVERLAY_POSITIONS,
-  NAVIGATION_CONTROL_STYLES,
-} from "@/constants/uiConstants";
+import { OVERLAY_POSITIONS, NAVIGATION_CONTROL_STYLES } from "@/constants";
 
 type TooltipPosition = "top" | "right";
 

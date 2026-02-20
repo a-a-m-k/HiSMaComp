@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
 import { Marker } from "react-map-gl/maplibre";
 import { Town } from "@/common/types";
-import { calculateMarkerDiameter, calculateMarkerColor } from "@/utils/markers";
 import {
+  calculateMarkerDiameter,
+  calculateMarkerColor,
   generateTownMarkerAriaLabel,
   enableTownMarkerFocus,
 } from "@/utils/markers";

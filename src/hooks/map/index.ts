@@ -1,12 +1,7 @@
 export { useInitialMapState } from "./useInitialMapState";
 export { useMapContainerResize } from "./useMapContainerResize";
 export { useMapLayerExpressions } from "./useMapLayerExpressions";
-export {
-  useMapViewState,
-  type MapViewState,
-  type MapViewport,
-  type ProgrammaticTarget,
-} from "./useMapViewState";
+export { useMapViewState, type MapViewState } from "./useMapViewState";
 export { useProgrammaticMapFit } from "./useProgrammaticMapFit";
 export { useMapKeyboardShortcuts } from "./useMapKeyboardShortcuts";
 export { useMapKeyboardPanning } from "./useMapKeyboardPanning";

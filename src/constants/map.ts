@@ -17,17 +17,6 @@ export const COORDINATE_LIMITS = {
   LONGITUDE: { min: -180, max: 180 },
 } as const;
 
-export const SPATIAL_INDEX_PRECISION = 10;
-export const MIN_ZOOM_CALCULATION = 2;
-export const MAX_ZOOM_CALCULATION = 15;
-export const ZOOM_CALCULATION_BASE = 10;
 export const FLOATING_BUTTON_SIZE = 45;
 /** Screenshot button size on desktop (md and up); larger than default for easier click. */
 export const SCREENSHOT_BUTTON_DESKTOP_SIZE = 56;
-
-/** View-state thresholds (reserved for future use, e.g. programmatic fit or animation) */
-export const ZOOM_CHANGE_THRESHOLD = 0.1;
-export const TRANSIENT_RESIZE_HEIGHT_THRESHOLD = 50;
-export const TRANSIENT_RESIZE_WIDTH_THRESHOLD = 40;
-export const PROGRAMMATIC_TARGET_ZOOM_EPS = 0.05;
-export const PROGRAMMATIC_TARGET_LATLNG_EPS = 0.0002;

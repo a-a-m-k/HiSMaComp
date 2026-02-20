@@ -1,5 +1,5 @@
 import { Town } from "@/common/types";
-
+import { MAX_CACHE_SIZE } from "@/constants";
 import {
   filterTownsByYear,
   getBounds,
@@ -27,7 +27,7 @@ interface YearData {
  * Uses LRU cache to optimize performance when switching between years.
  */
 class YearDataService {
-  private yearDataCache = new LRUCache<string, YearData>(50);
+  private yearDataCache = new LRUCache<string, YearData>(MAX_CACHE_SIZE);
 
   /**
    * Gets processed year data (filtered towns, bounds, center, GeoJSON) for a specific year.
