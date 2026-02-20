@@ -5,6 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { ScreenshotButton as StyledScreenshotButton } from "./ScreenshotButton.styles";
 import { TRANSITIONS, OPACITY, SIZES } from "@/constants/ui";
 import { SIZING_CONSTANTS } from "@/constants/sizing";
+import { strings } from "@/locales";
 import { useScreenshot } from "@/hooks/ui";
 import { isInputField } from "@/utils/keyboard";
 
@@ -60,7 +61,7 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
       onClick={captureScreenshot}
       size="medium"
       color="secondary"
-      aria-label="Save map as image file. Press Ctrl+S or Cmd+S to save."
+      aria-label={strings.screenshot.ariaLabel}
       disabled={isCapturing}
       tabIndex={0}
       disableRipple

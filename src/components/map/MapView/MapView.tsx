@@ -16,6 +16,7 @@ import { getZoomToFitBounds } from "@/utils/mapZoom";
 import { calculateMapArea } from "@/utils/utils";
 import { MAP_LAYER_ID } from "@/constants";
 import { getMapStyles } from "@/constants/ui";
+import { strings } from "@/locales";
 import { useViewport } from "@/hooks/ui";
 import type { Town } from "@/common/types";
 import {
@@ -175,7 +176,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
         id="map-container-area"
         ref={containerRef}
         role="application"
-        aria-label="Interactive historical map showing town populations. Click on the map or press Tab to focus, then use arrow keys to pan."
+        aria-label={strings.map.ariaLabel}
         aria-describedby="map-description"
         data-overlay-buttons-hidden={showOverlayButtons ? undefined : ""}
         style={{

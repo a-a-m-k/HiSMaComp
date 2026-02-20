@@ -20,6 +20,7 @@ import {
   useNarrowLayout,
   useOverlayButtonsVisible,
 } from "@/hooks/ui";
+import { strings } from "@/locales";
 import { calculateMapArea } from "@/utils/utils";
 import {
   getInitialMapProps,
@@ -155,7 +156,7 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
       )}
       {error && (
         <ErrorOverlay
-          title="Data Loading Error"
+          title={strings.errors.dataLoadingError}
           message={error}
           onRetry={retry}
         />
@@ -190,12 +191,12 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
               zIndex: 1,
             }}
           >
-            <LoadingSpinner message="Resizing map..." />
+            <LoadingSpinner message={strings.loading.resizingMap} />
           </Box>
         )}
       </Box>
       {(isLoading || townsLoading) && (
-        <LoadingSpinner message="Loading historical data..." />
+        <LoadingSpinner message={strings.loading.loadingHistoricalData} />
       )}
     </Box>
   );

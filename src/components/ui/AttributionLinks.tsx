@@ -4,7 +4,8 @@ import Link from "@mui/material/Link";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { ATTRIBUTION_LINKS } from "@/constants";
-import { SPACING, BORDER_RADIUS } from "@/constants/ui";
+import { SPACING, BORDER_RADIUS } from "@/constants";
+import { strings } from "@/locales";
 import { getLegendStyles } from "@/constants/sizing";
 import { useMemo } from "react";
 
@@ -41,7 +42,7 @@ export const AttributionLinks: React.FC = () => {
     <Box
       id="attribution"
       component="nav"
-      aria-label="Attribution links"
+      aria-label={strings.legend.attributionLinksAria}
       sx={{
         display: "flex",
         flexWrap: "wrap",
@@ -66,7 +67,7 @@ export const AttributionLinks: React.FC = () => {
           color="text.primary"
           sx={linkSx}
           tabIndex={-1}
-          aria-label={`${label} - Opens in new tab`}
+          aria-label={`${label} - ${strings.legend.opensInNewTab}`}
         >
           {label}
         </Link>

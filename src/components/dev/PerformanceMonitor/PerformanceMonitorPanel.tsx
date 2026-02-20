@@ -8,6 +8,7 @@ import type { Theme } from "@mui/material/styles";
 import BugReport from "@mui/icons-material/BugReport";
 import Memory from "@mui/icons-material/Memory";
 import Speed from "@mui/icons-material/Speed";
+import { strings } from "@/locales";
 import type { PerformanceMetricsState } from "./usePerformanceMetrics";
 
 export interface PerformanceMonitorPanelProps {
@@ -63,7 +64,7 @@ export function PerformanceMonitorPanel({
             size="small"
             onClick={onDebugLog}
             sx={{ color: "white" }}
-            aria-label="Log debug information to console"
+            aria-label={strings.dev.logDebugAria}
           >
             <BugReport fontSize="small" />
           </IconButton>

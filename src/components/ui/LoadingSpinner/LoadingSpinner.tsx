@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
+import { strings } from "@/locales";
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -10,7 +11,7 @@ interface LoadingSpinnerProps {
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  message = "Processing data...",
+  message = strings.loading.default,
   size = 48,
 }) => {
   const theme = useTheme();

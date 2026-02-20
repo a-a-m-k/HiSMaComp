@@ -6,6 +6,7 @@ import AlertTitle from "@mui/material/AlertTitle";
 import ErrorIcon from "@mui/icons-material/Error";
 import { Button } from "@/components/ui/common";
 import { SPACING, TRANSITIONS, Z_INDEX } from "@/constants";
+import { strings } from "@/locales";
 import { getUserFacingMessage } from "@/utils/errorMessage";
 
 export interface ErrorFallbackProps {
@@ -49,12 +50,9 @@ export function ErrorFallback({
         icon={<ErrorIcon />}
         sx={{ mb: SPACING.XL, maxWidth: 600, width: "90%" }}
       >
-        <AlertTitle>Oops! Something went wrong</AlertTitle>
+        <AlertTitle>{strings.errors.somethingWentWrong}</AlertTitle>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          {getUserFacingMessage(
-            error,
-            "An unexpected error occurred. Please try reloading the page."
-          )}
+          {getUserFacingMessage(error, strings.errors.unexpectedError)}
         </Typography>
 
         {import.meta.env.DEV && error && (
@@ -95,16 +93,16 @@ export function ErrorFallback({
           variant="contained"
           color="primary"
           onClick={onReset}
-          aria-label="Try again to reset error and continue"
+          aria-label={strings.errors.tryAgainReset}
         >
-          Try Again
+          {strings.common.tryAgain}
         </Button>
         <Button
           variant="outlined"
           onClick={onReload}
-          aria-label="Reload page to recover from error"
+          aria-label={strings.errors.reloadPageRecover}
         >
-          Reload Page
+          {strings.common.reloadPage}
         </Button>
       </Box>
 
@@ -113,7 +111,7 @@ export function ErrorFallback({
           variant="caption"
           sx={{ mt: SPACING.LG, color: "text.secondary" }}
         >
-          💡 Check the console for more details (F12 → Console)
+          💡 {strings.dev.checkConsole}
         </Typography>
       )}
     </Box>

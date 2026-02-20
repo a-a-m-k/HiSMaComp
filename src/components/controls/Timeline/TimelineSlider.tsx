@@ -2,6 +2,7 @@ import React from "react";
 import Slider from "@mui/material/Slider";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { SxProps, Theme, useTheme } from "@mui/material/styles";
+import { strings } from "@/locales";
 
 interface TimelineSliderProps {
   marks: Array<{ value: number; label: string }>;
@@ -31,10 +32,10 @@ export const TimelineSlider: React.FC<TimelineSliderProps> = ({
       step={null}
       value={value}
       onChange={(_, val) => onChange(val as number)}
-      aria-label="Select historical year"
-      aria-valuetext={`${value} AD`}
+      aria-label={strings.timeline.selectYearAria}
+      aria-valuetext={`${value}${strings.timeline.yearSuffix}`}
       valueLabelDisplay="auto"
-      valueLabelFormat={value => `${value} AD`}
+      valueLabelFormat={v => `${v}${strings.timeline.yearSuffix}`}
       tabIndex={0}
       sx={{
         mt: isMobile ? 0 : 1,

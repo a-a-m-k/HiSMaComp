@@ -4,7 +4,8 @@ import AlertTitle from "@mui/material/AlertTitle";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Refresh from "@mui/icons-material/Refresh";
-import { SPACING } from "@/constants/ui";
+import { SPACING } from "@/constants";
+import { strings } from "@/locales";
 
 interface ErrorAlertProps {
   title?: string;
@@ -19,7 +20,7 @@ export const ErrorAlert: React.FC<ErrorAlertProps> = ({
   message,
   onRetry,
   severity = "error",
-  retryLabel = "Try Again",
+  retryLabel = strings.common.tryAgain,
 }) => {
   return (
     <Alert

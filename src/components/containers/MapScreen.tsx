@@ -5,6 +5,7 @@ import { ErrorOverlay } from "@/components/ui";
 import { AppProvider } from "@/context/AppContext";
 import { useLegendLayers, useTownsData } from "@/hooks";
 
+import { strings } from "@/locales";
 import { MapLayout } from "./MapLayout";
 import { TIMELINE_MARKS } from "./MapLayoutHelpers";
 
@@ -23,7 +24,7 @@ const MapScreen: React.FC = () => {
         sx={{ width: "100%", height: "100%", position: "relative" }}
       >
         <ErrorOverlay
-          title="Data Loading Error"
+          title={strings.errors.dataLoadingError}
           message={townsError}
           onRetry={() => window.location.reload()}
         />
