@@ -1,6 +1,6 @@
 /**
  * UI constants barrel: pure layout (uiConstants), theme-derived (themeValues), and map style generators (mapStyles).
- * Import from @/constants/ui for compatibility; individual modules allow smaller bundles and clearer dependencies.
+ * Re-exports from @/theme for Z_INDEX, TRANSITIONS, getMapStyles, etc. Import from @/constants/ui for compatibility.
  */
 
 export * from "./uiConstants";

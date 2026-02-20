@@ -15,7 +15,12 @@ import { TIMELINE_MARKS } from "./MapLayoutHelpers";
  */
 const MapScreen: React.FC = () => {
   const legendLayers = useLegendLayers();
-  const { towns, isLoading: townsLoading, error: townsError } = useTownsData();
+  const {
+    towns,
+    isLoading: townsLoading,
+    error: townsError,
+    retry,
+  } = useTownsData();
 
   if (townsError) {
     return (
@@ -26,7 +31,7 @@ const MapScreen: React.FC = () => {
         <ErrorOverlay
           title={strings.errors.dataLoadingError}
           message={townsError}
-          onRetry={() => window.location.reload()}
+          onRetry={retry}
         />
       </Box>
     );

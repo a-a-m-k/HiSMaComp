@@ -6,7 +6,7 @@ import { ThemeProvider } from "@mui/material";
 
 import type { Town } from "@/common/types";
 import theme from "@/theme/theme";
-import MapContainer from "@/components/containers/MapContainer";
+import { MapContainer } from "@/components/containers";
 
 const mapViewSpy = vi.hoisted(() => vi.fn());
 const retrySpy = vi.hoisted(() => vi.fn());
@@ -32,6 +32,7 @@ const state = vi.hoisted(() => ({
     ],
     isLoading: false,
     error: null as string | null,
+    retry: vi.fn(),
   },
   appData: {
     towns: [] as Town[],

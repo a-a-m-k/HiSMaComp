@@ -13,6 +13,9 @@ interface TownMarkersProps {
  * Renders keyboard-navigable town markers using MapLibre Marker component.
  * Markers are focusable on click and navigable via arrow keys.
  * Uses geographic coordinates directly - MapLibre handles coordinate transformation automatically.
+ *
+ * Performance: Renders all markers (no virtualization). For very large town lists (e.g. hundreds+),
+ * consider clustering or virtualizing; current history dataset size is acceptable.
  */
 export const TownMarkers: React.FC<TownMarkersProps> = ({
   towns,

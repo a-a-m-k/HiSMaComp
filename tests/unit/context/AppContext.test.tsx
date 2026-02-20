@@ -65,27 +65,30 @@ vi.mock("@/hooks/ui", async () => {
   const { createResponsiveMock } = await import(
     "../../helpers/mocks/responsive"
   );
-  return {
-    useResponsive: vi.fn(() => createResponsiveMock()),
-    useScreenDimensions: vi.fn(() => ({
+  const viewportShape = () => {
+    const mock = createResponsiveMock();
+    return {
+      ...mock,
       screenWidth: 1920,
       screenHeight: 1080,
-    })),
-    useResponsiveZoom: vi.fn(() => 4),
+      rawScreenWidth: 1920,
+      rawScreenHeight: 1080,
+      isMobileLayout: false,
+      isTabletLayout: false,
+      isDesktopLayout: true,
+      isXLargeLayout: false,
+      isBelowMinViewport: false,
+    };
+  };
+  return {
+    useViewport: vi.fn(viewportShape),
+    useResponsive: vi.fn(() => createResponsiveMock()),
+    useResizeDebounced: vi.fn(() => ({ width: 1920, height: 1080 })),
+    useNarrowLayout: vi.fn(() => false),
+    useOverlayButtonsVisible: vi.fn(() => true),
     useScreenshot: vi.fn(() => ({
       captureScreenshot: vi.fn(),
       isCapturing: false,
-    })),
-  };
-});
-
-vi.mock("@/hooks/useAccessibility", () => {
-  const stableAnnounce = vi.fn();
-  const stableAnnounceAlert = vi.fn();
-  return {
-    useAccessibility: vi.fn(() => ({
-      announce: stableAnnounce,
-      announceAlert: stableAnnounceAlert,
     })),
   };
 });

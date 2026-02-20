@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   selectedYear: 1000,
   isMobile: false,
   isTablet: false,
+  isMobileLayout: false,
 }));
 
 vi.mock("@/context/AppContext", () => ({
@@ -33,6 +34,9 @@ vi.mock("@/hooks/ui", async () => {
         isMobile: state.isMobile,
         isTablet: state.isTablet,
         isDesktop: !state.isMobile && !state.isTablet,
+        isMobileLayout: state.isMobileLayout,
+        isTabletLayout: state.isTablet && !state.isMobileLayout,
+        isDesktopLayout: !state.isMobile && !state.isTablet,
       }),
   };
 });
@@ -78,6 +82,7 @@ describe("Timeline flow", () => {
     state.selectedYear = 1000;
     state.isMobile = false;
     state.isTablet = false;
+    state.isMobileLayout = false;
     getMobileLabelledMarksSpy.mockImplementation(
       (inputMarks: Array<{ value: number; label: string }>) => inputMarks
     );
@@ -103,6 +108,7 @@ describe("Timeline flow", () => {
 
   it("uses mobile-labeled marks strategy on mobile layout", () => {
     state.isMobile = true;
+    state.isMobileLayout = true;
     const mobileMarks = [
       { value: 800, label: "8th ct." },
       { value: 1000, label: "" },

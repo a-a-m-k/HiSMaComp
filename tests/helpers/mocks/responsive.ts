@@ -10,6 +10,9 @@ export const createResponsiveMock = (
     isTablet: boolean;
     isDesktop: boolean;
     isXLarge: boolean;
+    isMobileLayout: boolean;
+    isTabletLayout: boolean;
+    isDesktopLayout: boolean;
     theme: Partial<ResponsiveTheme>;
   }>
 ) => ({
@@ -17,6 +20,9 @@ export const createResponsiveMock = (
   isTablet: false,
   isDesktop: true,
   isXLarge: false,
+  isMobileLayout: false,
+  isTabletLayout: false,
+  isDesktopLayout: true,
   theme: {
     breakpoints: { values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1536 } },
     spacing: () => 8,

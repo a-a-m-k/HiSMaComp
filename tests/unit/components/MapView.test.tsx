@@ -263,15 +263,16 @@ vi.mock("@/hooks/ui", async () => {
   };
   return {
     useViewport: vi.fn(() => viewportFromWidth(viewportState.width)),
-    useScreenDimensions: vi.fn(() => ({
-      screenWidth: viewportState.width,
-      screenHeight: viewportState.height,
-    })),
     useResponsive: vi.fn(() => ({
       ...createResponsiveMock(),
       ...viewportFromWidth(viewportState.width),
     })),
-    useResponsiveZoom: vi.fn(() => 4),
+    useResizeDebounced: vi.fn(() => ({
+      width: viewportState.width,
+      height: viewportState.height,
+    })),
+    useNarrowLayout: vi.fn(() => false),
+    useOverlayButtonsVisible: vi.fn(() => true),
     useScreenshot: vi.fn(() => ({
       captureScreenshot: vi.fn(),
       isCapturing: false,
@@ -279,11 +280,8 @@ vi.mock("@/hooks/ui", async () => {
   };
 });
 
-vi.mock("@/hooks/useAccessibility", () => ({
-  useAccessibility: vi.fn(() => ({
-    announce: vi.fn(),
-    announceAlert: vi.fn(),
-  })),
+vi.mock("@/utils/accessibility", () => ({
+  announce: vi.fn(),
 }));
 
 vi.mock("@/utils/retry", () => ({
@@ -325,6 +323,7 @@ vi.mock("@/hooks/map", () => ({
   useMapKeyboardShortcuts: vi.fn(),
   useMapKeyboardPanning: vi.fn(),
   useNavigationControlAccessibility: vi.fn(),
+  useMapContainerResize: vi.fn(() => null),
   useTownsGeoJSON: vi.fn(() => ({ type: "FeatureCollection", features: [] })),
   useMapLayerExpressions: vi.fn(() => ({
     populationSortKey: "population",

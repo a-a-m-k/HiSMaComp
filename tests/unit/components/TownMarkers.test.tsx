@@ -11,6 +11,7 @@ const keyDownSpy = vi.hoisted(() => vi.fn());
 vi.mock("@/utils/markers", () => ({
   disableTownMarkerFocus: (element: HTMLElement) =>
     disableTownMarkerFocusSpy(element),
+  getStableTownMarkerId: (town: Town) => town.name,
 }));
 
 vi.mock("@/hooks/map", () => ({

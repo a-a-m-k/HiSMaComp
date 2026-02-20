@@ -7,15 +7,18 @@ import { getUserFacingMessage } from "@/utils/errorMessage";
  * Loads towns data asynchronously to reduce initial bundle size.
  * This allows the app to start rendering while data loads in the background.
  * Uses dynamic import to create a separate chunk that loads on demand.
+ * Exposes retry to re-run the load (e.g. after an error).
  */
 export const useTownsData = (): {
   towns: Town[];
   isLoading: boolean;
   error: string | null;
+  retry: () => void;
 } => {
   const [towns, setTowns] = useState<Town[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +52,9 @@ export const useTownsData = (): {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retryCount]);
 
-  return { towns, isLoading, error };
+  const retry = () => setRetryCount(c => c + 1);
+
+  return { towns, isLoading, error, retry };
 };

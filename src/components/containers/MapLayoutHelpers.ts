@@ -1,3 +1,7 @@
+/**
+ * Pure helpers and hooks for MapLayout: initial map props, device key, timeline labels.
+ * Used only by MapLayout; kept in containers for co-location.
+ */
 import React, { useRef } from "react";
 import {
   DEFAULT_CENTER,

@@ -2,8 +2,13 @@ import { Component, ErrorInfo, ReactNode } from "react";
 import { logger } from "@/utils/logger";
 import { ErrorFallback } from "./ErrorFallback";
 
+/**
+ * Error boundary: catches render errors in children and shows ErrorFallback or custom fallback.
+ * Use fallback to render a custom UI instead of the default ErrorFallback (e.g. inline message).
+ */
 interface Props {
   children: ReactNode;
+  /** Optional custom UI when an error is caught; defaults to ErrorFallback with Reload/Reset. */
   fallback?: ReactNode;
 }
 
