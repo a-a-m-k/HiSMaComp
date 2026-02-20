@@ -8,6 +8,7 @@ import { AttributionLinks } from "@/components/ui";
 import { useResponsive } from "@/hooks/ui";
 import { LayerItem } from "@/common/types";
 import { getLegendStyles } from "@/constants/sizing";
+import { useLegendContentStyles } from "./useLegendContentStyles";
 
 export interface LegendProps {
   label: string;
@@ -71,72 +72,15 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
     const theme = useTheme();
     const { isTabletLayout, isMobileLayout, isDesktopLayout, isXLargeLayout } =
       useResponsive();
-    const isMediumOrLargerLayout = isDesktopLayout || isXLargeLayout;
-
-    const titleStyle = useMemo<React.CSSProperties>(
-      () => ({
-        margin: 0,
-        marginBottom: isMapIdle
-          ? isMobileLayout
-            ? theme.spacing(0.5)
-            : isTabletLayout
-              ? theme.spacing(0.75)
-              : theme.spacing(1.25)
-          : 0,
-        textAlign: isTabletLayout || isMobileLayout ? "center" : "left",
-        width: "100%",
-        color: "#2f2f2f",
-        fontSize: isMobileLayout ? "0.78rem" : "0.88rem",
-        fontWeight: 500,
-        lineHeight: 1.25,
-        letterSpacing: "0.01em",
-      }),
-      [isMapIdle, isMobileLayout, isTabletLayout, theme]
-    );
-
-    const subtitleStyle = useMemo<React.CSSProperties>(
-      () => ({
-        margin: 0,
-        marginBottom: isMobileLayout
-          ? theme.spacing(0.5)
-          : isTabletLayout
-            ? theme.spacing(1)
-            : theme.spacing(2),
-        textAlign: isTabletLayout || isMobileLayout ? "center" : "left",
-        width: "100%",
-        color: theme.palette.text.secondary,
-        opacity: 0.9,
-        fontSize: isMobileLayout ? "0.78rem" : "0.88rem",
-        lineHeight: 1.25,
-        fontWeight: 500,
-        letterSpacing: "0.01em",
-      }),
-      [isMobileLayout, isTabletLayout, theme]
-    );
-
-    const stackStyles = useMemo(
-      () => ({
-        spacing: isMobileLayout
-          ? theme.spacing(0.5)
-          : isTabletLayout
-            ? theme.spacing(2.5)
-            : isMediumOrLargerLayout
-              ? theme.spacing(1.25)
-              : theme.spacing(1.5),
-        direction: (isMediumOrLargerLayout ? "column" : "row") as
-          | "row"
-          | "column",
-        alignItems: (isTabletLayout || isMobileLayout
-          ? "center"
-          : "flex-start") as "center" | "flex-start",
-        sx: {
-          flexWrap: isMediumOrLargerLayout ? "nowrap" : "wrap",
-          justifyContent:
-            isTabletLayout || isMobileLayout ? "space-evenly" : "flex-start",
-          overflowX: isTabletLayout ? "auto" : "visible",
-        },
-      }),
-      [isMobileLayout, isTabletLayout, isMediumOrLargerLayout, theme]
+    const layout: Parameters<typeof useLegendContentStyles>[1] = {
+      isMobileLayout,
+      isTabletLayout,
+      isMediumOrLargerLayout: isDesktopLayout || isXLargeLayout,
+    };
+    const { titleStyle, subtitleStyle, stackStyles } = useLegendContentStyles(
+      theme,
+      layout,
+      isMapIdle
     );
 
     if (!layers?.length) {

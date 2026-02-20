@@ -2,7 +2,7 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { MapContainer } from "@/components/containers";
+import { MapScreen } from "@/components/containers";
 import { APP_MIN_HEIGHT } from "@/constants";
 
 const hasStadiaApiKey = (): boolean =>
@@ -39,7 +39,7 @@ const MissingApiKeyMessage: React.FC = () => (
 
 /**
  * Root page layout: full-viewport main with map and overlays.
- * Min width (300px) is applied only to timeline and legend in MapContainer.
+ * Min width (300px) is applied only to timeline and legend in MapScreen.
  */
 const MapPage: React.FC = () => (
   <Box
@@ -64,7 +64,7 @@ const MapPage: React.FC = () => (
     <Typography component="h1" className="sr-only">
       HiSMaComp - Historical Map Visualizer
     </Typography>
-    {hasStadiaApiKey() ? <MapContainer /> : <MissingApiKeyMessage />}
+    {hasStadiaApiKey() ? <MapScreen /> : <MissingApiKeyMessage />}
   </Box>
 );
 

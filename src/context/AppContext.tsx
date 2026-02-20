@@ -18,7 +18,7 @@ import { announce } from "@/utils/accessibility";
 
 /**
  * Data-only application context: year, towns, loading, error.
- * Map initial center/fitZoom are computed in MapContainer via useInitialMapState
+ * Map initial center/fitZoom are computed in MapLayout via useInitialMapState
  * and passed as props so context doesn't re-render on viewport resize.
  */
 interface AppContextType {
@@ -46,7 +46,7 @@ interface AppProviderProps {
 
 /**
  * React Context Provider: data only (year, towns, loading, error).
- * Map initial position is computed in MapContainer and passed as props.
+ * Map initial position is computed in MapLayout and passed as props.
  */
 export const AppProvider: React.FC<AppProviderProps> = ({
   children,
@@ -146,7 +146,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({
     if (townsChanged) {
       setIsLoading(true);
       try {
-        // Validate that we can compute center (used by MapContainer via useInitialMapState).
+        // Validate that we can compute center (used by MapLayout via useInitialMapState).
         calculateBoundsCenter(towns);
         isInitializedRef.current = true;
         previousTownsRef.current = towns;

@@ -1,4 +1,5 @@
 export { useInitialMapState } from "./useInitialMapState";
+export { useMapContainerResize } from "./useMapContainerResize";
 export { useMapLayerExpressions } from "./useMapLayerExpressions";
 export {
   useMapViewState,

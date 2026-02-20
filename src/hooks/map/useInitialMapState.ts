@@ -21,7 +21,7 @@ import { logger } from "@/utils/logger";
 /**
  * Computes initial map center, fit zoom, and viewport bounds (for maxBounds).
  * Bounds = geographical box visible at (center, fitZoom) — getGeographicalBoxFromViewport(center, fitZoom, mapArea).
- * Caller should pass mapArea from a single source (e.g. MapContainer) so the same dimensions are used for bounds and for MapView’s effective min zoom fallback.
+ * Caller should pass mapArea from a single source (e.g. MapLayout) so the same dimensions are used for bounds and for MapView’s effective min zoom fallback.
  */
 export function useInitialMapState(
   towns: Town[],

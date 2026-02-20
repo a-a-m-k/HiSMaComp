@@ -48,7 +48,7 @@ interface UseMapViewStateReturn {
 /**
  * Manages map viewState and keeps it in sync with the initial fit from props.
  *
- * Breakpoint crosses (mobile ↔ tablet ↔ desktop) are handled by MapContainer
+ * Breakpoint crosses (mobile ↔ tablet ↔ desktop) are handled by MapLayout
  * (remount with spinner), so this hook only sees same-device resizes or initial mount.
  * When fitTargetFromProps or viewport change, we sync viewState to the fit so zoom
  * and camera stay correct without relying on the map library's resize behavior.

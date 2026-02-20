@@ -1,21 +1,20 @@
-import React, { useEffect, useMemo, useRef, Suspense, useState } from "react";
-import Map, { NavigationControl, MapRef } from "react-map-gl/maplibre";
+import React, { useMemo, useRef, useState } from "react";
+import Map, { MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
 
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
 import MapLayer from "./MapLayer/MapLayer";
+import { MapOverlays } from "./MapOverlays";
 import {
   getTerrainStyle,
   getMapDescription,
   handleMapFeatureClick,
 } from "@/utils/map";
-import { getZoomToFitBounds, calculateMapArea } from "@/utils/mapZoom";
-import { MAP_LAYER_ID, TRANSITIONS } from "@/constants";
-import { RESIZE_DEBOUNCE_MS } from "@/constants/breakpoints";
-import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
+import { getZoomToFitBounds } from "@/utils/mapZoom";
+import { calculateMapArea } from "@/utils/utils";
+import { MAP_LAYER_ID } from "@/constants";
 import { getMapStyles } from "@/constants/ui";
 import { useViewport } from "@/hooks/ui";
 import type { Town } from "@/common/types";
@@ -26,18 +25,11 @@ import {
   useMapKeyboardPanning,
   useNavigationControlAccessibility,
   useTownsGeoJSON,
+  useMapContainerResize,
 } from "@/hooks/map";
 import type { MapViewState } from "@/hooks/map";
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
 import { TownMarkers } from "./TownMarkers";
-
-/**
- * Loaded lazily because it is not rendered on mobile and is non-critical for
- * first paint.
- */
-const ScreenshotButton = React.lazy(
-  () => import("@/components/controls/ScreenshotButton/ScreenshotButton")
-);
 
 /** MapLibre maxBounds: [[minLng, minLat], [maxLng, maxLat]]. */
 type MapLibreMaxBounds = [[number, number], [number, number]];
@@ -49,7 +41,7 @@ interface MapViewComponentProps {
   initialZoom: number;
   /** Restrict panning to viewport bounds (from getGeographicalBoxFromViewport at initial fitZoom). */
   maxBounds?: MapLibreMaxBounds;
-  /** Map area from parent (e.g. MapContainer); fallback for effective min zoom before container is measured. */
+  /** Map area from parent (e.g. MapLayout); fallback for effective min zoom before container is measured. */
   fallbackMapSize?: { effectiveWidth: number; effectiveHeight: number };
   onFirstIdle?: () => void;
   /** When false, overlay buttons (screenshot, zoom) are hidden (e.g. during resize) until map is idle. */
@@ -71,16 +63,13 @@ const MapView: React.FC<MapViewComponentProps> = ({
   showOverlayButtons = true,
 }) => {
   const theme = useTheme();
-  // Single source for viewport: dimensions + device flags (no duplicate useResponsive + useScreenDimensions).
+  // Single source for viewport: dimensions + device flags.
   const viewport = useViewport();
   const { isMobile, isDesktop } = viewport;
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
-  const [containerSize, setContainerSize] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
+  const containerSize = useMapContainerResize(containerRef, mapRef);
   const enableZoomControls = !isMobile;
   const showZoomButtons = isDesktop;
 
@@ -121,23 +110,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
   useNavigationControlAccessibility(showZoomButtons, containerRef);
 
-  /** Track container size for effective min zoom when maxBounds is set. */
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(entries => {
-      const entry = entries[0];
-      if (entry?.contentRect) {
-        const { width, height } = entry.contentRect;
-        setContainerSize(w =>
-          w?.width === width && w?.height === height ? w : { width, height }
-        );
-      }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   /** Fallback map size when container not yet measured (prop from parent, or local). */
   const fallbackMapSizeLocal = useMemo(
     () => calculateMapArea(viewport.screenWidth, viewport.screenHeight, theme),
@@ -159,25 +131,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
     const zoomToFit = getZoomToFitBounds(bounds, w, h);
     return Math.max(safeProps.zoom, zoomToFit);
   }, [maxBounds, containerSize, safeProps.zoom, fallbackMapSize]);
-
-  /** Debounced map.resize() after window resize (separate from overlay visibility so map ref stays here). */
-  const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    const scheduleResize = () => {
-      if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
-      resizeTimeoutRef.current = setTimeout(() => {
-        resizeTimeoutRef.current = null;
-        mapRef.current?.getMap()?.resize();
-      }, RESIZE_DEBOUNCE_MS);
-    };
-    window.addEventListener("resize", scheduleResize);
-    window.addEventListener("orientationchange", scheduleResize);
-    return () => {
-      if (resizeTimeoutRef.current) clearTimeout(resizeTimeoutRef.current);
-      window.removeEventListener("resize", scheduleResize);
-      window.removeEventListener("orientationchange", scheduleResize);
-    };
-  }, []);
 
   /**
    * Conservative tile-loading: reduce prefetch so viewport loads first.
@@ -288,38 +241,11 @@ const MapView: React.FC<MapViewComponentProps> = ({
               <TownMarkers towns={towns} selectedYear={selectedYear} />
             </>
           )}
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              opacity: showOverlayButtons ? 1 : 0,
-              visibility: showOverlayButtons ? "visible" : "hidden",
-              transition: TRANSITIONS.OVERLAY_FADE,
-            }}
-          >
-            {!isMobile && (
-              <ScreenshotButtonContainer
-                sx={{ pointerEvents: showOverlayButtons ? "auto" : "none" }}
-              >
-                <Suspense fallback={null}>
-                  <ScreenshotButton />
-                </Suspense>
-              </ScreenshotButtonContainer>
-            )}
-            {showZoomButtons && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  bottom: 0,
-                  right: 0,
-                  pointerEvents: showOverlayButtons ? "auto" : "none",
-                }}
-              >
-                <NavigationControl position="bottom-right" />
-              </Box>
-            )}
-          </Box>
+          <MapOverlays
+            showOverlayButtons={showOverlayButtons}
+            showZoomButtons={showZoomButtons}
+            isMobile={isMobile}
+          />
         </Map>
       </div>
     </div>

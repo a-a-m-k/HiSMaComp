@@ -29,7 +29,7 @@ type ViewportState = {
  * Dimensions are clamped to MIN_APP_VIEWPORT (300px) so below 300px the app
  * and zoom both use the same effective size.
  *
- * When the viewport crosses a breakpoint (mobile ↔ tablet ↔ desktop), MapContainer
+ * When the viewport crosses a breakpoint (mobile ↔ tablet ↔ desktop), MapLayout
  * remounts the map with a brief spinner so zoom/camera stay correct.
  */
 export const useViewport = () => {
@@ -166,18 +166,6 @@ export const useViewport = () => {
       isBelowMinViewport,
     ]
   );
-};
-
-/**
- * @deprecated Prefer useViewport() for a single source of viewport + device.
- * Returns only dimensions for callers that don't need device flags.
- */
-export const useScreenDimensions = () => {
-  const viewport = useViewport();
-  return {
-    screenWidth: viewport.screenWidth,
-    screenHeight: viewport.screenHeight,
-  };
 };
 
 /**
