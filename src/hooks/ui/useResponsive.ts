@@ -5,7 +5,7 @@ import {
   DEFAULT_SCREEN_DIMENSIONS,
   MIN_APP_VIEWPORT,
   RESIZE_DEBOUNCE_MS,
-} from "@/constants/breakpoints";
+} from "@/constants";
 import { isValidPositiveNumber } from "@/utils/zoom/zoomHelpers";
 
 type ViewportState = {

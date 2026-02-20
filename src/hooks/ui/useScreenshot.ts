@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
@@ -49,6 +49,7 @@ export const useScreenshot = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const [isCapturing, setIsCapturing] = useState(false);
+  const mountedRef = useRef(true);
 
   const captureScreenshot = useCallback(async () => {
     if (isCapturing) return;
@@ -128,9 +129,16 @@ export const useScreenshot = ({
       if (controls) {
         restoreMapControls(controls, prevDisplay);
       }
-      setIsCapturing(false);
+      if (mountedRef.current) setIsCapturing(false);
     }
   }, [isCapturing, mapContainerSelector, filename, theme, isMobile, isTablet]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   return { captureScreenshot, isCapturing };
 };

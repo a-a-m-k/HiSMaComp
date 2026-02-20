@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useCallback } from "react";
 import { Town } from "@/common/types";
 import { useMarkerKeyboardNavigation } from "@/hooks/map";
-import { disableTownMarkerFocus } from "@/utils/markers";
+import { disableTownMarkerFocus, getStableTownMarkerId } from "@/utils/markers";
 import { TownMarkerItem } from "./TownMarkerItem";
 
 interface TownMarkersProps {
@@ -60,8 +60,8 @@ export const TownMarkers: React.FC<TownMarkersProps> = ({
 
   return (
     <>
-      {sortedTowns.map((town, index) => {
-        const markerId = `marker-${town.name}-${index}`;
+      {sortedTowns.map(town => {
+        const markerId = `marker-${getStableTownMarkerId(town)}`;
         const isFocused = focusedMarkerId === markerId;
         const isHovered = hoveredMarkerId === markerId && !isFocused;
 

@@ -1,6 +1,16 @@
 import { Town } from "@/common/types";
 
 /**
+ * Returns a stable, unique id for a town (for React key and data-marker-id).
+ * Based on name and coordinates so order-independent and stable across re-sorts.
+ */
+export const getStableTownMarkerId = (town: Town): string => {
+  const lat = Number(town.latitude).toFixed(4);
+  const lng = Number(town.longitude).toFixed(4);
+  return `${town.name}-${lat}-${lng}`;
+};
+
+/**
  * Generates an accessible aria-label for a town marker.
  * Includes town name, population, coordinates, and name variants.
  *

@@ -72,6 +72,8 @@ export function useMapViewState({
   const programmaticTargetRef = useRef<ProgrammaticTarget | null>(null);
   const programmaticTargetRefForSync = useRef<ProgrammaticTarget | null>(null);
   programmaticTargetRefForSync.current = programmaticTarget;
+  /** When programmatic animation ends, apply target in effect to avoid setState inside setState. */
+  const pendingViewStateRef = useRef<ProgrammaticTarget | null>(null);
 
   // Sync view to fit whenever initial fit or viewport changes (same-device resize or props update).
   useEffect(() => {
@@ -87,6 +89,15 @@ export function useMapViewState({
     isDesktop,
   ]);
 
+  // Apply programmatic target to viewState when animation ends (programmaticTarget cleared).
+  useEffect(() => {
+    if (programmaticTarget === null && pendingViewStateRef.current !== null) {
+      const target = pendingViewStateRef.current;
+      pendingViewStateRef.current = null;
+      setViewState(target);
+    }
+  }, [programmaticTarget]);
+
   const handleMove = useCallback((evt: { viewState: MapViewState }) => {
     setViewState(evt.viewState);
   }, []);
@@ -94,7 +105,7 @@ export function useMapViewState({
   const onProgrammaticAnimationEnd = useCallback(() => {
     programmaticTargetRef.current = null;
     setProgrammaticTarget(prev => {
-      if (prev) setViewState(prev);
+      if (prev) pendingViewStateRef.current = prev;
       return null;
     });
   }, []);

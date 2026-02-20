@@ -13,6 +13,7 @@ import { YEARS } from "@/constants";
 import { yearDataService } from "@/services";
 import { calculateBoundsCenter } from "@/utils/utils";
 import { logger } from "@/utils/logger";
+import { getUserFacingMessage } from "@/utils/errorMessage";
 import { retryWithBackoff } from "@/utils/retry";
 import { announce } from "@/utils/accessibility";
 
@@ -67,6 +68,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({
   const [error, setError] = useState<string | null>(null);
   const isInitializedRef = useRef<boolean>(false);
   const previousTownsRef = useRef<Town[]>([]);
+  /** Ignore completions for years that are no longer selected (avoid race). */
+  const currentYearRef = useRef<number>(YEARS[0]);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -80,17 +83,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({
         return;
       }
 
+      currentYearRef.current = year;
+      const requestYear = year;
+
       const loadData = async (): Promise<void> => {
         try {
-          const yearData = yearDataService.getYearData(towns, year);
+          const yearData = yearDataService.getYearData(towns, requestYear);
+          if (currentYearRef.current !== requestYear) return;
           setFilteredTowns(yearData.filteredTowns);
           setError(null);
         } catch (error) {
+          if (currentYearRef.current !== requestYear) return;
           logger.error("Error loading year data:", error);
-          const errorMessage =
-            error instanceof Error
-              ? `Failed to load data for year ${year}: ${error.message}`
-              : `Failed to load data for year ${year}. Please try again.`;
+          const errorMessage = `Failed to load data for year ${requestYear}: ${getUserFacingMessage(error, "Please try again.")}`;
           setError(errorMessage);
           setFilteredTowns([]);
           announce(errorMessage, "assertive");
@@ -106,21 +111,27 @@ export const AppProvider: React.FC<AppProviderProps> = ({
           maxDelay: 5000,
         })
           .catch(error => {
+            if (currentYearRef.current !== requestYear) return;
             logger.error("Error loading year data after retries:", error);
-            const errorMessage =
-              error instanceof Error
-                ? error.message
-                : "Failed to load data after multiple attempts. Please refresh the page.";
+            const errorMessage = getUserFacingMessage(
+              error,
+              "Failed to load data after multiple attempts. Please refresh the page."
+            );
             setError(errorMessage);
             announce(errorMessage, "assertive");
           })
           .finally(() => {
-            setIsLoading(false);
+            if (currentYearRef.current === requestYear) setIsLoading(false);
           });
       } else {
-        loadData().catch(error => {
-          logger.error("Error in loadYearData:", error);
-        });
+        setIsLoading(true);
+        loadData()
+          .catch(error => {
+            logger.error("Error in loadYearData:", error);
+          })
+          .finally(() => {
+            if (currentYearRef.current === requestYear) setIsLoading(false);
+          });
       }
     },
     [towns]
@@ -136,6 +147,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({
       setFilteredTowns([]);
       isInitializedRef.current = false;
       previousTownsRef.current = [];
+      currentYearRef.current = selectedYear;
       return;
     }
 
@@ -152,10 +164,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({
         previousTownsRef.current = towns;
       } catch (error) {
         logger.error("Error initializing app:", error);
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : "Failed to load historical data. Please try refreshing the page.";
+        const errorMessage = getUserFacingMessage(
+          error,
+          "Failed to load historical data. Please try refreshing the page."
+        );
         setError(errorMessage);
         setFilteredTowns([]);
       } finally {
@@ -163,6 +175,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({
       }
     }
 
+    currentYearRef.current = selectedYear;
     if (isInitializedRef.current) {
       loadYearData(selectedYear, false);
     }

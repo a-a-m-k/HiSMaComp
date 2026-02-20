@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Town } from "@/common/types";
 import { logger } from "@/utils/logger";
+import { getUserFacingMessage } from "@/utils/errorMessage";
 
 /**
  * Loads towns data asynchronously to reduce initial bundle size.
@@ -17,6 +18,8 @@ export const useTownsData = (): {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadTowns = async () => {
       try {
         setIsLoading(true);
@@ -27,22 +30,25 @@ export const useTownsData = (): {
           "@/assets/history-data/towns.json"
         );
 
+        if (cancelled) return;
+
         const townsData = townsModule.default || townsModule;
         setTowns(townsData);
         logger.info(`Loaded ${townsData.length} towns asynchronously`);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? `Failed to load towns data: ${err.message}`
-            : "Failed to load towns data. Please refresh the page.";
+        if (cancelled) return;
+        const errorMessage = `Failed to load towns data: ${getUserFacingMessage(err, "Please refresh the page.")}`;
         logger.error("Error loading towns data:", err);
         setError(errorMessage);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     loadTowns();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return { towns, isLoading, error };
