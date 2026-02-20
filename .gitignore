@@ -27,6 +27,7 @@ dist/
 tests/results/
 playwright-report/
 test-results/
+coverage/
 
 # Lighthouse reports (may contain API keys)
 lighthouse-report.html
