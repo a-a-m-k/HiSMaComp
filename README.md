@@ -78,6 +78,13 @@ npm run dev
 
 Open http://localhost:5173
 
+## Environment variables
+
+| Variable              | Required | Description                                                                                            |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------ |
+| `VITE_STADIA_API_KEY` | Yes      | Stadia Maps API key for map tiles. Get one at [client.stadiamaps.com](https://client.stadiamaps.com/). |
+| `VITE_BASE_PATH`      | No       | Base path for production (e.g. `/HiSMaComp/` for GitHub Pages).                                        |
+
 ## Scripts
 
 | Script                  | Description              |

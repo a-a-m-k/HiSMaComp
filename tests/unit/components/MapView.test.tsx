@@ -46,13 +46,17 @@ vi.mock("@mui/material/styles", async importOriginal => {
   };
 });
 
-vi.mock("@/utils/terrainStyle", () => ({
-  getTerrainStyle: vi.fn().mockReturnValue({
-    version: 8,
-    sources: {},
-    layers: [],
-  }),
-}));
+vi.mock("@/utils/map", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/utils/map")>();
+  return {
+    ...actual,
+    getTerrainStyle: vi.fn().mockReturnValue({
+      version: 8,
+      sources: {},
+      layers: [],
+    }),
+  };
+});
 
 vi.mock("@/constants/ui", async importOriginal => {
   const actual = await importOriginal<typeof import("@/constants/ui")>();
@@ -277,6 +281,7 @@ vi.mock("@/hooks/ui", async () => {
       captureScreenshot: vi.fn(),
       isCapturing: false,
     })),
+    usePrefersReducedMotion: vi.fn(() => false),
   };
 });
 
@@ -314,12 +319,12 @@ vi.mock("@/hooks/map", () => ({
   useMapViewState: vi.fn(({ longitude, latitude, zoom, viewport }) => ({
     viewState: { longitude, latitude, zoom },
     handleMove: vi.fn(),
-    programmaticTarget: null,
-    onProgrammaticAnimationEnd: vi.fn(),
+    cameraFitTarget: null,
+    onCameraFitComplete: vi.fn(),
     syncViewStateFromMap: vi.fn(),
-    programmaticTargetRefForSync: { current: null },
+    cameraFitTargetRefForSync: { current: null },
   })),
-  useProgrammaticMapFit: vi.fn(() => ({ current: false })),
+  useAnimateCameraToFit: vi.fn(() => ({ current: false })),
   useMapKeyboardShortcuts: vi.fn(),
   useMapKeyboardPanning: vi.fn(),
   useNavigationControlAccessibility: vi.fn(),

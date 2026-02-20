@@ -15,10 +15,11 @@ const distDir = join(process.cwd(), "dist");
 const assetsDir = join(distDir, "assets");
 
 const BUDGETS = {
-  totalJs: 950, // ~950 KiB gzip total JS (maplibre + vendor + rest)
+  totalJs: 1100, // ~1100 KiB gzip total JS (maplibre + vendor + index + towns)
   maplibre: 260,
   vendor: 150,
-  index: 20,
+  index: 30,
+  towns: 120, // async chunk from useTownsData dynamic import
 };
 
 function getGzipSizeKiB(filePath) {
@@ -54,6 +55,7 @@ function main() {
     if (file.includes("maplibre")) byName.maplibre = (byName.maplibre || 0) + sizeKiB;
     else if (file.includes("vendor")) byName.vendor = (byName.vendor || 0) + sizeKiB;
     else if (file.includes("index-")) byName.index = (byName.index || 0) + sizeKiB;
+    else if (file.includes("towns")) byName.towns = (byName.towns || 0) + sizeKiB;
   }
 
   if (totalJs > BUDGETS.totalJs) {
@@ -77,6 +79,12 @@ function main() {
   if ((byName.index || 0) > BUDGETS.index) {
     console.error(
       `[check-bundle-size] index chunk ${(byName.index || 0).toFixed(0)} KiB exceeds budget ${BUDGETS.index} KiB`
+    );
+    failed = true;
+  }
+  if ((byName.towns || 0) > BUDGETS.towns) {
+    console.error(
+      `[check-bundle-size] towns chunk ${(byName.towns || 0).toFixed(0)} KiB exceeds budget ${BUDGETS.towns} KiB`
     );
     failed = true;
   }

@@ -33,11 +33,25 @@ jobs:
           npm ci --include=optional || npm install --include=optional
           npm list @rollup/rollup-linux-x64-gnu || npm install --no-save @rollup/rollup-linux-x64-gnu
 
+      - name: Run tests
+        env:
+          VITE_STADIA_API_KEY: test-key-for-deploy
+        run: npm run test:coverage
+
+      - name: Lint
+        run: npm run lint:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Build
         env:
           VITE_STADIA_API_KEY: ${{ secrets.VITE_STADIA_API_KEY }}
           VITE_BASE_PATH: /HiSMaComp/
         run: npm run build
+
+      - name: Check bundle size budget
+        run: node scripts/check-bundle-size.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

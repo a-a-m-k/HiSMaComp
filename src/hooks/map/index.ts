@@ -1,8 +1,12 @@
 export { useInitialMapState } from "./useInitialMapState";
 export { useMapContainerResize } from "./useMapContainerResize";
 export { useMapLayerExpressions } from "./useMapLayerExpressions";
-export { useMapViewState, type MapViewState } from "./useMapViewState";
-export { useProgrammaticMapFit } from "./useProgrammaticMapFit";
+export {
+  useMapViewState,
+  type MapViewState,
+  type CameraFitTarget,
+} from "./useMapViewState";
+export { useAnimateCameraToFit } from "./useAnimateCameraToFit";
 export { useMapKeyboardShortcuts } from "./useMapKeyboardShortcuts";
 export { useMapKeyboardPanning } from "./useMapKeyboardPanning";
 export { useNavigationControlAccessibility } from "./useNavigationControlAccessibility";

@@ -15,13 +15,14 @@ import {
 import { getZoomToFitBounds } from "@/utils/mapZoom";
 import { calculateMapArea } from "@/utils/utils";
 import { MAP_LAYER_ID } from "@/constants";
+import { ZOOM_ANIMATION_DURATION_MS } from "@/constants/keyboard";
 import { getMapStyles } from "@/constants/ui";
 import { strings } from "@/locales";
-import { useViewport } from "@/hooks/ui";
+import { useViewport, usePrefersReducedMotion } from "@/hooks/ui";
 import type { Town } from "@/common/types";
 import {
   useMapViewState,
-  useProgrammaticMapFit,
+  useAnimateCameraToFit,
   useMapKeyboardShortcuts,
   useMapKeyboardPanning,
   useNavigationControlAccessibility,
@@ -65,6 +66,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
 }) => {
   const theme = useTheme();
   const viewport = useViewport();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const { isMobile, isDesktop } = viewport;
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -85,10 +87,10 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const {
     viewState,
     handleMove,
-    programmaticTarget,
-    onProgrammaticAnimationEnd,
+    cameraFitTarget,
+    onCameraFitComplete,
     syncViewStateFromMap,
-    programmaticTargetRefForSync,
+    cameraFitTargetRefForSync,
   } = useMapViewState({
     longitude: safeProps.longitude,
     latitude: safeProps.latitude,
@@ -96,17 +98,21 @@ const MapView: React.FC<MapViewComponentProps> = ({
     viewport,
   });
 
-  const isProgrammaticAnimatingRef = useProgrammaticMapFit({
+  const isCameraFitAnimatingRef = useAnimateCameraToFit({
     mapRef,
-    programmaticTarget,
-    onProgrammaticAnimationEnd,
+    cameraFitTarget,
+    onCameraFitComplete,
     syncViewStateFromMap,
-    programmaticTargetRefForSync,
+    cameraFitTargetRefForSync,
   });
 
   const townsGeojson = useTownsGeoJSON(towns);
 
-  useMapKeyboardShortcuts(mapRef, enableZoomControls);
+  useMapKeyboardShortcuts(
+    mapRef,
+    enableZoomControls,
+    prefersReducedMotion ? 0 : ZOOM_ANIMATION_DURATION_MS
+  );
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
   useNavigationControlAccessibility(showZoomButtons, containerRef);
 
@@ -189,13 +195,13 @@ const MapView: React.FC<MapViewComponentProps> = ({
       >
         <Map
           ref={mapRef}
-          {...(programmaticTarget ?? viewState)}
+          {...(cameraFitTarget ?? viewState)}
           {...(maxBounds && {
             maxBounds,
             maxBoundsViscosity: 1,
           })}
           onMove={evt => {
-            if (!isProgrammaticAnimatingRef.current) {
+            if (!isCameraFitAnimatingRef.current) {
               const z = evt.viewState.zoom;
               const ZOOM_SNAP_EPSILON = 1e-6;
               const atOrNearMin = z <= effectiveMinZoom + ZOOM_SNAP_EPSILON;

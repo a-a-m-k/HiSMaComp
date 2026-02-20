@@ -8,10 +8,12 @@ import { isInputField } from "@/utils/keyboard";
  * Keyboard shortcuts for map zoom (Cmd/Ctrl +/- and +/-). Smooth zoom animation.
  * Only active when enabled (e.g. desktop only).
  * Uses capture phase so the handler runs before the browser's default zoom behavior.
+ * Pass zoomDurationMs 0 when user prefers reduced motion.
  */
 export const useMapKeyboardShortcuts = (
   mapRef: RefObject<MapRef>,
-  enabled: boolean
+  enabled: boolean,
+  zoomDurationMs: number = ZOOM_ANIMATION_DURATION_MS
 ) => {
   useEffect(() => {
     if (!enabled) {
@@ -51,9 +53,9 @@ export const useMapKeyboardShortcuts = (
 
       try {
         if (isZoomIn) {
-          mapInstance.zoomIn({ duration: ZOOM_ANIMATION_DURATION_MS });
+          mapInstance.zoomIn({ duration: zoomDurationMs });
         } else if (isZoomOut) {
-          mapInstance.zoomOut({ duration: ZOOM_ANIMATION_DURATION_MS });
+          mapInstance.zoomOut({ duration: zoomDurationMs });
         }
       } catch (error) {
         logger.error("Error handling zoom keyboard shortcut:", error);
@@ -71,5 +73,5 @@ export const useMapKeyboardShortcuts = (
         passive: false,
       } as EventListenerOptions);
     };
-  }, [mapRef, enabled]);
+  }, [mapRef, enabled, zoomDurationMs]);
 };

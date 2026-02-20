@@ -33,16 +33,24 @@ export interface MapViewState {
   zoom: number;
 }
 
-/** Target view for programmatic camera animation (e.g. future "fit bounds" action). Same shape as MapViewState. */
-export type ProgrammaticTarget = MapViewState;
+/**
+ * Target camera position (center + zoom) for "fit to view" animation.
+ * When the layout resizes, we animate the map to this target so the view stays correct.
+ * Same shape as MapViewState.
+ */
+export type CameraFitTarget = MapViewState;
 
 interface UseMapViewStateReturn {
   viewState: MapViewState;
   handleMove: (evt: { viewState: MapViewState }) => void;
-  programmaticTarget: ProgrammaticTarget | null;
-  onProgrammaticAnimationEnd: () => void;
-  syncViewStateFromMap: (state: ProgrammaticTarget) => void;
-  programmaticTargetRefForSync: React.RefObject<ProgrammaticTarget | null>;
+  /** When set, the map should animate to this camera position (e.g. after resize). */
+  cameraFitTarget: CameraFitTarget | null;
+  /** Called when the map has finished animating to cameraFitTarget. */
+  onCameraFitComplete: () => void;
+  /** Syncs React state with the map's current view. Used after fit animation. */
+  syncViewStateFromMap: (state: CameraFitTarget) => void;
+  /** Ref mirror of cameraFitTarget for use in animation cleanup. */
+  cameraFitTargetRefForSync: React.RefObject<CameraFitTarget | null>;
 }
 
 /**
@@ -67,13 +75,13 @@ export function useMapViewState({
   );
 
   const [viewState, setViewState] = useState(fitTargetFromProps);
-  const [programmaticTarget, setProgrammaticTarget] =
-    useState<ProgrammaticTarget | null>(null);
-  const programmaticTargetRef = useRef<ProgrammaticTarget | null>(null);
-  const programmaticTargetRefForSync = useRef<ProgrammaticTarget | null>(null);
-  programmaticTargetRefForSync.current = programmaticTarget;
-  /** When programmatic animation ends, apply target in effect to avoid setState inside setState. */
-  const pendingViewStateRef = useRef<ProgrammaticTarget | null>(null);
+  const [cameraFitTarget, setCameraFitTarget] =
+    useState<CameraFitTarget | null>(null);
+  const cameraFitTargetRef = useRef<CameraFitTarget | null>(null);
+  const cameraFitTargetRefForSync = useRef<CameraFitTarget | null>(null);
+  cameraFitTargetRefForSync.current = cameraFitTarget;
+  /** When fit animation ends, apply this target to viewState (avoids setState inside setState). */
+  const pendingCameraFitTargetRef = useRef<CameraFitTarget | null>(null);
 
   /** Sync view to fit when initial fit or viewport changes (same-device resize or props update). */
   useEffect(() => {
@@ -89,37 +97,40 @@ export function useMapViewState({
     isDesktop,
   ]);
 
-  /** Apply programmatic target to viewState when animation ends (programmaticTarget cleared). */
+  /** Apply pending camera fit target to viewState when animation ends. */
   useEffect(() => {
-    if (programmaticTarget === null && pendingViewStateRef.current !== null) {
-      const target = pendingViewStateRef.current;
-      pendingViewStateRef.current = null;
+    if (
+      cameraFitTarget === null &&
+      pendingCameraFitTargetRef.current !== null
+    ) {
+      const target = pendingCameraFitTargetRef.current;
+      pendingCameraFitTargetRef.current = null;
       setViewState(target);
     }
-  }, [programmaticTarget]);
+  }, [cameraFitTarget]);
 
   const handleMove = useCallback((evt: { viewState: MapViewState }) => {
     setViewState(evt.viewState);
   }, []);
 
-  const onProgrammaticAnimationEnd = useCallback(() => {
-    programmaticTargetRef.current = null;
-    setProgrammaticTarget(prev => {
-      if (prev) pendingViewStateRef.current = prev;
+  const onCameraFitComplete = useCallback(() => {
+    cameraFitTargetRef.current = null;
+    setCameraFitTarget(prev => {
+      if (prev) pendingCameraFitTargetRef.current = prev;
       return null;
     });
   }, []);
 
-  const syncViewStateFromMap = useCallback((state: ProgrammaticTarget) => {
+  const syncViewStateFromMap = useCallback((state: CameraFitTarget) => {
     setViewState(state);
   }, []);
 
   return {
     viewState,
     handleMove,
-    programmaticTarget,
-    onProgrammaticAnimationEnd,
+    cameraFitTarget,
+    onCameraFitComplete,
     syncViewStateFromMap,
-    programmaticTargetRefForSync,
+    cameraFitTargetRefForSync,
   };
 }
