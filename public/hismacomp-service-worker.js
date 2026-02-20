@@ -1,6 +1,7 @@
-const CACHE_VERSION = "v5";
+const CACHE_VERSION = "v6";
 const CACHE_NAME = `hismacomp-app-${CACHE_VERSION}`;
-const MAX_CACHE_SIZE = 100;
+/** Enough for hashed JS/CSS chunks, icons, and HTML (efficient cache lifetimes for ~395 KiB savings on repeat visits). */
+const MAX_CACHE_SIZE = 200;
 const INDEX_PATH = (() => {
   try {
     const scopePath = new URL(self.registration.scope).pathname.replace(/\/$/, "");
@@ -50,6 +51,12 @@ function isStaticAsset(pathname) {
   return staticExtensions.some(ext => pathWithoutQuery.endsWith(ext)) || staticPaths.some(path => pathname.includes(path));
 }
 
+/** Vite build outputs hashed filenames under /assets/ (e.g. maplibre-ABC123.js). These are immutable; use cache-first for efficient cache lifetimes. */
+function isHashedImmutableAsset(pathname) {
+  const path = pathname.split("?")[0].split("#")[0];
+  return /\/assets\/[^/]+\.(js|css|mjs)$/i.test(path);
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
     return;
@@ -75,6 +82,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (isStaticAsset(url.pathname)) {
+    const useCacheFirst = isHashedImmutableAsset(url.pathname);
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) => {
         return cache.match(event.request).then((cachedResponse) => {
@@ -89,9 +97,9 @@ self.addEventListener("fetch", (event) => {
           });
 
           if (cachedResponse) {
-            // Silently ignore background fetch errors - stale-while-revalidate pattern
-            // returns cached response immediately, updates cache in background
-            fetchPromise.catch(() => {});
+            // Hashed assets: cache-first (efficient cache lifetimes; no revalidation).
+            // Other static: stale-while-revalidate (return cache, update in background).
+            if (!useCacheFirst) fetchPromise.catch(() => {});
             return cachedResponse;
           }
 
