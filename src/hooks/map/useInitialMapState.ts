@@ -14,14 +14,19 @@ import {
   getGeographicalBoxFromViewport,
 } from "@/utils/utils";
 import type { Bounds } from "@/utils/geo";
+import type { MapArea } from "@/utils/mapZoom";
 import { isValidPositiveNumber } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
 
 /**
  * Computes initial map center, fit zoom, and viewport bounds (for maxBounds).
- * Bounds = geographical box visible at (center, fitZoom) so panning is clamped to that view.
+ * Bounds = geographical box visible at (center, fitZoom) — getGeographicalBoxFromViewport(center, fitZoom, mapArea).
+ * Caller should pass mapArea from a single source (e.g. MapContainer) so the same dimensions are used for bounds and for MapView’s effective min zoom fallback.
  */
-export function useInitialMapState(towns: Town[]): {
+export function useInitialMapState(
+  towns: Town[],
+  mapArea: MapArea | undefined
+): {
   center: { latitude: number; longitude: number } | undefined;
   fitZoom: number;
   bounds: Bounds | undefined;
@@ -55,16 +60,13 @@ export function useInitialMapState(towns: Town[]): {
         Math.round(zoom * 100) / 100 - INITIAL_ZOOM_OUT_OFFSET
       );
 
-      const mapArea = calculateMapArea(
-        validScreenWidth,
-        validScreenHeight,
-        theme
-      );
+      const area =
+        mapArea ?? calculateMapArea(validScreenWidth, validScreenHeight, theme);
       const bounds = getGeographicalBoxFromViewport(
         { longitude: center.longitude, latitude: center.latitude },
         fitZoom,
-        mapArea.effectiveWidth,
-        mapArea.effectiveHeight
+        area.effectiveWidth,
+        area.effectiveHeight
       );
 
       return { center, fitZoom, bounds };
@@ -72,5 +74,5 @@ export function useInitialMapState(towns: Town[]): {
       logger.error("Error computing initial map state:", error);
       return { center: undefined, fitZoom: DEFAULT_ZOOM, bounds: undefined };
     }
-  }, [towns, screenWidth, screenHeight, theme]);
+  }, [towns, mapArea, screenWidth, screenHeight, theme]);
 }

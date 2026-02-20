@@ -12,7 +12,7 @@ import {
   getMapDescription,
   handleMapFeatureClick,
 } from "@/utils/map";
-import { getZoomToFitBounds } from "@/utils/mapZoom";
+import { getZoomToFitBounds, calculateMapArea } from "@/utils/mapZoom";
 import { MAP_LAYER_ID, TRANSITIONS } from "@/constants";
 import { RESIZE_DEBOUNCE_MS } from "@/constants/breakpoints";
 import { ScreenshotButtonContainer } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
@@ -47,8 +47,10 @@ interface MapViewComponentProps {
   selectedYear: number;
   initialPosition: Pick<MapViewState, "longitude" | "latitude">;
   initialZoom: number;
-  /** Restrict panning to viewport bounds (from getGeographicalBoxFromViewport). */
+  /** Restrict panning to viewport bounds (from getGeographicalBoxFromViewport at initial fitZoom). */
   maxBounds?: MapLibreMaxBounds;
+  /** Map area from parent (e.g. MapContainer); fallback for effective min zoom before container is measured. */
+  fallbackMapSize?: { effectiveWidth: number; effectiveHeight: number };
   onFirstIdle?: () => void;
   /** When false, overlay buttons (screenshot, zoom) are hidden (e.g. during resize) until map is idle. */
   showOverlayButtons?: boolean;
@@ -64,6 +66,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   initialPosition: { longitude, latitude },
   initialZoom,
   maxBounds,
+  fallbackMapSize: fallbackMapSizeProp,
   onFirstIdle,
   showOverlayButtons = true,
 }) => {
@@ -135,22 +138,27 @@ const MapView: React.FC<MapViewComponentProps> = ({
     return () => ro.disconnect();
   }, []);
 
-  /** Effective min zoom: when maxBounds is set, at least the zoom that fits bounds in the container. */
+  /** Fallback map size when container not yet measured (prop from parent, or local). */
+  const fallbackMapSizeLocal = useMemo(
+    () => calculateMapArea(viewport.screenWidth, viewport.screenHeight, theme),
+    [viewport.screenWidth, viewport.screenHeight, theme]
+  );
+  const fallbackMapSize = fallbackMapSizeProp ?? fallbackMapSizeLocal;
+
+  /** Effective min zoom: when maxBounds is set, zoom that fits bounds in container (or fallback map size). */
   const effectiveMinZoom = useMemo(() => {
-    if (!maxBounds || !containerSize) return safeProps.zoom;
+    if (!maxBounds) return safeProps.zoom;
     const bounds = {
       minLat: maxBounds[0][1],
       maxLat: maxBounds[1][1],
       minLng: maxBounds[0][0],
       maxLng: maxBounds[1][0],
     };
-    const zoomToFit = getZoomToFitBounds(
-      bounds,
-      containerSize.width,
-      containerSize.height
-    );
+    const w = containerSize?.width ?? fallbackMapSize.effectiveWidth;
+    const h = containerSize?.height ?? fallbackMapSize.effectiveHeight;
+    const zoomToFit = getZoomToFitBounds(bounds, w, h);
     return Math.max(safeProps.zoom, zoomToFit);
-  }, [maxBounds, containerSize, safeProps.zoom]);
+  }, [maxBounds, containerSize, safeProps.zoom, fallbackMapSize]);
 
   /** Debounced map.resize() after window resize (separate from overlay visibility so map ref stays here). */
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

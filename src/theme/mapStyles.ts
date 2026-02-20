@@ -239,6 +239,11 @@ export function getNavigationControlStyles(themeArg: Theme): string {
       cursor: not-allowed !important;
       pointer-events: none !important;
     }
+    /* Hide tooltip when zoom-out is disabled */
+    [data-zoom-at-min] .maplibregl-ctrl-zoom-out[data-tooltip]::after,
+    [data-zoom-at-min] .maplibregl-ctrl-zoom-out[data-tooltip]::before {
+      display: none !important;
+    }
 
     ${getTooltipStyles({
       position: "top",

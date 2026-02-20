@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
+import { useTheme } from "@mui/material/styles";
 
 import Timeline from "@/components/controls/Timeline/Timeline";
 import MapLegend from "@/components/controls/Legend/Legend";
@@ -23,6 +24,7 @@ import {
   useOverlayButtonsVisible,
 } from "@/hooks/ui";
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/constants/map";
+import { calculateMapArea } from "@/utils/utils";
 import { useLegendLayers, useTownsData } from "@/hooks";
 import { isValidNumber, isValidCoordinate } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
@@ -155,6 +157,7 @@ const MapContainerContent = ({
   const { towns, filteredTowns, selectedYear, isLoading, error, retry } =
     useApp();
   const viewport = useViewport();
+  const theme = useTheme();
   const narrowLayout = useNarrowLayout(viewport.rawScreenWidth);
   const [isMapIdle, setIsMapIdle] = React.useState(false);
   const { showOverlayButtons, isResizing } =
@@ -181,8 +184,12 @@ const MapContainerContent = ({
     setIsRemounting(false);
   }, []);
 
-  // Center/fitZoom and viewport bounds (for maxBounds) from useInitialMapState.
-  const initialMapState = useInitialMapState(towns);
+  // Single source for map area dimensions (used for initial bounds and MapView fallback).
+  const mapArea = React.useMemo(
+    () => calculateMapArea(viewport.screenWidth, viewport.screenHeight, theme),
+    [viewport.screenWidth, viewport.screenHeight, theme]
+  );
+  const initialMapState = useInitialMapState(towns, mapArea);
   const { initialPosition, initialZoom } = getInitialMapProps(
     showDefaultMap ?? false,
     isLoading,
@@ -282,6 +289,7 @@ const MapContainerContent = ({
             initialPosition={initialPosition}
             initialZoom={initialZoom}
             maxBounds={maxBounds}
+            fallbackMapSize={mapArea}
             onFirstIdle={handleFirstIdle}
             showOverlayButtons={showOverlayButtons}
           />
