@@ -7,6 +7,7 @@ import { isInputField } from "@/utils/keyboard";
 /**
  * Keyboard shortcuts for map zoom (Cmd/Ctrl +/- and +/-). Smooth zoom animation.
  * Only active when enabled (e.g. desktop only).
+ * Uses capture phase so the handler runs before the browser's default zoom behavior.
  */
 export const useMapKeyboardShortcuts = (
   mapRef: RefObject<MapRef>,
@@ -59,9 +60,6 @@ export const useMapKeyboardShortcuts = (
       }
     };
 
-    // Use capture phase with high priority to intercept before browser default behavior
-    // This is different from other keyboard hooks (e.g., useMapKeyboardPanning) which
-    // use default bubbling phase, because browser zoom handler runs in capture phase
     window.addEventListener("keydown", handleKeyDown, {
       capture: true,
       passive: false,

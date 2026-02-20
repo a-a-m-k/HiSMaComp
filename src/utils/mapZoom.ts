@@ -232,8 +232,6 @@ export function calculateMapArea(
   const uiSizes = getUIElementSizes(deviceType, theme);
   const spacing = Number(theme.spacing(1));
 
-  // Mobile: legend at top, timeline at bottom (vertical stack)
-  // Desktop: legend on right side (horizontal layout)
   let effectiveWidth: number;
   let effectiveHeight: number;
 
@@ -245,7 +243,6 @@ export function calculateMapArea(
       uiSizes.bottomSpacing -
       spacing) as number;
   } else if (deviceType === "tablet") {
-    // Large tablets (iPad Pro) may have legend on right like desktop
     const isLargeTablet = width >= 1000;
     if (isLargeTablet) {
       const legendWidth = Math.max(

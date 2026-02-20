@@ -64,7 +64,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
   showOverlayButtons = true,
 }) => {
   const theme = useTheme();
-  // Single source for viewport: dimensions + device flags.
   const viewport = useViewport();
   const { isMobile, isDesktop } = viewport;
   const mapRef = useRef<MapRef>(null);
@@ -198,7 +197,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
           onMove={evt => {
             if (!isProgrammaticAnimatingRef.current) {
               const z = evt.viewState.zoom;
-              // Snap to effective min when at or near minimum so zoom reliably returns to min
               const ZOOM_SNAP_EPSILON = 1e-6;
               const atOrNearMin = z <= effectiveMinZoom + ZOOM_SNAP_EPSILON;
               const effectiveZoom = atOrNearMin ? effectiveMinZoom : z;

@@ -6,7 +6,7 @@ import theme from "@/theme/theme";
 import MapPage from "@/pages/MapPage";
 import { ErrorBoundary } from "@/components/dev";
 
-// Lazy load dev-only components to reduce initial bundle size
+/** Lazy-loaded dev-only components to reduce initial bundle size. */
 const PerformanceMonitor = React.lazy(
   () => import("@/components/dev/PerformanceMonitor/PerformanceMonitor")
 );

@@ -158,7 +158,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({
     if (townsChanged) {
       setIsLoading(true);
       try {
-        // Validate that we can compute center (used by MapLayout via useInitialMapState).
         calculateBoundsCenter(towns);
         isInitializedRef.current = true;
         previousTownsRef.current = towns;

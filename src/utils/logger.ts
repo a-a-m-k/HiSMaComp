@@ -1,5 +1,6 @@
 type LogLevel = "debug" | "info" | "warn" | "error";
 
+/** Logger interface: debug/info only in DEV; warn/error in all environments. */
 interface Logger {
   debug: (...args: unknown[]) => void;
   info: (...args: unknown[]) => void;
@@ -40,4 +41,5 @@ class AppLogger implements Logger {
   }
 }
 
+/** App logger. In DEV logs all levels; in production only error. */
 export const logger = new AppLogger();

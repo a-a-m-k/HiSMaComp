@@ -97,20 +97,20 @@ export const getTownMarkerLabelContainerStyles = (
 
 /**
  * Generates styles for the town marker label content box.
+ * Uses rgba for opacity (better browser support than hex alpha).
  */
 export const getTownMarkerLabelContentStyles = (): CSSProperties => {
-  // Use rgba format for white with opacity (better browser support than hex alpha)
   const white90 = "rgba(255, 255, 255, 0.9)";
   const white80 = "rgba(255, 255, 255, 0.8)";
 
   return {
-    backgroundColor: white90, // Slightly transparent white for overlay effect
+    backgroundColor: white90,
     padding: "2px 6px",
     borderRadius: `${BORDER_RADIUS.CONTROL}px`,
     fontSize: "10px",
     fontWeight: 500,
-    color: "#222222", // Slightly lighter than pure black (#000) for better contrast on markers
-    textShadow: `0 1px 2px ${white80}`, // White shadow for text readability
+    color: "#222222",
+    textShadow: `0 1px 2px ${white80}`,
     boxShadow: "0 1px 3px rgba(0, 0, 0, 0.2)",
     lineHeight: 1.2,
   };

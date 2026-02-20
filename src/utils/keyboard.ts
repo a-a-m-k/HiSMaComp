@@ -15,7 +15,6 @@ export const isInputField = (target: HTMLElement | null): boolean => {
 
   if (target.tagName === "INPUT") {
     const inputType = (target as HTMLInputElement).type;
-    // Exclude range inputs (sliders) - they should allow keyboard shortcuts
     return inputType !== "range";
   }
 
