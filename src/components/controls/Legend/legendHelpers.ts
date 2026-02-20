@@ -5,7 +5,7 @@ import {
   LEGEND_WIDTHS,
   OVERLAY_POSITIONS,
   RESPONSIVE_PADDING,
-} from "@/constants/ui";
+} from "@/constants";
 import { SIZING_CONSTANTS } from "@/constants/sizing";
 
 export interface LegendLayoutOptions {

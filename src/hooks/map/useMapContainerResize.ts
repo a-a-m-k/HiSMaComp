@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef, RefObject } from "react";
 import type { MapRef } from "react-map-gl/maplibre";
-import { RESIZE_DEBOUNCE_MS } from "@/constants/breakpoints";
+import { RESIZE_DEBOUNCE_MS } from "@/constants";
 
 /**
  * Tracks map container size via ResizeObserver and triggers map.resize() on window
  * resize (debounced). Returns container size for effective min zoom etc.
+ * Re-runs attach when ref is available (rAF + single retry so late-mounting container is observed).
  */
 export function useMapContainerResize(
   containerRef: RefObject<HTMLDivElement | null>,
@@ -17,22 +18,44 @@ export function useMapContainerResize(
   const resizeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(entries => {
-      const entry = entries[0];
-      if (entry?.contentRect) {
-        const { width, height } = entry.contentRect;
-        setContainerSize(prev =>
-          prev?.width === width && prev?.height === height
-            ? prev
-            : { width, height }
-        );
+    let disconnected = false;
+    let ro: ResizeObserver | null = null;
+
+    const attach = (el: HTMLDivElement) => {
+      if (disconnected || ro) return;
+      ro = new ResizeObserver(entries => {
+        const entry = entries[0];
+        if (entry?.contentRect) {
+          const { width, height } = entry.contentRect;
+          setContainerSize(prev =>
+            prev?.width === width && prev?.height === height
+              ? prev
+              : { width, height }
+          );
+        }
+      });
+      ro.observe(el);
+    };
+
+    const tryAttach = () => {
+      const el = containerRef.current;
+      if (el) {
+        attach(el);
+        return;
       }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+      requestAnimationFrame(() => {
+        if (disconnected) return;
+        const el2 = containerRef.current;
+        if (el2) attach(el2);
+      });
+    };
+
+    requestAnimationFrame(tryAttach);
+    return () => {
+      disconnected = true;
+      ro?.disconnect();
+    };
+  }, [containerRef]);
 
   useEffect(() => {
     const scheduleResize = () => {
