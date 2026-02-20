@@ -22,11 +22,7 @@ import {
 } from "@/hooks/ui";
 import { strings } from "@/locales";
 import { calculateMapArea } from "@/utils/utils";
-import {
-  getInitialMapProps,
-  getMapDeviceKey,
-  useStableMapKey,
-} from "./MapLayoutHelpers";
+import { getInitialMapProps, useStableMapKey } from "./MapLayoutHelpers";
 
 export interface MapLayoutProps {
   legendLayers: LayerItem[];

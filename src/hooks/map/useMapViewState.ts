@@ -87,9 +87,7 @@ export function useMapViewState({
   useEffect(() => {
     setViewState(fitTargetFromProps);
   }, [
-    longitude,
-    latitude,
-    zoom,
+    fitTargetFromProps,
     screenWidth,
     screenHeight,
     isMobile,
