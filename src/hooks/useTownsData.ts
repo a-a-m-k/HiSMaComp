@@ -1,0 +1,62 @@
+import { useState, useEffect } from "react";
+import { Town } from "@/common/types";
+import { logger } from "@/utils/logger";
+import { getUserFacingMessage } from "@/utils/errorMessage";
+import { validateTownsData } from "@/utils/validateTowns";
+
+/**
+ * Loads towns data asynchronously to reduce initial bundle size.
+ * This allows the app to start rendering while data loads in the background.
+ * Uses dynamic import to create a separate chunk that loads on demand.
+ * Exposes retry to re-run the load (e.g. after an error).
+ */
+export const useTownsData = (): {
+  towns: Town[];
+  isLoading: boolean;
+  error: string | null;
+  retry: () => void;
+} => {
+  const [towns, setTowns] = useState<Town[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadTowns = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const townsModule = await import(
+          /* webpackChunkName: "towns-data" */
+          "@/assets/history-data/towns.json"
+        );
+
+        if (cancelled) return;
+
+        const raw = townsModule.default ?? townsModule;
+        const townsData = validateTownsData(raw);
+        setTowns(townsData);
+        logger.info(`Loaded ${townsData.length} towns asynchronously`);
+      } catch (err) {
+        if (cancelled) return;
+        const errorMessage = `Failed to load towns data: ${getUserFacingMessage(err, "Please refresh the page.")}`;
+        logger.error("Error loading towns data:", err);
+        setError(errorMessage);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    loadTowns();
+    return () => {
+      cancelled = true;
+    };
+  }, [retryCount]);
+
+  const retry = () => setRetryCount(c => c + 1);
+
+  return { towns, isLoading, error, retry };
+};

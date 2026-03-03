@@ -1,0 +1,18 @@
+# Shared setup: Node.js, install deps (+ optional Rollup native binary).
+# Caller must run actions/checkout first so this local action can be loaded.
+name: "Setup repo"
+description: "Setup Node 20 with npm cache, install dependencies"
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+        cache: "npm"
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        npm ci --include=optional || npm install --include=optional
+        npm list @rollup/rollup-linux-x64-gnu 2>/dev/null || npm install --no-save @rollup/rollup-linux-x64-gnu
