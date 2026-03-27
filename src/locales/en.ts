@@ -39,6 +39,7 @@ export const en = {
     descriptionShortcutZoomTablet:
       "On tablets, use pinch-to-zoom gestures to zoom.",
     descriptionMarkersColor: "Town markers are color-coded by population size.",
+    resetViewAria: "Reset map to initial center and zoom",
   },
   timeline: {
     selectYearAria: "Select historical year",

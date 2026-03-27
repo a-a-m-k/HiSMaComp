@@ -22,11 +22,6 @@
   --timeline-height-mobile: 87px;
   --timeline-height-tablet: 120px;
   --timeline-height-desktop: 100px;
-  
-  --button-spacing: 8px;
-  --screenshot-button-tablet-bottom: calc(
-    var(--timeline-height-tablet) + var(--overlay-edge-spacing) + var(--button-spacing)
-  );
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;

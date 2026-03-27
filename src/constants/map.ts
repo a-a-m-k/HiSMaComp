@@ -5,6 +5,9 @@ export const INITIAL_ZOOM_OUT_OFFSET = 0.25;
 
 export const MAP_LAYER_ID = "towns-population-layer";
 
+/** Dispatched to return the map to its initial center and zoom (`MapView` listens). */
+export const MAP_RESET_CAMERA_EVENT = "hismacomp:map-reset-camera";
+
 export const WORLD_DIMENSIONS = { width: 256, height: 256 };
 export const MAX_ZOOM_LEVEL = 20;
 export const DEGREES_IN_CIRCLE = 360;
@@ -15,5 +18,7 @@ export const COORDINATE_LIMITS = {
 } as const;
 
 export const FLOATING_BUTTON_SIZE = 45;
-/** Larger on desktop for easier click. */
-export const SCREENSHOT_BUTTON_DESKTOP_SIZE = 56;
+/** Circular save / reset on map overlay below `md` (matches compact mobile row). */
+export const SCREENSHOT_BUTTON_SIZE = 36;
+/** Floating snapshot + reset on map overlay at `md+` (slightly larger targets). */
+export const MAP_OVERLAY_FLOATING_TOOL_SIZE_DESKTOP = 40;

@@ -7,13 +7,11 @@ const {
   mockHtml2Canvas,
   mockHideMapControls,
   mockRestoreMapControls,
-  mockAddAttributionOverlay,
   mockLogger,
 } = vi.hoisted(() => ({
   mockHtml2Canvas: vi.fn(),
   mockHideMapControls: vi.fn(),
   mockRestoreMapControls: vi.fn(),
-  mockAddAttributionOverlay: vi.fn(),
   mockLogger: {
     error: vi.fn(),
     warn: vi.fn(),
@@ -27,10 +25,11 @@ vi.mock("html2canvas", () => ({
 }));
 
 vi.mock("@/components/controls/ScreenshotButton/utils", () => ({
+  LEGEND_SCREENSHOT_EXPAND_EVENT: "hismacomp:legend-screenshot-expand",
+  LEGEND_SCREENSHOT_RESTORE_EVENT: "hismacomp:legend-screenshot-restore",
+  LEGEND_SCREENSHOT_EXPAND_WAIT_MS: 320,
   hideMapControls: (...args: unknown[]) => mockHideMapControls(...args),
   restoreMapControls: (...args: unknown[]) => mockRestoreMapControls(...args),
-  addAttributionOverlay: (...args: unknown[]) =>
-    mockAddAttributionOverlay(...args),
 }));
 
 vi.mock("@/utils/logger", () => ({
@@ -56,8 +55,6 @@ vi.mock("@mui/material/useMediaQuery", () => ({
 }));
 
 describe("useScreenshot", () => {
-  const overlayRemove = vi.fn();
-
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
@@ -65,9 +62,6 @@ describe("useScreenshot", () => {
     mockHideMapControls.mockReturnValue({
       controls: [],
       prevDisplay: [],
-    });
-    mockAddAttributionOverlay.mockReturnValue({
-      remove: overlayRemove,
     });
     mockHtml2Canvas.mockResolvedValue({
       toDataURL: vi.fn(() => "data:image/png;base64,fake"),
@@ -96,7 +90,6 @@ describe("useScreenshot", () => {
     });
 
     expect(mockRestoreMapControls).toHaveBeenCalledTimes(1);
-    expect(overlayRemove).toHaveBeenCalledTimes(1);
   });
 
   it("logs capture failure and resets isCapturing when html2canvas throws", async () => {
@@ -113,6 +106,5 @@ describe("useScreenshot", () => {
       expect.any(Error)
     );
     expect(mockRestoreMapControls).toHaveBeenCalledTimes(1);
-    expect(overlayRemove).toHaveBeenCalledTimes(1);
   });
 });

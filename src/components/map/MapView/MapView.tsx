@@ -14,7 +14,7 @@ import {
 } from "@/utils/map";
 import { getZoomToFitBounds } from "@/utils/mapZoom";
 import { calculateMapArea } from "@/utils/utils";
-import { MAP_LAYER_ID } from "@/constants";
+import { MAP_LAYER_ID, MAP_RESET_CAMERA_EVENT } from "@/constants";
 import { ZOOM_ANIMATION_DURATION_MS } from "@/constants/keyboard";
 import { getMapStyles } from "@/constants/ui";
 import { strings } from "@/locales";
@@ -59,7 +59,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const theme = useTheme();
   const viewport = useViewport();
   const prefersReducedMotion = usePrefersReducedMotion();
-  const { isMobile, isDesktop } = viewport;
+  const { isMobile, isDesktop, isTablet } = viewport;
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -83,6 +83,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
     onCameraFitComplete,
     syncViewStateFromMap,
     cameraFitTargetRefForSync,
+    requestCameraFitTo,
   } = useMapViewState({
     longitude: safeProps.longitude,
     latitude: safeProps.latitude,
@@ -128,6 +129,25 @@ const MapView: React.FC<MapViewComponentProps> = ({
     const zoomToFit = getZoomToFitBounds(bounds, w, h);
     return Math.max(safeProps.zoom, zoomToFit);
   }, [maxBounds, containerSize, safeProps.zoom, fallbackMapSize]);
+
+  React.useEffect(() => {
+    const onResetCamera = () => {
+      requestCameraFitTo({
+        longitude: safeProps.longitude,
+        latitude: safeProps.latitude,
+        zoom: Math.max(safeProps.zoom, effectiveMinZoom),
+      });
+    };
+    window.addEventListener(MAP_RESET_CAMERA_EVENT, onResetCamera);
+    return () =>
+      window.removeEventListener(MAP_RESET_CAMERA_EVENT, onResetCamera);
+  }, [
+    safeProps.longitude,
+    safeProps.latitude,
+    safeProps.zoom,
+    effectiveMinZoom,
+    requestCameraFitTo,
+  ]);
 
   // Apply maxBounds whenever they change or become available (e.g. after towns load).
   // MapLibre only applies bounds at init when passed as option; prop updates may not apply reliably.
@@ -247,7 +267,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
           <MapOverlays
             showOverlayButtons={showOverlayButtons}
             showZoomButtons={showZoomButtons}
-            isMobile={isMobile}
+            isTablet={isTablet}
           />
         </Map>
       </div>

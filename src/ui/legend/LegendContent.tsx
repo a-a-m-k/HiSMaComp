@@ -1,4 +1,10 @@
-import React, { useCallback, useState } from "react";
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
@@ -9,13 +15,22 @@ import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
 import { alpha, useTheme } from "@mui/material/styles";
 
 import { AttributionLinks } from "@/components/ui";
-import { useResponsive } from "@/hooks/ui";
+import { useResponsive, useViewport } from "@/hooks/ui";
 import { LayerItem } from "@/common/types";
 import { LEGEND_APP_TITLE } from "@/constants";
 import { strings } from "@/locales";
+import {
+  LEGEND_SCREENSHOT_EXPAND_EVENT,
+  LEGEND_SCREENSHOT_RESTORE_EVENT,
+} from "@/components/controls/ScreenshotButton/utils";
 import { getLegendYearLabel, LEGEND_CONTENT_SPACING } from "./legendHelpers";
+import { MapResetViewButton } from "@/components/controls/MapResetViewButton/MapResetViewButton";
 import { LegendItem } from "./LegendItem";
 import { useLegendContentStyles } from "./useLegendContentStyles";
+
+const ScreenshotButtonLazy = React.lazy(
+  () => import("@/components/controls/ScreenshotButton/ScreenshotButton")
+);
 
 export interface LegendProps {
   label: string;
@@ -29,6 +44,7 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
   ({ layers, label, selectedYear, style, isMapIdle = true }) => {
     const theme = useTheme();
     const [isExpanded, setIsExpanded] = useState(true);
+    const { isTablet } = useViewport();
     const { isTabletLayout, isMobileLayout, isDesktopLayout, isXLargeLayout } =
       useResponsive();
     const layout: Parameters<typeof useLegendContentStyles>[1] = {
@@ -46,84 +62,189 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
       setIsExpanded(v => !v);
     }, []);
 
+    const isExpandedRef = useRef(isExpanded);
+    const expandedBeforeScreenshotRef = useRef<boolean | null>(null);
+    useEffect(() => {
+      isExpandedRef.current = isExpanded;
+    }, [isExpanded]);
+
+    useEffect(() => {
+      const onExpandForScreenshot = () => {
+        expandedBeforeScreenshotRef.current = isExpandedRef.current;
+        setIsExpanded(true);
+      };
+      const onRestoreAfterScreenshot = () => {
+        const prev = expandedBeforeScreenshotRef.current;
+        if (prev !== null) {
+          setIsExpanded(prev);
+          expandedBeforeScreenshotRef.current = null;
+        }
+      };
+      window.addEventListener(
+        LEGEND_SCREENSHOT_EXPAND_EVENT,
+        onExpandForScreenshot
+      );
+      window.addEventListener(
+        LEGEND_SCREENSHOT_RESTORE_EVENT,
+        onRestoreAfterScreenshot
+      );
+      return () => {
+        window.removeEventListener(
+          LEGEND_SCREENSHOT_EXPAND_EVENT,
+          onExpandForScreenshot
+        );
+        window.removeEventListener(
+          LEGEND_SCREENSHOT_RESTORE_EVENT,
+          onRestoreAfterScreenshot
+        );
+      };
+    }, []);
+
     if (!layers?.length) {
       return null;
     }
 
+    const headerPadding = {
+      px: LEGEND_CONTENT_SPACING.paddingX,
+      py: LEGEND_CONTENT_SPACING.headerPaddingY,
+    };
+
+    const legendTitleBlock = (
+      <>
+        <Typography id="legend-title" component="h1" sx={appTitleStyle}>
+          {LEGEND_APP_TITLE}
+        </Typography>
+        {isMapIdle && (
+          <Typography
+            component="p"
+            aria-live="polite"
+            aria-atomic="true"
+            sx={subtitleStyle}
+          >
+            {getLegendYearLabel(selectedYear)}
+          </Typography>
+        )}
+      </>
+    );
+
+    const collapseControl = (
+      <IconButton
+        id="legend-collapse-button"
+        type="button"
+        size="small"
+        onClick={toggleExpanded}
+        aria-expanded={isExpanded}
+        aria-controls="legend-collapsible"
+        aria-label={
+          isExpanded
+            ? strings.legend.collapseLegend
+            : strings.legend.expandLegend
+        }
+        sx={{
+          width: collapseIconButton.size,
+          height: collapseIconButton.size,
+          flexShrink: 0,
+          color: infoAccent,
+          transition: theme.custom.transitions.color,
+          "&:hover": {
+            bgcolor: alpha(infoAccent, 0.1),
+          },
+          "@media (prefers-reduced-motion: reduce)": {
+            transition: "none",
+          },
+        }}
+      >
+        {isExpanded ? (
+          <KeyboardArrowUp sx={{ fontSize: collapseIconButton.iconFontSize }} />
+        ) : (
+          <KeyboardArrowDown
+            sx={{ fontSize: collapseIconButton.iconFontSize }}
+          />
+        )}
+      </IconButton>
+    );
+
+    /** Phone + tablet: balanced columns so title stays visually centered vs. trailing controls. */
+    const useBalancedLegendHeader = isMobileLayout || isTablet;
+
     return (
       <Box sx={style} component="section" aria-labelledby="legend-title">
-        <Box
-          component="header"
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 1,
-            px: LEGEND_CONTENT_SPACING.paddingX,
-            py: LEGEND_CONTENT_SPACING.headerPaddingY,
-          }}
-        >
+        {useBalancedLegendHeader ? (
           <Box
+            component="header"
             sx={{
-              flex: 1,
-              minWidth: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "stretch",
-              gap: LEGEND_CONTENT_SPACING.headerGap,
+              display: "grid",
+              gridTemplateColumns:
+                "minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr)",
+              alignItems: "flex-start",
+              columnGap: 1,
+              ...headerPadding,
             }}
           >
-            <Typography id="legend-title" component="h1" sx={appTitleStyle}>
-              {LEGEND_APP_TITLE}
-            </Typography>
-            {isMapIdle && (
-              <Typography
-                component="p"
-                aria-live="polite"
-                aria-atomic="true"
-                sx={subtitleStyle}
-              >
-                {getLegendYearLabel(selectedYear)}
-              </Typography>
-            )}
+            <Box aria-hidden sx={{ minWidth: 0 }} />
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                textAlign: "center",
+                minWidth: 0,
+                maxWidth: "100%",
+                gap: LEGEND_CONTENT_SPACING.headerGap,
+              }}
+            >
+              {legendTitleBlock}
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: 0.5,
+                flexShrink: 0,
+                flexWrap: "nowrap",
+              }}
+            >
+              {isTablet && (
+                <>
+                  <Suspense fallback={null}>
+                    <ScreenshotButtonLazy variant="inline" />
+                  </Suspense>
+                  <MapResetViewButton variant="inline" />
+                </>
+              )}
+              {collapseControl}
+            </Box>
           </Box>
-          <IconButton
-            type="button"
-            size="small"
-            onClick={toggleExpanded}
-            aria-expanded={isExpanded}
-            aria-controls="legend-collapsible"
-            aria-label={
-              isExpanded
-                ? strings.legend.collapseLegend
-                : strings.legend.expandLegend
-            }
+        ) : (
+          <Box
+            component="header"
             sx={{
-              width: collapseIconButton.size,
-              height: collapseIconButton.size,
-              flexShrink: 0,
-              color: infoAccent,
-              transition: theme.custom.transitions.color,
-              "&:hover": {
-                bgcolor: alpha(infoAccent, 0.1),
-              },
-              "@media (prefers-reduced-motion: reduce)": {
-                transition: "none",
-              },
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 1,
+              ...headerPadding,
             }}
           >
-            {isExpanded ? (
-              <KeyboardArrowUp
-                sx={{ fontSize: collapseIconButton.iconFontSize }}
-              />
-            ) : (
-              <KeyboardArrowDown
-                sx={{ fontSize: collapseIconButton.iconFontSize }}
-              />
-            )}
-          </IconButton>
-        </Box>
+            <Box
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "stretch",
+                gap: LEGEND_CONTENT_SPACING.headerGap,
+              }}
+            >
+              {legendTitleBlock}
+            </Box>
+            {collapseControl}
+          </Box>
+        )}
 
         <Collapse
           id="legend-collapsible"

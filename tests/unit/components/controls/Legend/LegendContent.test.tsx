@@ -14,6 +14,21 @@ vi.mock("@/hooks/ui", async () => {
     await import("../../../../helpers/mocks/responsive");
   return {
     useResponsive: vi.fn(() => createResponsiveMock()),
+    useViewport: vi.fn(() => ({
+      isTablet: false,
+      isMobile: false,
+      isDesktop: true,
+      isXLarge: false,
+      screenWidth: 1200,
+      screenHeight: 800,
+      rawScreenWidth: 1200,
+      rawScreenHeight: 800,
+      isMobileLayout: false,
+      isTabletLayout: false,
+      isDesktopLayout: true,
+      isXLargeLayout: false,
+      isBelowMinViewport: false,
+    })),
   };
 });
 

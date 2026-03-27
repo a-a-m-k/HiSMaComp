@@ -1,32 +1,32 @@
 import React, { useEffect } from "react";
 import SaveAltRounded from "@mui/icons-material/SaveAltRounded";
 import CircularProgress from "@mui/material/CircularProgress";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useTheme } from "@mui/material/styles";
 
 import { ScreenshotButton as StyledScreenshotButton } from "./ScreenshotButton.styles";
 import { TRANSITIONS, OPACITY, SIZES } from "@/constants/ui";
-import { SIZING_CONSTANTS } from "@/constants/sizing";
 import { strings } from "@/locales";
 import { useScreenshot } from "@/hooks/ui";
 import { isInputField } from "@/utils/keyboard";
 
+export type ScreenshotButtonVariant = "floating" | "inline";
+
 type ScreenshotButtonProps = {
   mapContainerSelector?: string;
   filename?: string;
+  /** Legend header (tablet): match collapse control; default frosted circle for desktop overlay. */
+  variant?: ScreenshotButtonVariant;
 };
 
 /**
  * Screenshot button component.
- * Note: This component is conditionally rendered in MapView and is not shown on mobile devices (< 600px).
+ * Rendered in `MapView` (including mobile) or in the legend header on tablet.
  * Keyboard shortcut (Ctrl+S/Cmd+S) is only active when component is mounted.
  */
 const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
   mapContainerSelector = "#map-container",
   filename = "map.png",
+  variant = "floating",
 }) => {
-  const theme = useTheme();
-  const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
   const { captureScreenshot, isCapturing } = useScreenshot({
     mapContainerSelector,
     filename,
@@ -56,6 +56,7 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
   return (
     <StyledScreenshotButton
       id="map-screenshot-button"
+      data-variant={variant === "inline" ? "inline" : undefined}
       data-testid="screenshot-button"
       data-tooltip={
         isCapturing
@@ -72,19 +73,15 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
       sx={{
         opacity: isCapturing ? OPACITY.DISABLED : OPACITY.ACTIVE,
         transition: TRANSITIONS.OPACITY,
-        "& .MuiSvgIcon-root": {
-          fontSize: {
-            xs: SIZING_CONSTANTS.FONT_SIZES.ICON_DEFAULT,
-            md: SIZING_CONSTANTS.FONT_SIZES.ICON_XL,
+        ...(variant === "floating" && {
+          "& .MuiSvgIcon-root": {
+            fontSize: "1.25rem",
           },
-        },
+        }),
       }}
     >
       {isCapturing ? (
-        <CircularProgress
-          size={isMdUp ? SIZES.ICON_LARGE : SIZES.ICON_MEDIUM}
-          color="inherit"
-        />
+        <CircularProgress size={SIZES.ICON_MEDIUM} color="inherit" />
       ) : (
         <SaveAltRounded />
       )}

@@ -91,6 +91,8 @@ vi.mock(
       }: {
         children: React.ReactNode;
       }) => React.createElement("div", null, children),
+      MapOverlayToolsStack: ({ children }: { children: React.ReactNode }) =>
+        React.createElement("div", null, children),
       ScreenshotButton,
     };
   }
@@ -248,9 +250,8 @@ vi.mock("../MapLayer/MapLayer", () => ({
 // Single viewport source: MapView uses useViewport() for dimensions + device flags.
 // Derive device from viewportState.width (MUI breakpoints) so mock stays in sync with test.
 vi.mock("@/hooks/ui", async () => {
-  const { createResponsiveMock } = await import(
-    "../../helpers/mocks/responsive"
-  );
+  const { createResponsiveMock } =
+    await import("../../helpers/mocks/responsive");
   const viewportFromWidth = (w: number) => {
     const isMobile = w < 600;
     const isTablet = w >= 600 && w < 900;
@@ -479,7 +480,7 @@ describe("MapView", () => {
     expect(screen.getByTestId("town-markers")).toBeInTheDocument();
   });
 
-  it("should hide screenshot button on mobile", async () => {
+  it("shows screenshot and reset view controls on mobile (alongside)", async () => {
     viewportState.width = 375;
     viewportState.height = 667;
 
@@ -498,7 +499,10 @@ describe("MapView", () => {
       expect(screen.getByTestId("map-container")).toBeInTheDocument();
     });
 
-    expect(screen.queryByTestId("screenshot-button")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("screenshot-button")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("map-reset-view-button")).toBeInTheDocument();
   });
 
   it("shows zoom buttons on desktop/tablet and hides them on mobile", async () => {

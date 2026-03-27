@@ -61,9 +61,6 @@ export const OVERLAY_POSITIONS = {
   SCREENSHOT_BUTTON: {
     LEFT_DESKTOP: 1,
     TOP_DESKTOP: 2,
-    /** Tablet: match Timeline `sm` horizontal inset (`2rem` ≈ `theme.spacing(4)` at 8px unit). */
-    LEFT_TABLET: 4,
-    BOTTOM_TABLET_CALCULATED: TIMELINE_HEIGHTS.TABLET + 8 + 8,
   },
 } as const;
 

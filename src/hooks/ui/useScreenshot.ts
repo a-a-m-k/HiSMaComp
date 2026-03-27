@@ -5,7 +5,9 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   hideMapControls,
   restoreMapControls,
-  addAttributionOverlay,
+  LEGEND_SCREENSHOT_EXPAND_EVENT,
+  LEGEND_SCREENSHOT_RESTORE_EVENT,
+  LEGEND_SCREENSHOT_EXPAND_WAIT_MS,
 } from "@/components/controls/ScreenshotButton/utils";
 import { logger } from "@/utils/logger";
 
@@ -22,9 +24,9 @@ interface UseScreenshotOptions {
 /**
  * Hook for capturing screenshots of the map container.
  *
- * Uses html2canvas to capture the map as a PNG image. Automatically hides
- * map controls during capture and adds attribution overlay. Handles responsive
- * scaling for different device types.
+ * Uses html2canvas to capture the map as a PNG image. Hides chrome (zoom,
+ * reset view, timeline, collapse controls) during capture; on small screens the
+ * save button can stay visible. Legend attribution stays in place in the export.
  *
  * @param options - Configuration options for screenshot capture
  * @returns Object with captureScreenshot function and isCapturing state
@@ -47,7 +49,6 @@ export const useScreenshot = ({
 }: UseScreenshotOptions = {}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const [isCapturing, setIsCapturing] = useState(false);
   const mountedRef = useRef(true);
 
@@ -66,23 +67,35 @@ export const useScreenshot = ({
 
     setIsCapturing(true);
 
+    const legendToggle = document.querySelector<HTMLElement>(
+      '#legend [aria-controls="legend-collapsible"]'
+    );
+    const legendAlreadyExpanded =
+      !legendToggle || legendToggle.getAttribute("aria-expanded") !== "false";
+
+    window.dispatchEvent(new Event(LEGEND_SCREENSHOT_EXPAND_EVENT));
+
+    if (!legendAlreadyExpanded) {
+      const expandWaitMs =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? 50
+          : LEGEND_SCREENSHOT_EXPAND_WAIT_MS;
+      await new Promise<void>(resolve => setTimeout(resolve, expandWaitMs));
+    }
+
     let controls: NodeListOf<Element> | null = null;
     let prevDisplay: string[] = [];
-    let attributionDiv: HTMLElement | null = null;
     let link: HTMLAnchorElement | null = null;
 
     try {
       const html2canvas = (await import("html2canvas")).default;
 
-      const hiddenControls = hideMapControls(mapContainer);
+      const hiddenControls = hideMapControls(mapContainer, {
+        keepScreenshotButtonVisibleDuringCapture: isMobile,
+      });
       controls = hiddenControls.controls;
       prevDisplay = hiddenControls.prevDisplay;
-      attributionDiv = addAttributionOverlay(
-        mapContainer,
-        theme,
-        isMobile,
-        isTablet
-      );
 
       const canvas = await html2canvas(mapContainer, {
         useCORS: true,
@@ -123,15 +136,13 @@ export const useScreenshot = ({
     } catch (error) {
       logger.error("Screenshot capture failed:", error);
     } finally {
-      if (attributionDiv) {
-        attributionDiv.remove();
-      }
+      window.dispatchEvent(new Event(LEGEND_SCREENSHOT_RESTORE_EVENT));
       if (controls) {
         restoreMapControls(controls, prevDisplay);
       }
       if (mountedRef.current) setIsCapturing(false);
     }
-  }, [isCapturing, mapContainerSelector, filename, theme, isMobile, isTablet]);
+  }, [isCapturing, mapContainerSelector, filename, theme, isMobile]);
 
   useEffect(() => {
     mountedRef.current = true;
