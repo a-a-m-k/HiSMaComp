@@ -72,7 +72,7 @@ vi.mock("@/components/controls/Timeline/Timeline", () => ({
   ),
 }));
 
-vi.mock("@/components/controls/Legend/Legend", () => ({
+vi.mock("@/ui/legend/Legend", () => ({
   __esModule: true,
   default: ({ layers }: { layers: unknown[] }) => (
     <div data-testid="legend">{`Legend layers: ${layers.length}`}</div>

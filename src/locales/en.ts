@@ -43,10 +43,16 @@ export const en = {
   timeline: {
     selectYearAria: "Select historical year",
     yearSuffix: " AD",
+    navigationAria: "Timeline navigation",
+    centurySliderAria: "Century slider",
+    currentPeriod: "Current Period",
   },
   legend: {
     attributionLinksAria: "Attribution links",
     opensInNewTab: "Opens in new tab",
+    collapseLegend: "Collapse legend",
+    expandLegend: "Expand legend",
+    scaleDetailsAria: "Population scale details",
   },
   screenshot: {
     ariaLabel: "Save map as image file. Press Ctrl+S or Cmd+S to save.",

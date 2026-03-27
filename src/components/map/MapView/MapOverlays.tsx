@@ -51,7 +51,11 @@ export const MapOverlays: React.FC<MapOverlaysProps> = ({
           pointerEvents: showOverlayButtons ? "auto" : "none",
         }}
       >
-        <NavigationControl position="bottom-right" />
+        <NavigationControl
+          position="bottom-right"
+          showCompass={false}
+          showZoom
+        />
       </Box>
     )}
   </Box>

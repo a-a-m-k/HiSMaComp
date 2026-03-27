@@ -13,7 +13,6 @@ const Legend: React.FC<LegendProps> = props => {
   if (!props.layers || props.layers.length === 0) return null;
 
   const commonStyles = {
-    elevation: 3,
     zIndex: Z_INDEX.LEGEND,
     ...props.style,
   };
@@ -21,6 +20,7 @@ const Legend: React.FC<LegendProps> = props => {
   return (
     <Paper
       id="legend"
+      elevation={0}
       sx={getResponsiveStyles({
         isMobile: isMobileLayout,
         isTablet: isTabletLayout,

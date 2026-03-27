@@ -12,6 +12,10 @@ const theme = createTheme({
     secondary: {
       main: grey[900],
     },
+    info: {
+      main: "#5680a5",
+      contrastText: common.white,
+    },
     background: {
       default: grey[100],
       paper: common.white,
@@ -314,6 +318,26 @@ const theme = createTheme({
       arrowSize: 5,
       offset: 8,
       arrowOffset: 12,
+    },
+    legend: {
+      colors: {
+        title: "#2d3e50",
+        scaleHeading: "#64748b",
+        layerLabel: "#334155",
+      },
+      borders: {
+        paper: "1px solid rgba(226, 232, 240, 1)",
+        sectionDivider: "1px solid rgba(203, 213, 225, 0.4)",
+        layerIndicator: "2px solid rgba(203, 213, 225, 0.8)",
+      },
+      shadows: {
+        paper: "0 4px 20px rgba(0, 0, 0, 0.08)",
+        layerDot: "0 1px 3px rgba(0, 0, 0, 0.1)",
+      },
+      collapseIconButton: {
+        size: 32,
+        iconFontSize: 20,
+      },
     },
   },
 });

@@ -125,11 +125,6 @@ body[data-narrow-layout="true"] #map-container > *:first-child > *:last-child {
   outline-offset: 2px;
 }
 
-.maplibregl-ctrl-zoom-in:focus-visible,
-.maplibregl-ctrl-zoom-out:focus-visible {
-  outline: none !important;
-}
-
 a:focus-visible {
   outline: none;
   color: var(--color-text-black);

@@ -1,108 +1,315 @@
-import React, { useMemo } from "react";
-import Divider from "@mui/material/Divider";
+import React, { useCallback, useMemo } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Paper from "@mui/material/Paper";
+import Slider from "@mui/material/Slider";
 import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 
-import { MobileSheet, MediumSheet, DesktopCard } from "./Timeline.styles";
-import { TimelineSlider } from "./TimelineSlider";
-import { getMobileLabelledMarks } from "./utils";
 import { useApp } from "@/context/AppContext";
-import { useResponsive } from "@/hooks/ui";
-import { getTimelineStyles } from "@/constants/sizing";
+import { strings } from "@/locales";
 
-interface TimelineProps {
+export interface TimelineProps {
   marks: Array<{ value: number; label: string }>;
 }
 
 const Timeline: React.FC<TimelineProps> = ({ marks }) => {
+  const theme = useTheme();
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
+  const isSmUp = useMediaQuery(theme.breakpoints.up("sm"));
+  const isMobileLayout = !isSmUp;
+  const isTabletLayout = isSmUp && !isMdUp;
   const { selectedYear, setSelectedYear } = useApp();
-  const { isMobileLayout, isTabletLayout, theme } = useResponsive();
-  const sizingStyles = useMemo(() => getTimelineStyles(theme), [theme]);
 
-  const min = marks[0]?.value ?? 0;
-  const max = marks[marks.length - 1]?.value ?? 100;
+  const years = useMemo(() => marks.map(m => m.value), [marks]);
 
-  const mobileMarks = useMemo(
-    () =>
-      isMobileLayout ? getMobileLabelledMarks(marks, selectedYear) : marks,
-    [isMobileLayout, marks, selectedYear]
+  const labelByYear = useMemo(() => {
+    const map: Record<number, string> = {};
+    marks.forEach(m => {
+      map[m.value] = m.label;
+    });
+    return map;
+  }, [marks]);
+
+  const currentIndex = useMemo(() => {
+    const i = years.indexOf(selectedYear);
+    return i >= 0 ? i : 0;
+  }, [years, selectedYear]);
+
+  const maxIndex = Math.max(0, years.length - 1);
+
+  const handleSliderChange = useCallback(
+    (_event: Event, value: number | number[]) => {
+      const index = typeof value === "number" ? value : value[0];
+      const year = years[index];
+      if (year != null) setSelectedYear(year);
+    },
+    [years, setSelectedYear]
   );
 
-  const titleStyles = {
-    ...sizingStyles.title,
-    mb: 0,
-    color: theme.palette.text.primary,
-  };
-
-  if (isMobileLayout) {
-    return (
-      <MobileSheet
-        id="timeline"
-        aria-labelledby="timeline-heading-mobile"
-        tabIndex={-1}
-      >
-        <Typography
-          id="timeline-heading-mobile"
-          component="h2"
-          className="sr-only"
-        >
-          Historical Timeline
-        </Typography>
-        <TimelineSlider
-          marks={mobileMarks}
-          min={min}
-          max={max}
-          value={selectedYear}
-          onChange={setSelectedYear}
-        />
-      </MobileSheet>
-    );
-  }
-
-  if (isTabletLayout) {
-    return (
-      <MediumSheet
-        id="timeline"
-        aria-labelledby="timeline-heading"
-        tabIndex={-1}
-      >
-        <Typography
-          id="timeline-heading"
-          component="h2"
-          variant="h6"
-          sx={titleStyles}
-        >
-          Historical Timeline
-        </Typography>
-        <Divider sx={{ mb: 0.2, width: "100%", opacity: 0.6 }} />
-        <TimelineSlider
-          marks={marks}
-          min={min}
-          max={max}
-          value={selectedYear}
-          onChange={setSelectedYear}
-        />
-      </MediumSheet>
-    );
-  }
+  const accent = theme.palette.info.main;
+  const activeText = "#3d5d7e";
+  const mutedText = "#6b7c8e";
+  const neighborMuted = "#8899aa";
 
   return (
-    <DesktopCard id="timeline" aria-labelledby="timeline-heading" tabIndex={-1}>
-      <Typography
-        id="timeline-heading"
-        component="h2"
-        variant="h5"
-        sx={titleStyles}
+    <Box
+      id="timeline"
+      component="nav"
+      role="navigation"
+      aria-label={strings.timeline.navigationAria}
+      tabIndex={-1}
+      sx={{
+        position: "fixed",
+        bottom: {
+          xs: "max(8px, env(safe-area-inset-bottom))",
+          sm: 16,
+          md: 24,
+        },
+        left: {
+          xs: "max(1rem, env(safe-area-inset-left))",
+          sm: "2rem",
+          md: "50%",
+        },
+        right: {
+          xs: "max(1rem, env(safe-area-inset-right))",
+          sm: "2rem",
+          md: "auto",
+        },
+        transform: { md: "translateX(-50%)" },
+        zIndex: theme.custom.zIndex.timeline,
+        width: { xs: "auto", md: "auto" },
+        maxWidth: { xs: "100%", md: 800 },
+        minWidth: { md: 650 },
+      }}
+    >
+      <Paper
+        elevation={0}
+        sx={{
+          bgcolor: "background.paper",
+          border: 1,
+          borderColor: "divider",
+          borderRadius: 2,
+          boxShadow: {
+            xs: "0 2px 12px rgba(0, 0, 0, 0.1)",
+            md: "0 8px 32px rgba(0, 0, 0, 0.12)",
+          },
+          transition: "all 0.3s ease",
+          "@media (prefers-reduced-motion: reduce)": {
+            transition: "none",
+          },
+        }}
       >
-        Historical Timeline
-      </Typography>
-      <TimelineSlider
-        marks={marks}
-        min={min}
-        max={max}
-        value={selectedYear}
-        onChange={setSelectedYear}
-      />
-    </DesktopCard>
+        <Box
+          sx={{
+            px: { xs: 2, sm: 2.5, md: 3 },
+            py: { xs: 1.75, sm: 1.5, md: 2 },
+          }}
+        >
+          <Box
+            sx={{ mb: { xs: 1.25, sm: 1, md: 1.25 } }}
+            role="group"
+            aria-label={strings.timeline.centurySliderAria}
+          >
+            <Slider
+              value={currentIndex}
+              onChange={handleSliderChange}
+              min={0}
+              max={maxIndex}
+              step={1}
+              aria-label={strings.timeline.selectYearAria}
+              aria-valuetext={
+                labelByYear[selectedYear] ??
+                `${selectedYear}${strings.timeline.yearSuffix}`
+              }
+              aria-valuenow={currentIndex}
+              aria-valuemin={0}
+              aria-valuemax={maxIndex}
+              sx={{
+                color: accent,
+                height: { xs: 8, sm: 6, md: 6 },
+                py: { xs: 1, sm: 0 },
+                "& .MuiSlider-thumb": {
+                  bgcolor: accent,
+                  border: "3px solid #ffffff",
+                  boxShadow: "0 3px 10px rgba(86, 128, 165, 0.4)",
+                  width: { xs: 28, sm: 22, md: 24 },
+                  height: { xs: 28, sm: 22, md: 24 },
+                  transition: "all 0.2s ease",
+                  "&:hover, &:active": {
+                    boxShadow: "0 4px 14px rgba(86, 128, 165, 0.6)",
+                  },
+                  "&:focus-visible": {
+                    outline: `3px solid ${accent}`,
+                    outlineOffset: "2px",
+                  },
+                  "@media (prefers-reduced-motion: reduce)": {
+                    transition: "none",
+                  },
+                },
+                "& .MuiSlider-track": {
+                  bgcolor: accent,
+                  height: { xs: 7, sm: 6, md: 6 },
+                  border: "none",
+                  boxShadow: "0 1px 4px rgba(86, 128, 165, 0.25)",
+                },
+                "& .MuiSlider-rail": {
+                  bgcolor: "#cbd5e1",
+                  height: { xs: 7, sm: 6, md: 6 },
+                  opacity: 1,
+                },
+              }}
+            />
+          </Box>
+
+          {isMdUp && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "flex-start",
+                gap: 0.5,
+                flexWrap: "wrap",
+              }}
+            >
+              {years.map((year, index) => (
+                <Button
+                  key={year}
+                  onClick={() => setSelectedYear(year)}
+                  variant="text"
+                  sx={{
+                    fontSize: 11,
+                    lineHeight: 1.3,
+                    px: 0.75,
+                    py: 0.5,
+                    minWidth: "auto",
+                    borderRadius: 1.5,
+                    textTransform: "none",
+                    transition: "all 0.2s ease",
+                    ...(currentIndex === index
+                      ? {
+                          color: activeText,
+                          fontWeight: 700,
+                          bgcolor: "#e8f0f5",
+                          boxShadow: "0 1px 4px rgba(86, 128, 165, 0.15)",
+                        }
+                      : {
+                          color: mutedText,
+                          fontWeight: 600,
+                          "&:hover": {
+                            color: "#2d3e50",
+                            bgcolor: "#f1f5f9",
+                            transform: "translateY(-1px)",
+                          },
+                        }),
+                    "@media (prefers-reduced-motion: reduce)": {
+                      "&:hover": { transform: "none" },
+                    },
+                  }}
+                >
+                  {labelByYear[year]}
+                </Button>
+              ))}
+            </Box>
+          )}
+
+          {isTabletLayout && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 0.75,
+                flexWrap: "wrap",
+              }}
+            >
+              {years.map((year, index) => {
+                const isActive = currentIndex === index;
+                const isNeighbor = Math.abs(currentIndex - index) === 1;
+                if (!isActive && !isNeighbor) return null;
+
+                return (
+                  <Button
+                    key={year}
+                    onClick={() => setSelectedYear(year)}
+                    variant="text"
+                    sx={{
+                      fontSize: 10.5,
+                      lineHeight: 1.3,
+                      px: 1.25,
+                      py: 0.5,
+                      minWidth: "auto",
+                      borderRadius: 1.5,
+                      textTransform: "none",
+                      transition: "all 0.2s ease",
+                      ...(isActive
+                        ? {
+                            color: activeText,
+                            fontWeight: 700,
+                            bgcolor: "#e8f0f5",
+                            boxShadow: "0 1px 4px rgba(86, 128, 165, 0.15)",
+                          }
+                        : {
+                            color: neighborMuted,
+                            fontWeight: 500,
+                            "&:hover": {
+                              color: "#2d3e50",
+                              bgcolor: "#f1f5f9",
+                            },
+                          }),
+                    }}
+                  >
+                    {labelByYear[year]}
+                  </Button>
+                );
+              })}
+            </Box>
+          )}
+
+          {isMobileLayout && (
+            <Box
+              sx={{
+                textAlign: "center",
+                bgcolor: "#e8f0f5",
+                borderRadius: 2,
+                py: 1.5,
+                px: 2,
+                border: "1px solid #d0dce5",
+                boxShadow: "0 1px 4px rgba(86, 128, 165, 0.1)",
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{
+                  color: mutedText,
+                  fontWeight: 600,
+                  mb: 0.5,
+                  display: "block",
+                  fontSize: 10.5,
+                  letterSpacing: "0.5px",
+                  textTransform: "uppercase",
+                }}
+              >
+                {strings.timeline.currentPeriod}
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  color: activeText,
+                  lineHeight: 1.2,
+                  fontSize: 17,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {labelByYear[selectedYear] ?? String(selectedYear)}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </Paper>
+    </Box>
   );
 };
 

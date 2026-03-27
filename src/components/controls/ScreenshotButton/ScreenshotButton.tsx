@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import SaveAltRounded from "@mui/icons-material/SaveAltRounded";
 import CircularProgress from "@mui/material/CircularProgress";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 
 import { ScreenshotButton as StyledScreenshotButton } from "./ScreenshotButton.styles";
 import { TRANSITIONS, OPACITY, SIZES } from "@/constants/ui";
@@ -23,6 +25,8 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
   mapContainerSelector = "#map-container",
   filename = "map.png",
 }) => {
+  const theme = useTheme();
+  const isMdUp = useMediaQuery(theme.breakpoints.up("md"));
   const { captureScreenshot, isCapturing } = useScreenshot({
     mapContainerSelector,
     filename,
@@ -71,13 +75,16 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
         "& .MuiSvgIcon-root": {
           fontSize: {
             xs: SIZING_CONSTANTS.FONT_SIZES.ICON_DEFAULT,
-            xl: SIZING_CONSTANTS.FONT_SIZES.ICON_XL,
+            md: SIZING_CONSTANTS.FONT_SIZES.ICON_XL,
           },
         },
       }}
     >
       {isCapturing ? (
-        <CircularProgress size={SIZES.ICON_MEDIUM} color="inherit" />
+        <CircularProgress
+          size={isMdUp ? SIZES.ICON_LARGE : SIZES.ICON_MEDIUM}
+          color="inherit"
+        />
       ) : (
         <SaveAltRounded />
       )}

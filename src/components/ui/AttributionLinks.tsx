@@ -1,42 +1,63 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
+import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { ATTRIBUTION_LINKS } from "@/constants";
-import { SPACING, BORDER_RADIUS } from "@/constants";
+import {
+  ATTRIBUTION_LINKS,
+  type AttributionLink,
+  LEGEND_ATTRIBUTION_TEXT_SX,
+} from "@/constants";
 import { strings } from "@/locales";
-import { getLegendStyles } from "@/constants/sizing";
-import { useMemo } from "react";
 
-export const AttributionLinks: React.FC = () => {
+const inlineLinkSx = {
+  color: "inherit",
+  fontSize: "inherit",
+  lineHeight: "inherit",
+  fontWeight: "inherit",
+  textDecoration: "none",
+  "&:hover": {
+    color: "#64748b",
+  },
+  "&:focus-visible": {
+    outline: "2px solid",
+    outlineColor: "#64748b",
+    outlineOffset: "2px",
+    borderRadius: "2px",
+  },
+} as const;
+
+function AttributionAnchor({ link }: { link: AttributionLink }) {
+  return (
+    <Link
+      href={link.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      underline="none"
+      sx={inlineLinkSx}
+      aria-label={`${link.label} - ${strings.legend.opensInNewTab}`}
+    >
+      {link.label}
+    </Link>
+  );
+}
+
+export interface AttributionLinksProps {
+  /**
+   * How the block sits in the footer. On the legend: centered for tablet/mobile,
+   * left for desktop (`lg+`). Desktop uses a 2×2 grid aligned to this edge.
+   */
+  rowAlignment?: "center" | "left";
+}
+
+export const AttributionLinks: React.FC<AttributionLinksProps> = ({
+  rowAlignment,
+}) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const sizingStyles = useMemo(() => getLegendStyles(theme), [theme]);
-
-  const linkSx = {
-    ...sizingStyles.attributionLinks,
-    px: theme.spacing(SPACING.XS / 2),
-    py: theme.spacing(SPACING.XS / 5),
-    borderRadius: BORDER_RADIUS.SMALL,
-    transition: theme.custom.transitions.color,
-    "&:hover": {
-      color: theme.palette.action.hover,
-    },
-    "&:focus-visible": {
-      outline: "none",
-      color: theme.custom.colors.textBlack,
-      fontWeight: 600,
-      textDecoration: "none",
-    },
-    "&:focus:not(:focus-visible)": {
-      outline: "none",
-      textDecoration: "none",
-    },
-    textAlign: "center" as const,
-    width: "auto",
-    minWidth: 0,
-  };
+  /** Tablet and below: one centered line; desktop (`lg+`): 2×2 grid, left by default. */
+  const isLgDown = useMediaQuery(theme.breakpoints.down("lg"));
+  const align = rowAlignment ?? (isLgDown ? "center" : "left");
 
   return (
     <Box
@@ -44,34 +65,52 @@ export const AttributionLinks: React.FC = () => {
       component="nav"
       aria-label={strings.legend.attributionLinksAria}
       sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: isMobile ? theme.spacing(0.25) : theme.spacing(SPACING.XS * 0.6),
         width: "100%",
-        mt: isMobile ? theme.spacing(1) : theme.spacing(1.5),
-        mb: isMobile ? theme.spacing(0.5) : theme.spacing(SPACING.SM),
-        alignItems: "center",
-        justifyContent: "center",
-        wordBreak: "normal",
-        overflowWrap: "normal",
-        whiteSpace: "nowrap",
+        mt: 0,
+        mb: 0,
       }}
     >
-      {ATTRIBUTION_LINKS.map(({ href, label }) => (
-        <Link
-          key={href}
-          href={href}
-          target="_blank"
-          underline="none"
-          rel="noopener noreferrer"
-          color="text.primary"
-          sx={linkSx}
-          tabIndex={-1}
-          aria-label={`${label} - ${strings.legend.opensInNewTab}`}
+      {isLgDown ? (
+        <Typography
+          component="p"
+          sx={{
+            ...LEGEND_ATTRIBUTION_TEXT_SX,
+            m: 0,
+            textAlign: "center",
+          }}
         >
-          {label}
-        </Link>
-      ))}
+          {ATTRIBUTION_LINKS.map((link, i) => (
+            <React.Fragment key={link.href}>
+              {i > 0 ? " " : null}
+              <AttributionAnchor link={link} />
+            </React.Fragment>
+          ))}
+        </Typography>
+      ) : (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: align === "center" ? "center" : "flex-start",
+            width: "100%",
+          }}
+        >
+          <Box
+            component="div"
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, max-content)",
+              columnGap: 2,
+              rowGap: 0.25,
+              ...LEGEND_ATTRIBUTION_TEXT_SX,
+              textAlign: "left",
+            }}
+          >
+            {ATTRIBUTION_LINKS.map(link => (
+              <AttributionAnchor key={link.href} link={link} />
+            ))}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };
