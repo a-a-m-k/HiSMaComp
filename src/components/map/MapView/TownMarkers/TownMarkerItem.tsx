@@ -109,7 +109,7 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
               target.focus();
             }}
           />
-          {isFocused && (
+          {(isFocused || isHovered) && (
             <TownMarkerLabel
               townName={town.name}
               population={population}

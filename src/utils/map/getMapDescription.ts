@@ -1,3 +1,4 @@
+import { strings } from "@/locales";
 import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
 
 export interface GetMapDescriptionOptions {
@@ -26,8 +27,9 @@ export function getMapDescription(options: GetMapDescriptionOptions): string {
   let text = `Interactive map displaying European towns and their populations. Use Tab to navigate controls: ${controls}. The base map is ${mapStyleMode === "dark" ? "grayscale" : "full color"}. Click on the map or press Tab to focus the map area, then use arrow keys to pan. When a town marker is focused, use arrow keys to navigate between markers.`;
   text += " Press Ctrl+S or Cmd+S to save the map as an image.";
   if (isDesktop) {
-    text +=
-      " Press Ctrl+Plus or Cmd+Plus to zoom in, and Ctrl+Minus or Cmd+Minus to zoom out.";
+    text += ` ${strings.map.descriptionShortcutZoomDesktop}`;
+    text += ` ${strings.map.descriptionShortcutResetDesktop}`;
+    text += ` ${strings.map.descriptionShortcutBasemapDesktop}`;
   } else {
     text += " On tablets, use pinch-to-zoom gestures to zoom.";
   }

@@ -2,8 +2,7 @@ import React, { type RefObject } from "react";
 import Map, { type MapProps, type MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 
-import { MAP_DARK_BASEMAP_FILTER } from "@/constants";
-import { getTerrainStyle } from "@/utils/map";
+import { getTerrainDarkStyle } from "@/utils/map";
 
 import { SPLIT_BASEMAP_TILE_OPTIONS } from "./constants";
 
@@ -20,8 +19,7 @@ export interface MapViewDarkBasemapProps {
 }
 
 /**
- * Full-terrain underlay for dark mode: CSS-filtered so the overlay map only draws borders +
- * population. Not used in light mode.
+ * Full-terrain underlay for dark mode (`terrain-dark.json`). Overlay map draws borders + population.
  */
 export const MapViewDarkBasemap: React.FC<MapViewDarkBasemapProps> = ({
   basemapRef,
@@ -35,7 +33,6 @@ export const MapViewDarkBasemap: React.FC<MapViewDarkBasemapProps> = ({
       inset: 0,
       zIndex: 0,
       pointerEvents: "none",
-      filter: MAP_DARK_BASEMAP_FILTER,
       transform: "translateZ(0)",
       isolation: "isolate",
       backfaceVisibility: "hidden",
@@ -44,7 +41,7 @@ export const MapViewDarkBasemap: React.FC<MapViewDarkBasemapProps> = ({
     <Map
       ref={basemapRef as React.Ref<MapRef>}
       {...sharedViewProps}
-      mapStyle={getTerrainStyle()}
+      mapStyle={getTerrainDarkStyle()}
       mapLib={MaplibreGL}
       attributionControl={false}
       style={{ width: "100%", height: "100%" }}

@@ -10,7 +10,6 @@ import {
   LEGEND_SCREENSHOT_EXPAND_WAIT_MS,
 } from "@/components/controls/ScreenshotButton/utils";
 import { logger } from "@/utils/logger";
-import { bakeDarkBasemapIntoScreenshotClone } from "@/utils/screenshotDarkBasemap";
 
 /**
  * Options for the useScreenshot hook.
@@ -106,7 +105,7 @@ export const useScreenshot = ({
         allowTaint: false,
         foreignObjectRendering: false,
         imageTimeout: 5000,
-        onclone: async clonedDoc => {
+        onclone: clonedDoc => {
           if (import.meta.env.DEV) {
             clonedDoc.querySelector("[data-performance-monitor]")?.remove();
           }
@@ -118,7 +117,6 @@ export const useScreenshot = ({
             element.style.opacity = "1";
             element.style.visibility = "visible";
           });
-          await bakeDarkBasemapIntoScreenshotClone(clonedDoc);
         },
       });
 

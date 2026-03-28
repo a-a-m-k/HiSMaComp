@@ -20,6 +20,7 @@
     "test:e2e:install": "playwright install chromium",
     "test:unit": "npm run test:base -- run tests/unit",
     "zoom:report": "tsx scripts/generateZoomReport.ts",
+    "generate:terrain-dark": "node scripts/generate-terrain-dark.mjs",
     "prepare": "husky",
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"scripts/**/*.{ts,tsx}\" \"vite-plugin-*.ts\"",
     "lint:staged": "npx lint-staged",

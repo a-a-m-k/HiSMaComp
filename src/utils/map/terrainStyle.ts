@@ -1,11 +1,12 @@
 import { StyleSpecification } from "react-map-gl/maplibre";
+import terrainDarkStyleJson from "@/assets/terrain-gl-style/terrain-dark.json";
 import terrainStyleJson from "@/assets/terrain-gl-style/terrain.json";
 import { MAP_MUTED_SLATE_RGBA } from "@/constants/map";
 import { logger } from "../logger";
 
 /**
- * Light: full-color terrain. Dark: CSS `filter` on a separate basemap layer only;
- * population circles/labels render on a transparent overlay map (unfiltered).
+ * Light: full-color terrain. Dark: separate basemap uses `terrain-dark.json` (fork of `terrain.json`);
+ * population circles/labels render on a transparent overlay map.
  */
 export type MapBaseStyleMode = "light" | "dark";
 
@@ -54,6 +55,8 @@ function replaceApiKeyPlaceholder(obj: unknown, apiKey: string): unknown {
  */
 let cachedTerrainStyle: StyleSpecification | null = null;
 
+let cachedTerrainDarkStyle: StyleSpecification | null = null;
+
 /** Terrain style with API key injected; memoized. */
 export function getTerrainStyle(): StyleSpecification {
   if (cachedTerrainStyle) {
@@ -69,9 +72,22 @@ export function getTerrainStyle(): StyleSpecification {
   return cachedTerrainStyle;
 }
 
-/** Full terrain style (same for light and dark; dark mode adds a filtered basemap in MapView). */
-export function getMapBaseStyle(): StyleSpecification {
-  return getTerrainStyle();
+/**
+ * Dark basemap: same sources/layers as `terrain.json`, with hsl paints darkened (see
+ * `scripts/generate-terrain-dark.mjs`). Regenerate after editing `terrain.json`.
+ */
+export function getTerrainDarkStyle(): StyleSpecification {
+  if (cachedTerrainDarkStyle) {
+    return cachedTerrainDarkStyle;
+  }
+
+  const apiKey = getStadiaApiKey();
+  cachedTerrainDarkStyle = replaceApiKeyPlaceholder(
+    terrainDarkStyleJson,
+    apiKey
+  ) as StyleSpecification;
+
+  return cachedTerrainDarkStyle;
 }
 
 /**
@@ -91,10 +107,7 @@ const DISPUTED_BOUNDARY_IDS = [
  * Top map in split “dark” mode: transparent canvas + country borders only.
  *
  * We intentionally do **not** add a second `hillshade` here: the basemap map already renders
- * full terrain + hillshade from `terrain.json`, then `DARK_BASEMAP_FILTER` in MapView styles it.
- * A duplicate DEM/hillshade on this overlay blended on top looked the same when you changed
- * `paint` — relief is dominated by the bottom map + CSS filter, not this layer.
- * To darken mountains / land tone, edit **`DARK_BASEMAP_FILTER`** in `MapView.tsx`.
+ * full terrain + hillshade from `terrain-dark.json` (dark fork of `terrain.json`).
  *
  * Bump `POPULATION_OVERLAY_STYLE_REVISION` in MapView when changing this style’s layers.
  */
