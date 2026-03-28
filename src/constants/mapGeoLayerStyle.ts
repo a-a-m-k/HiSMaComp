@@ -9,6 +9,13 @@ import {
 } from "@/theme/mapTokens";
 
 /**
+ * Font for GeoJSON town labels. Basemap layers use `PT Sans Narrow Regular` + Inter, but
+ * **Narrow** is a condensed face — letters look tall/skinny vs normal text. Use **Inter
+ * Regular** only so label glyphs match typical proportions (same glyph server as terrain).
+ */
+export const MAP_GEOJSON_TEXT_FONT = ["Inter Regular"] as const;
+
+/**
  * GeoJSON population layer marker styling (circle stroke + label colors) keyed by basemap mode.
  */
 export const MAP_GEOJSON_MARKERS = {

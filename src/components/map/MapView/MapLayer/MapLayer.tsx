@@ -1,17 +1,19 @@
 /**
  * GeoJSON `Source` with circle + symbol layers for town population markers and labels.
  */
-import React from "react";
-import { Layer, Source, LayerProps } from "react-map-gl/maplibre";
+import React, { useEffect } from "react";
+import { Layer, Source, LayerProps, useMap } from "react-map-gl/maplibre";
 import {
   POPULATION_THRESHOLDS,
   MIN_MARKER_SIZE,
   MAX_MARKER_SIZE,
   MAP_GEOJSON_MARKERS,
+  MAP_GEOJSON_TEXT_FONT,
   getMapTextLabelPaint,
 } from "@/constants";
 import { GeoJSON } from "geojson";
 import { useMapLayerExpressions } from "@/hooks/map";
+import { bumpTownTextLayerToTop } from "@/utils/map/mapLabelCollision";
 import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
 
 interface MapLayerProps extends Omit<
@@ -53,8 +55,30 @@ const MapLayer = ({
     maxMarkerSize,
   });
 
+  const mapRef = useMap().current;
+
+  /** Top symbol layers place first and win cross-layer collision vs basemap water labels. */
+  useEffect(() => {
+    const map = mapRef?.getMap?.();
+    if (!map) return;
+    const bumpToTop = () => bumpTownTextLayerToTop(map, layerId);
+    bumpToTop();
+    const id = window.setTimeout(bumpToTop, 0);
+    map.once("idle", bumpToTop);
+    map.on("style.load", bumpToTop);
+    return () => {
+      window.clearTimeout(id);
+      map.off("style.load", bumpToTop);
+    };
+  }, [layerId, mapRef, mapStyleMode, selectedYear]);
+
   return (
-    <Source id={`${layerId}-source`} type="geojson" data={data}>
+    <Source
+      id={`${layerId}-source`}
+      key={`${layerId}-${selectedYear}`}
+      type="geojson"
+      data={data}
+    >
       <Layer
         id={`${layerId}-circle`}
         type="circle"
@@ -74,21 +98,30 @@ const MapLayer = ({
         id={`${layerId}-text`}
         type="symbol"
         layout={{
+          // Two-line column: name, then population (newline). Not a single horizontal "name · pop" line.
           "text-field": [
-            "format",
-            ["get", "name"],
-            {},
+            "concat",
+            ["coalesce", ["get", "name"], ""],
             "\n",
-            {},
             ["to-string", ["coalesce", populationExpression, "N/A"]],
-            { "font-scale": 0.8 },
           ],
+          "text-font": [...MAP_GEOJSON_TEXT_FONT],
           "text-anchor": "top",
-          "text-offset": [0, 1.5],
+          "text-justify": "center",
+          "text-offset": [0, 1],
           "text-size": 10,
-          // With `symbol-sort-key` from population (see getPopulationSortKey), MapLibre places larger towns first; smaller labels omit on overlap.
-          "text-allow-overlap": false,
+          // Ems per line for wrapped name lines; population stays on its own line after `\n`.
+          "text-max-width": 16,
+          "text-line-height": 1.2,
+          // Extra collision margin so basemap sea/water line labels yield to this label (glyph box alone can miss curved sea labels).
+          "text-padding": 4,
+          // Screen-space quads: avoids map-plane projection that can skew glyph aspect.
+          "text-pitch-alignment": "viewport",
+          "text-rotation-alignment": "viewport",
+          // Same sort as circles: `getPopulationSortKey` uses negated population so placement order is largest towns first; with collision on, smaller towns drop labels when they overlap.
           "symbol-sort-key": populationSortKey,
+          // Collision: hide overlapping labels; larger towns win (see symbol-sort-key). No `text-ignore-placement` — it can break labels after year changes.
+          "text-allow-overlap": false,
         }}
         paint={getMapTextLabelPaint(mapStyleMode) as Record<string, unknown>}
         {...rest}

@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { MapRef } from "react-map-gl/maplibre";
 
-import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
+import { hideBasemapWaterLabelsForSplitOverlay } from "@/utils/map/mapLabelCollision";
 import type { MapViewState } from "./useMapViewState";
 
 type MapInstance = NonNullable<ReturnType<MapRef["getMap"]>>;
@@ -19,7 +19,6 @@ interface UseMapViewLibreEffectsParams {
   basemapMapRef: RefObject<MapRef | null>;
   mapReady: boolean;
   isSplitBasemap: boolean;
-  mapStyleMode: MapBaseStyleMode;
   viewState: MapViewState;
   maxBounds: MapLibreMaxBounds | undefined;
 }
@@ -33,14 +32,13 @@ export function useMapViewLibreEffects({
   basemapMapRef,
   mapReady,
   isSplitBasemap,
-  mapStyleMode,
   viewState,
   maxBounds,
 }: UseMapViewLibreEffectsParams) {
   const viewStateRef = useRef(viewState);
   viewStateRef.current = viewState;
 
-  const cameraSyncedForMapStyleModeRef = useRef(mapStyleMode);
+  const cameraSyncedForSplitBasemapRef = useRef(isSplitBasemap);
   const maxBoundsRef = useRef(maxBounds);
   maxBoundsRef.current = maxBounds;
 
@@ -86,12 +84,12 @@ export function useMapViewLibreEffects({
   }, [mapReady, syncMapsToViewStateRef, mapRef]);
 
   useLayoutEffect(() => {
-    if (cameraSyncedForMapStyleModeRef.current === mapStyleMode) return;
+    if (cameraSyncedForSplitBasemapRef.current === isSplitBasemap) return;
     const map = mapRef.current?.getMap?.();
     if (!map || !mapReady) return;
     syncMapsToViewStateRef();
-    cameraSyncedForMapStyleModeRef.current = mapStyleMode;
-  }, [mapStyleMode, mapReady, syncMapsToViewStateRef, mapRef]);
+    cameraSyncedForSplitBasemapRef.current = isSplitBasemap;
+  }, [isSplitBasemap, mapReady, syncMapsToViewStateRef, mapRef]);
 
   const handleOverlayMapLoad = useCallback(() => {
     const map = mapRef.current?.getMap();
@@ -104,6 +102,7 @@ export function useMapViewLibreEffects({
     applyMapLoad(basemap);
     const vs = viewStateRef.current;
     basemap.jumpTo({ center: [vs.longitude, vs.latitude], zoom: vs.zoom });
+    hideBasemapWaterLabelsForSplitOverlay(basemap);
   }, [applyMapLoad, basemapMapRef]);
 
   return {

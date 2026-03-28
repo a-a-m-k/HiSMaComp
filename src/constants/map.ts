@@ -12,11 +12,20 @@ export const MAP_MUTED_SLATE_RGBA = `rgba(93, 99, 105, ${128 / 255})`;
 export const MAP_LAYER_ID = "towns-population-layer";
 
 /**
- * CSS `filter` on the split dark terrain basemap (see `MapView`). Exposed so screenshot export can
- * bake the same look — html2canvas does not apply parent `filter` to WebGL canvases.
+ * Terrain basemap symbol layers for sea / ocean / lake names (`terrain.json` / `terrain-dark.json`).
+ *
+ * Manual QA:
+ * - Light (single map): Town text is bumped to the top of the layer stack; `text-padding` on
+ *   the GeoJSON symbol layer plus MapLibre collision should drop overlapping basemap sea/water
+ *   line and point labels (not a global hide).
+ * - Dark (split basemap): Two WebGL maps cannot share one collision grid. We hide these layers
+ *   on the basemap for the whole viewport — all sea/ocean/lake line & point labels are off, not
+ *   only where markers sit. River names (`waterway-label`) stay visible on the basemap.
  */
-export const MAP_DARK_BASEMAP_FILTER =
-  "brightness(0.9) invert(1) contrast(0.6) hue-rotate(200deg) saturate(0.25) brightness(0.65)";
+export const MAP_BASEMAP_WATER_LABEL_LAYER_IDS = [
+  "water-line-label",
+  "water-point-label",
+] as const;
 
 /** Dispatched to return the map to its initial center and zoom (`MapView` listens). */
 export const MAP_RESET_CAMERA_EVENT = "hismacomp:map-reset-camera";
