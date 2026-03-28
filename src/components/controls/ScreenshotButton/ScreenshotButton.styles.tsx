@@ -29,8 +29,8 @@ export const ScreenshotButtonContainer = styled(Box)(({ theme }) => ({
 }));
 
 /**
- * Snapshot + reset + map style: row on phone; from `md`, column grouped like MapLibre zoom (`.maplibregl-ctrl-group`).
- * Phone: bottom-right, stacked above the fixed timeline (see `--timeline-height-mobile` in index.css).
+ * Snapshot + reset + map style: phone = right-aligned column above timeline; `sm`–`md` = row; `md+` = column grouped like MapLibre zoom (`.maplibregl-ctrl-group`).
+ * Phone: bottom-right (safe area), stacked above the fixed timeline (see `--timeline-height-mobile` in index.css).
  */
 export const MapOverlayToolsStack = styled(Box)(({ theme }) => ({
   position: "fixed",
@@ -46,9 +46,12 @@ export const MapOverlayToolsStack = styled(Box)(({ theme }) => ({
     left: "auto",
     top: "auto",
     right: `max(${theme.spacing(2)}, env(safe-area-inset-right, 0px))`,
+    transform: "none",
     /** Timeline uses bottom: max(8px, safe-area); lift stack by timeline height + gap. */
     bottom: `calc(var(--timeline-height-mobile) + max(${theme.spacing(1)}, env(safe-area-inset-bottom, 0px)) + ${theme.spacing(1.5)})`,
-    justifyContent: "flex-end",
+    flexDirection: "column",
+    alignItems: "flex-end",
+    justifyContent: "center",
   },
   [theme.breakpoints.up("md")]: {
     flexDirection: "column",

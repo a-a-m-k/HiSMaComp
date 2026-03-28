@@ -1,7 +1,8 @@
 /**
  * GeoJSON `Source` with circle + symbol layers for town population markers and labels.
  */
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
+import type { ExpressionSpecification } from "maplibre-gl";
 import { Layer, Source, LayerProps, useMap } from "react-map-gl/maplibre";
 import {
   POPULATION_THRESHOLDS,
@@ -47,7 +48,6 @@ const MapLayer = ({
     circleColorExpression,
     populationExpression,
   } = useMapLayerExpressions({
-    selectedYear,
     mapStyleMode,
     minPopulation,
     maxPopulation,
@@ -71,6 +71,35 @@ const MapLayer = ({
       map.off("style.load", bumpToTop);
     };
   }, [layerId, mapRef, mapStyleMode, selectedYear]);
+
+  const textField = useMemo(
+    (): ExpressionSpecification => [
+      "concat",
+      ["coalesce", ["get", "name"], ""],
+      "\n",
+      ["to-string", ["coalesce", populationExpression, "N/A"]],
+    ],
+    [populationExpression]
+  );
+
+  const textLayoutBase = useMemo(
+    () => ({
+      "text-field": textField,
+      "text-font": [...MAP_GEOJSON_TEXT_FONT],
+      "text-anchor": "top" as const,
+      "text-justify": "center" as const,
+      "text-offset": [0, 1] as [number, number],
+      "text-size": 10,
+      "text-max-width": 16,
+      "text-line-height": 1.2,
+      "text-padding": 4,
+      "text-pitch-alignment": "viewport" as const,
+      "text-rotation-alignment": "viewport" as const,
+      "symbol-sort-key": populationSortKey,
+      "symbol-z-order": "source" as const,
+    }),
+    [populationSortKey, textField]
+  );
 
   return (
     <Source
@@ -98,30 +127,10 @@ const MapLayer = ({
         id={`${layerId}-text`}
         type="symbol"
         layout={{
-          // Two-line column: name, then population (newline). Not a single horizontal "name · pop" line.
-          "text-field": [
-            "concat",
-            ["coalesce", ["get", "name"], ""],
-            "\n",
-            ["to-string", ["coalesce", populationExpression, "N/A"]],
-          ],
-          "text-font": [...MAP_GEOJSON_TEXT_FONT],
-          "text-anchor": "top",
-          "text-justify": "center",
-          "text-offset": [0, 1],
-          "text-size": 10,
-          // Ems per line for wrapped name lines; population stays on its own line after `\n`.
-          "text-max-width": 16,
-          "text-line-height": 1.2,
-          // Extra collision margin so basemap sea/water line labels yield to this label (glyph box alone can miss curved sea labels).
-          "text-padding": 4,
-          // Screen-space quads: avoids map-plane projection that can skew glyph aspect.
-          "text-pitch-alignment": "viewport",
-          "text-rotation-alignment": "viewport",
-          // Same sort as circles: `getPopulationSortKey` uses negated population so placement order is largest towns first; with collision on, smaller towns drop labels when they overlap.
-          "symbol-sort-key": populationSortKey,
-          // Collision: hide overlapping labels; larger towns win (see symbol-sort-key). No `text-ignore-placement` — it can break labels after year changes.
-          "text-allow-overlap": false,
+          ...textLayoutBase,
+          // Historic years often have no town ≥50k; collision would hide almost all labels on small viewports.
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
         }}
         paint={getMapTextLabelPaint(mapStyleMode) as Record<string, unknown>}
         {...rest}

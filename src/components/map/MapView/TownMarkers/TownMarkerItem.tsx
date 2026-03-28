@@ -47,15 +47,17 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
   }) => {
     const { mode: mapStyleMode } = useMapStyleMode();
     const theme = useTheme();
-    const population = town.populationByYear?.[selectedYear] || 0;
+    const yearKey = String(selectedYear);
+    const rawPopulation = town.populationByYear?.[yearKey];
+    const population = rawPopulation ?? 0;
 
     const markerProps = useMemo(
       () => ({
-        size: calculateMarkerDiameter(population),
-        color: calculateMarkerColor(population, mapStyleMode),
+        size: calculateMarkerDiameter(rawPopulation),
+        color: calculateMarkerColor(rawPopulation, mapStyleMode),
         ariaLabel: generateTownMarkerAriaLabel(town, selectedYear),
       }),
-      [town, population, selectedYear, mapStyleMode]
+      [town, rawPopulation, selectedYear, mapStyleMode]
     );
 
     const markerStyles = useMemo(

@@ -29,11 +29,17 @@ export const LEGEND_WIDTHS = {
   TABLET: "100%",
   DESKTOP: "22%",
   DESKTOP_MAX: "360px",
+  /**
+   * md–lg desktop: at ~1091px, 22% ≈ 240px and nowrap N/A labels (e.g. “No data for the
+   * current time period”) clip. Min width ensures the legend can grow past the percentage.
+   */
+  DESKTOP_MIN: "250px",
 } as const;
 
 export const LEGEND_WIDTH_CALCULATIONS = {
   LARGE_TABLET: { percentage: 0.21, min: 250 },
-  DESKTOP: { percentage: 0.22, min: 260 },
+  /** Keep in sync with `LEGEND_WIDTHS.DESKTOP_MIN` for `calculateMapArea` / zoom fitting. */
+  DESKTOP: { percentage: 0.22, min: 300 },
 } as const;
 
 export const TIMELINE_WIDTHS = {

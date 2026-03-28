@@ -11,19 +11,27 @@ import { logger } from "./logger";
  * @returns GeoJSON FeatureCollection with Point features for each valid town
  * @throws Error if localities is not an array
  *
+ * @param selectedYear - Timeline year; each feature gets flat `populationForYear` so MapLibre
+ *   expressions can use `["get", "populationForYear"]` (nested `populationByYear` lookups are unreliable in symbol paint).
+ *
  * @example
  * ```ts
- * const geojson = townsToGeoJSON(towns);
+ * const geojson = townsToGeoJSON(towns, 1200);
  * // Returns: { type: "FeatureCollection", features: [...] }
  * ```
  */
-export function townsToGeoJSON(localities: Town[]): GeoJSON.FeatureCollection {
+export function townsToGeoJSON(
+  localities: Town[],
+  selectedYear: number
+): GeoJSON.FeatureCollection {
   if (!Array.isArray(localities)) {
     throw new Error("Localities must be an array");
   }
 
   const features: GeoJSON.Feature[] = [];
   let invalidCount = 0;
+
+  const yearKey = String(selectedYear);
 
   for (let i = 0; i < localities.length; i++) {
     const town = localities[i];
@@ -42,6 +50,7 @@ export function townsToGeoJSON(localities: Town[]): GeoJSON.FeatureCollection {
       },
       properties: {
         ...town,
+        populationForYear: town.populationByYear?.[yearKey] ?? null,
       },
     });
   }

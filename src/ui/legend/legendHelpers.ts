@@ -1,9 +1,5 @@
 import type { SxProps, Theme } from "@mui/material/styles";
-import {
-  COMPONENT_WIDTHS,
-  LEGEND_WIDTHS,
-  OVERLAY_POSITIONS,
-} from "@/constants";
+import { LEGEND_WIDTHS, OVERLAY_POSITIONS } from "@/constants";
 import { SIZING_CONSTANTS } from "@/constants/sizing";
 import { LEGEND_NIGHT_SHELL_SX } from "@/theme/mapTheme";
 
@@ -112,7 +108,7 @@ export function getResponsiveStyles(
     maxWidth: LEGEND_WIDTHS.DESKTOP_MAX,
     minWidth: isXLarge
       ? SIZING_CONSTANTS.XL_MIN_WIDTH
-      : COMPONENT_WIDTHS.DESKTOP_MIN,
+      : LEGEND_WIDTHS.DESKTOP_MIN,
   };
 }
 

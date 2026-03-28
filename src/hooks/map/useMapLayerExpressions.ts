@@ -14,7 +14,6 @@ import {
 import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
 
 interface UseMapLayerExpressionsOptions {
-  selectedYear: number;
   mapStyleMode: MapBaseStyleMode;
   minPopulation?: number;
   maxPopulation?: number;
@@ -26,57 +25,36 @@ interface UseMapLayerExpressionsOptions {
  * Memoized MapLibre expressions for the GeoJSON population layer (radius, color, sort, population field).
  */
 export const useMapLayerExpressions = ({
-  selectedYear,
   mapStyleMode,
   minPopulation = POPULATION_THRESHOLDS[0],
   maxPopulation = POPULATION_THRESHOLDS[POPULATION_THRESHOLDS.length - 1],
   minMarkerSize = MIN_MARKER_SIZE,
   maxMarkerSize = MAX_MARKER_SIZE,
 }: UseMapLayerExpressionsOptions) => {
-  const selectedCentury = String(selectedYear);
-
   const legendColors = useMemo(
     () => getLegendColorsForMapMode(mapStyleMode),
     [mapStyleMode]
   );
 
-  const populationSortKey = useMemo(
-    () => getPopulationSortKey(selectedCentury),
-    [selectedCentury]
-  );
+  const populationSortKey = useMemo(() => getPopulationSortKey(), []);
 
   const circleRadiusExpression = useMemo(
     () =>
       getCircleRadiusExpression(
-        selectedCentury,
         minPopulation,
         maxPopulation,
         minMarkerSize,
         maxMarkerSize
       ),
-    [
-      selectedCentury,
-      minPopulation,
-      maxPopulation,
-      minMarkerSize,
-      maxMarkerSize,
-    ]
+    [minPopulation, maxPopulation, minMarkerSize, maxMarkerSize]
   );
 
   const circleColorExpression = useMemo(
-    () =>
-      getCircleColorExpression(
-        selectedCentury,
-        POPULATION_THRESHOLDS,
-        legendColors
-      ),
-    [selectedCentury, legendColors]
+    () => getCircleColorExpression(POPULATION_THRESHOLDS, legendColors),
+    [legendColors]
   );
 
-  const populationExpression = useMemo(
-    () => getPopulationExpression(selectedCentury),
-    [selectedCentury]
-  );
+  const populationExpression = useMemo(() => getPopulationExpression(), []);
 
   return {
     populationSortKey,

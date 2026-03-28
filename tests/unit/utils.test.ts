@@ -81,7 +81,7 @@ describe("filterTownsByYear", () => {
 
 describe("townsToGeoJSON", () => {
   it("should convert towns to valid GeoJSON", () => {
-    const geoJSON = townsToGeoJSON(mockTowns);
+    const geoJSON = townsToGeoJSON(mockTowns, 1000);
 
     // Verify GeoJSON structure and content
     expect(geoJSON.type).toBe("FeatureCollection");
@@ -104,13 +104,13 @@ describe("townsToGeoJSON", () => {
       } as Town,
     ];
 
-    const geoJSON = townsToGeoJSON(invalidTowns);
+    const geoJSON = townsToGeoJSON(invalidTowns, 1000);
 
     expect(geoJSON.features).toHaveLength(3); // Only valid towns should be included
   });
 
   it("should throw error for invalid input", () => {
-    expect(() => townsToGeoJSON(null as unknown as Town[])).toThrow(
+    expect(() => townsToGeoJSON(null as unknown as Town[], 1000)).toThrow(
       "Localities must be an array"
     );
   });

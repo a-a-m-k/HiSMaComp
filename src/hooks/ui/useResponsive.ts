@@ -23,8 +23,10 @@ type ViewportState = {
  *
  * - **Raw dimensions** (rawScreenWidth, rawScreenHeight) and **isBelowMinViewport**
  *   update on every resize so layout (e.g. narrow layout, min width) can react immediately.
- * - **Clamped dimensions** (screenWidth, screenHeight) and **deviceType** update after
- *   a short debounce so zoom/map recalculate only when resize settles.
+ * - **Clamped dimensions** (screenWidth, screenHeight) and **deviceType** update on the
+ *   same animation-frame pass as raw dimensions so map fit zoom / minZoom math matches
+ *   the map container (ResizeObserver) instead of lagging ~RESIZE_DEBOUNCE_MS behind.
+ * - A debounced pass still runs after idle for parity; it is usually a no-op when sizes match.
  *
  * Dimensions are clamped to MIN_APP_VIEWPORT (300px) so below 300px the app
  * and zoom both use the same effective size.
@@ -83,7 +85,7 @@ export const useViewport = () => {
         prev.rawHeight === rawHeight;
       if (same) return prev;
       if (options?.immediate) {
-        return { ...prev, rawWidth, rawHeight, isBelowMinViewport };
+        return { width, height, rawWidth, rawHeight, isBelowMinViewport };
       }
       return { width, height, isBelowMinViewport, rawWidth, rawHeight };
     });

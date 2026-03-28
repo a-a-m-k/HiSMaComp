@@ -30,7 +30,7 @@ class YearDataService {
     const filteredTowns = filterTownsByYear(towns, year);
     const bounds = getBounds(filteredTowns);
     const center = calculateAverageCenter(filteredTowns);
-    const geojson = townsToGeoJSON(filteredTowns);
+    const geojson = townsToGeoJSON(filteredTowns, year);
 
     const yearData: YearData = {
       filteredTowns,

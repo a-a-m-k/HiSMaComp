@@ -3,6 +3,7 @@ import { alpha, type Theme } from "@mui/material/styles";
 
 import {
   MAP_OVERLAY_FLOATING_TOOL_SIZE_DESKTOP,
+  MAP_OVERLAY_FLOATING_TOOL_SIZE_PHONE,
   SCREENSHOT_BUTTON_SIZE,
 } from "@/constants/map";
 import { mapOverlayIconButtonTooltipStyles } from "@/theme/mapOverlayTooltipStyles";
@@ -70,12 +71,6 @@ export function mapOverlayIconButtonFloatingStyles(
       "& .MuiTouchRipple-ripple": {
         borderRadius: "50%",
       },
-      "&:hover": {
-        backgroundColor: alpha(accent, 0.12),
-        borderColor: accent,
-        outline: "none",
-        boxShadow: `0 4px 20px ${alpha(accent, 0.22)}`,
-      },
       "&:focus": {
         outline: "none",
       },
@@ -87,6 +82,15 @@ export function mapOverlayIconButtonFloatingStyles(
       "&:active": {
         transform: "scale(0.95)",
       },
+      /* Only when the UA reports real hover (not touch-first). Avoid `pointer: fine` — it hides hover for some trackpads / hybrid setups. */
+      "@media (hover: hover)": {
+        "&:hover": {
+          backgroundColor: alpha(accent, 0.12),
+          borderColor: accent,
+          outline: "none",
+          boxShadow: `0 4px 20px ${alpha(accent, 0.22)}`,
+        },
+      },
       "@media (prefers-reduced-motion: reduce)": {
         transition: "none",
         "&:active": {
@@ -96,6 +100,16 @@ export function mapOverlayIconButtonFloatingStyles(
       "& .MuiSvgIcon-root": {
         fontSize: "1.25rem",
         ...svgExtras,
+      },
+      [theme.breakpoints.down("sm")]: {
+        width: MAP_OVERLAY_FLOATING_TOOL_SIZE_PHONE,
+        height: MAP_OVERLAY_FLOATING_TOOL_SIZE_PHONE,
+        minWidth: MAP_OVERLAY_FLOATING_TOOL_SIZE_PHONE,
+        minHeight: MAP_OVERLAY_FLOATING_TOOL_SIZE_PHONE,
+        "& .MuiSvgIcon-root": {
+          fontSize: "1.625rem",
+          ...svgExtras,
+        },
       },
       [theme.breakpoints.up("md")]: {
         width: MAP_OVERLAY_FLOATING_TOOL_SIZE_DESKTOP,
@@ -131,10 +145,12 @@ export function mapOverlayIconButtonInlineStyles(theme: Theme) {
       border: "none",
       boxShadow: "none",
       transition: theme.custom.transitions.color,
-      "&:hover": {
-        backgroundColor: alpha(accent, 0.1),
-        border: "none",
-        boxShadow: "none",
+      "@media (hover: hover)": {
+        "&:hover": {
+          backgroundColor: alpha(accent, 0.1),
+          border: "none",
+          boxShadow: "none",
+        },
       },
       "&:focus": {
         outline: "none",

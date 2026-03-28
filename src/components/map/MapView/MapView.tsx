@@ -118,7 +118,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
     prefersReducedMotion,
   });
 
-  const townsGeojson = useTownsGeoJSON(towns);
+  const townsGeojson = useTownsGeoJSON(towns, selectedYear);
 
   useMapKeyboardShortcuts(
     mapRef,

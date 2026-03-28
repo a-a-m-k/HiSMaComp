@@ -1,4 +1,4 @@
-import { ExpressionSpecification } from "maplibre-gl";
+import type { ExpressionSpecification } from "maplibre-gl";
 import { MAP_LEGEND_COLORS } from "@/constants";
 import {
   getDefaultMarkerScaleConfig,
@@ -9,64 +9,40 @@ import {
 const DEFAULT_MARKER_SCALE = getDefaultMarkerScaleConfig();
 const DEFAULT_MARKER_BOUNDS = getMarkerScaleBounds(DEFAULT_MARKER_SCALE);
 
+/** Feature property set in `townsToGeoJSON` for the selected timeline year (flat; reliable in symbol layers). */
+export const POPULATION_FOR_YEAR_PROP = "populationForYear" as const;
+
 /**
- * Generates a MapLibre GL expression to retrieve the population value for a given century.
- *
- * @param selectedCentury - The century for which to retrieve the population (e.g., "19th", "20th").
- * @returns An expression specification that accesses the population value for the specified century
- *          from the "populationByYear" property of a feature.
+ * Population for the active year (see `townsToGeoJSON`). Nested `populationByYear` lookups
+ * often fail to evaluate in symbol `text-field` / paint; use this flat property only.
  */
-export const getPopulationExpression = (
-  selectedCentury: string
-): ExpressionSpecification => [
+export const getPopulationExpression = (): ExpressionSpecification => [
   "get",
-  selectedCentury,
-  ["get", "populationByYear"],
+  POPULATION_FOR_YEAR_PROP,
 ];
 
 /**
- * Generates a MapLibre expression that checks if there is no population data available
- * for the specified century in a feature's `populationByYear` property.
- *
- * The returned expression evaluates to `true` if either:
- * - The `populationByYear` object does not have the specified century as a property, or
- * - The population value for the specified century is `null`.
- *
- * @param selectedCentury - The century (as a string) to check for population data.
- * @returns An `ExpressionSpecification` that evaluates to `true` when no data is present for the given century.
+ * True when the feature has no numeric population for the selected year (`populationForYear` missing or null).
  */
-export const getNoDataExpression = (
-  selectedCentury: string
-): ExpressionSpecification => [
+export const getNoDataExpression = (): ExpressionSpecification => [
   "any",
-  ["!", ["has", selectedCentury, ["get", "populationByYear"]]],
-  ["==", getPopulationExpression(selectedCentury), ["literal", null]],
+  ["!", ["has", POPULATION_FOR_YEAR_PROP]],
+  ["==", ["get", POPULATION_FOR_YEAR_PROP], ["literal", null]],
 ];
 
 /**
- * Generates a MapLibre expression to be used as a sort key for population-based layers.
- *
- * The expression sorts features based on their population value for the specified century.
- * If the population data is missing (as determined by `getNoDataExpression`), the feature
- * is assigned `Number.POSITIVE_INFINITY` to ensure it appears last in the sort order.
- * Otherwise, the sort key is the negated population value, so higher populations are sorted first.
- *
- * @param selectedCentury - The century for which to retrieve and sort population data (e.g., "19th", "20th").
- * @returns A MapLibre `ExpressionSpecification` that can be used as a sort key in layer styling.
+ * Sort key for circles/symbols: larger populations first; no-data last.
  */
-export const getPopulationSortKey = (
-  selectedCentury: string
-): ExpressionSpecification => [
+export const getPopulationSortKey = (): ExpressionSpecification => [
   "case",
-  getNoDataExpression(selectedCentury),
+  getNoDataExpression(),
   Number.POSITIVE_INFINITY,
-  ["-", 0, getPopulationExpression(selectedCentury)],
+  ["-", 0, getPopulationExpression()],
 ];
 
 /**
  * Builds a MapLibre expression to determine the circle radius for map markers based on population data for a given century.
  *
- * @param selectedCentury - The century for which to extract population data (used as a property key).
  * @param minPopulation - The minimum population value for scaling marker size. Defaults to the lowest value in POPULATION_THRESHOLDS.
  * @param maxPopulation - The maximum population value for scaling marker size. Defaults to the highest value in POPULATION_THRESHOLDS.
  * @param minMarkerSize - The minimum marker size (radius) for the smallest population. Defaults to MIN_MARKER_SIZE.
@@ -79,7 +55,6 @@ export const getPopulationSortKey = (
  * - Otherwise, interpolate the marker size linearly between `minMarkerSize` and `maxMarkerSize` based on the population value between `minPopulation` and `maxPopulation`.
  */
 export const getCircleRadiusExpression = (
-  selectedCentury: string,
   minPopulation: number = DEFAULT_MARKER_BOUNDS.minPopulation,
   maxPopulation: number = DEFAULT_MARKER_BOUNDS.maxPopulation,
   minMarkerSize: number = DEFAULT_MARKER_SCALE.minMarkerSize,
@@ -87,12 +62,12 @@ export const getCircleRadiusExpression = (
   noDataMarkerSize: number = DEFAULT_MARKER_SCALE.noDataMarkerSize
 ): ExpressionSpecification => [
   "case",
-  getNoDataExpression(selectedCentury),
+  getNoDataExpression(),
   noDataMarkerSize,
   [
     "interpolate",
     ["linear"],
-    ["coalesce", getPopulationExpression(selectedCentury), 0],
+    ["coalesce", getPopulationExpression(), 0],
     minPopulation,
     minMarkerSize,
     maxPopulation,
@@ -108,22 +83,26 @@ export const getCircleRadiusExpression = (
  * according to the population value for the given century. If the population value is missing,
  * it defaults to 0. Each threshold in populationThresholds defines the lower bound for the next color.
  *
- * @param selectedCentury - The century (as a string) for which to retrieve population data.
  * @param populationThresholds - An array of population thresholds that define the color steps. Defaults to POPULATION_THRESHOLDS.
  * @param legendColors - An array of colors corresponding to each population range. Defaults to MAP_LEGEND_COLORS.
  * @returns A MapLibre GL expression specification for circle color styling.
  */
 export const getCircleColorExpression = (
-  selectedCentury: string,
   populationThresholds: number[] = DEFAULT_MARKER_SCALE.populationThresholds,
   legendColors: string[] = MAP_LEGEND_COLORS
 ): ExpressionSpecification => [
-  "step",
-  ["coalesce", getPopulationExpression(selectedCentury), 0],
+  "case",
+  getNoDataExpression(),
   legendColors[0],
-  ...getMarkerColorStops({
-    ...DEFAULT_MARKER_SCALE,
-    populationThresholds,
-    legendColors,
-  }),
+  [
+    "step",
+    ["coalesce", getPopulationExpression(), 0],
+    // Below first threshold (5k): visible grey — not N/A white (historic towns are often <5k).
+    legendColors[1],
+    ...getMarkerColorStops({
+      ...DEFAULT_MARKER_SCALE,
+      populationThresholds,
+      legendColors,
+    }),
+  ],
 ];

@@ -40,8 +40,14 @@ export const COORDINATE_LIMITS = {
 } as const;
 
 export const FLOATING_BUTTON_SIZE = 45;
-/** Circular save / reset on map overlay below `md` (matches compact mobile row). */
+/** Circular save / reset on map overlay below `md` (tablet / small widths; compact row). */
 export const SCREENSHOT_BUTTON_SIZE = 36;
+/**
+ * Floating overlay tools on phones only (`xs`); ~30% larger than `SCREENSHOT_BUTTON_SIZE` for touch targets.
+ */
+export const MAP_OVERLAY_FLOATING_TOOL_SIZE_PHONE = Math.round(
+  SCREENSHOT_BUTTON_SIZE * 1.3
+);
 /** Floating snapshot + reset on map overlay at `md+` (slightly larger targets). */
 export const MAP_OVERLAY_FLOATING_TOOL_SIZE_DESKTOP = 40;
 /**

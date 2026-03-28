@@ -13,6 +13,7 @@ import Typography from "@mui/material/Typography";
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUp from "@mui/icons-material/KeyboardArrowUp";
 import { alpha, useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { AttributionLinks } from "@/components/ui";
 import { useResponsive, useViewport } from "@/hooks/ui";
@@ -44,6 +45,8 @@ export interface LegendProps {
 export const LegendContent: React.FC<LegendProps> = React.memo(
   ({ layers, label, selectedYear, style, isMapIdle = true }) => {
     const theme = useTheme();
+    /** Divider above “No data” only on large screens; md and below keep one list. */
+    const splitNoDataBand = useMediaQuery(theme.breakpoints.up("lg"));
     const [isExpanded, setIsExpanded] = useState(true);
     const { isTablet } = useViewport();
     const { isTabletLayout, isMobileLayout, isDesktopLayout, isXLargeLayout } =
@@ -104,6 +107,9 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
     if (!layers?.length) {
       return null;
     }
+
+    const populationLayers = layers.filter(l => l.variant !== "noData");
+    const noDataLayers = layers.filter(l => l.variant === "noData");
 
     const headerPadding = {
       px: LEGEND_CONTENT_SPACING.paddingX,
@@ -273,13 +279,46 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
             <Typography component="h2" id="legend-heading" sx={titleStyle}>
               {label}
             </Typography>
-            {isMapIdle && (
-              <Stack {...stackStyles}>
-                {layers.map(({ layer, color }) => (
-                  <LegendItem key={layer} layer={layer} color={color} />
-                ))}
-              </Stack>
-            )}
+            {isMapIdle &&
+              (splitNoDataBand ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    width: "100%",
+                  }}
+                >
+                  {populationLayers.length > 0 && (
+                    <Stack {...stackStyles}>
+                      {populationLayers.map(({ layer, color }) => (
+                        <LegendItem key={layer} layer={layer} color={color} />
+                      ))}
+                    </Stack>
+                  )}
+                  {noDataLayers.length > 0 && (
+                    <Box
+                      sx={{
+                        mt:
+                          populationLayers.length > 0 ? theme.spacing(1.5) : 0,
+                        borderTop: borders.sectionDivider,
+                        pt: LEGEND_CONTENT_SPACING.sectionPaddingTop,
+                      }}
+                    >
+                      <Stack {...stackStyles}>
+                        {noDataLayers.map(({ layer, color }) => (
+                          <LegendItem key={layer} layer={layer} color={color} />
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+                </Box>
+              ) : (
+                <Stack {...stackStyles}>
+                  {layers.map(({ layer, color }) => (
+                    <LegendItem key={layer} layer={layer} color={color} />
+                  ))}
+                </Stack>
+              ))}
           </Box>
 
           {isMapIdle && (
@@ -290,7 +329,7 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
                 px: LEGEND_CONTENT_SPACING.paddingX,
                 pt: LEGEND_CONTENT_SPACING.sectionPaddingTop,
                 pb: LEGEND_CONTENT_SPACING.footerPaddingBottom,
-                "& #attribution": {
+                "& [data-legend-attribution]": {
                   mt: 0,
                   mb: 0,
                 },

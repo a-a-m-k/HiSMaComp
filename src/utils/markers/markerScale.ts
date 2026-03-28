@@ -69,7 +69,10 @@ export const calculateMarkerColorFromPopulation = (
   population: number | null | undefined,
   config: MarkerScaleConfig
 ): string => {
-  const pop = population ?? 0;
+  if (population == null) {
+    return config.legendColors[0];
+  }
+  const pop = population;
 
   for (let i = config.populationThresholds.length - 1; i >= 0; i--) {
     if (pop >= config.populationThresholds[i]) {
@@ -77,5 +80,6 @@ export const calculateMarkerColorFromPopulation = (
     }
   }
 
-  return config.legendColors[0];
+  /** 0…4999: visible grey — same as GeoJSON circles (not N/A white). */
+  return config.legendColors[1];
 };

@@ -134,8 +134,10 @@ export function getNavigationControlStyles(themeArg: Theme): string {
     background-image: ${zoomOutUrl} !important;
   }
 
-  .maplibregl-ctrl-group button:hover {
-    background-color: ${hoverBg} !important;
+  @media (hover: hover) {
+    .maplibregl-ctrl-group button:hover {
+      background-color: ${hoverBg} !important;
+    }
   }
 
   .maplibregl-ctrl-group button:focus {

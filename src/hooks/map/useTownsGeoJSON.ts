@@ -10,7 +10,10 @@ import { logger } from "@/utils/logger";
  * @param towns - Array of town objects to convert to GeoJSON
  * @returns GeoJSON FeatureCollection object
  */
-export const useTownsGeoJSON = (towns: Town[] | undefined) => {
+export const useTownsGeoJSON = (
+  towns: Town[] | undefined,
+  selectedYear: number
+) => {
   return useMemo(() => {
     try {
       if (!towns || !Array.isArray(towns) || towns.length === 0) {
@@ -20,7 +23,7 @@ export const useTownsGeoJSON = (towns: Town[] | undefined) => {
         };
       }
 
-      return townsToGeoJSON(towns);
+      return townsToGeoJSON(towns, selectedYear);
     } catch (error) {
       logger.error("Error getting GeoJSON:", error);
       return {
@@ -28,5 +31,5 @@ export const useTownsGeoJSON = (towns: Town[] | undefined) => {
         features: [],
       };
     }
-  }, [towns]);
+  }, [towns, selectedYear]);
 };
