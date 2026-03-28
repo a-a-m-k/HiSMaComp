@@ -1,0 +1,60 @@
+import React, { type RefObject } from "react";
+import Map, { type MapProps, type MapRef } from "react-map-gl/maplibre";
+import MaplibreGL from "maplibre-gl";
+
+import { MAP_DARK_BASEMAP_FILTER } from "@/constants";
+import { getTerrainStyle } from "@/utils/map";
+
+import { SPLIT_BASEMAP_TILE_OPTIONS } from "./constants";
+
+/** Camera + bounds props aligned with the interactive overlay (no `mapStyle`). */
+export type MapViewSharedCameraProps = Pick<
+  MapProps,
+  "longitude" | "latitude" | "zoom" | "minZoom" | "maxZoom" | "maxBounds"
+> & { maxBoundsViscosity?: number };
+
+export interface MapViewDarkBasemapProps {
+  basemapRef: RefObject<MapRef | null>;
+  sharedViewProps: MapViewSharedCameraProps;
+  onLoad: () => void;
+}
+
+/**
+ * Full-terrain underlay for dark mode: CSS-filtered so the overlay map only draws borders +
+ * population. Not used in light mode.
+ */
+export const MapViewDarkBasemap: React.FC<MapViewDarkBasemapProps> = ({
+  basemapRef,
+  sharedViewProps,
+  onLoad,
+}) => (
+  <div
+    data-map-basemap=""
+    style={{
+      position: "absolute",
+      inset: 0,
+      zIndex: 0,
+      pointerEvents: "none",
+      filter: MAP_DARK_BASEMAP_FILTER,
+      transform: "translateZ(0)",
+      isolation: "isolate",
+      backfaceVisibility: "hidden",
+    }}
+  >
+    <Map
+      ref={basemapRef as React.Ref<MapRef>}
+      {...sharedViewProps}
+      mapStyle={getTerrainStyle()}
+      mapLib={MaplibreGL}
+      attributionControl={false}
+      style={{ width: "100%", height: "100%" }}
+      interactive={false}
+      fadeDuration={0}
+      cancelPendingTileRequestsWhileZooming={true}
+      maxTileCacheZoomLevels={SPLIT_BASEMAP_TILE_OPTIONS.maxTileCacheZoomLevels}
+      maxTileCacheSize={SPLIT_BASEMAP_TILE_OPTIONS.maxTileCacheSize}
+      onLoad={onLoad}
+      canvasContextAttributes={{ preserveDrawingBuffer: true }}
+    />
+  </div>
+);

@@ -11,6 +11,13 @@ export const MAP_MUTED_SLATE_RGBA = `rgba(93, 99, 105, ${128 / 255})`;
 
 export const MAP_LAYER_ID = "towns-population-layer";
 
+/**
+ * CSS `filter` on the split dark terrain basemap (see `MapView`). Exposed so screenshot export can
+ * bake the same look — html2canvas does not apply parent `filter` to WebGL canvases.
+ */
+export const MAP_DARK_BASEMAP_FILTER =
+  "brightness(0.9) invert(1) contrast(0.6) hue-rotate(200deg) saturate(0.25) brightness(0.65)";
+
 /** Dispatched to return the map to its initial center and zoom (`MapView` listens). */
 export const MAP_RESET_CAMERA_EVENT = "hismacomp:map-reset-camera";
 

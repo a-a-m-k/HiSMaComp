@@ -86,6 +86,7 @@ const MapLayer = ({
           "text-anchor": "top",
           "text-offset": [0, 1.5],
           "text-size": 10,
+          // With `symbol-sort-key` from population (see getPopulationSortKey), MapLibre places larger towns first; smaller labels omit on overlap.
           "text-allow-overlap": false,
           "symbol-sort-key": populationSortKey,
         }}

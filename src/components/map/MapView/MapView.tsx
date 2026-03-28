@@ -4,14 +4,17 @@ import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "@mui/material/styles";
 
-import { DEFAULT_MAP_CONTAINER_PROPS, TILE_LOADING_OPTIONS } from "./constants";
+import {
+  DEFAULT_MAP_CONTAINER_PROPS,
+  SPLIT_OVERLAY_TILE_OPTIONS,
+  TILE_LOADING_OPTIONS,
+} from "./constants";
 import MapLayer from "./MapLayer/MapLayer";
 import { MapOverlays } from "./MapOverlays";
 import {
   getMapBaseStyle,
   getMapDescription,
   getPopulationOverlayStyle,
-  getTerrainStyle,
   handleMapFeatureClick,
   POPULATION_OVERLAY_STYLE_REVISION,
 } from "@/utils/map";
@@ -31,23 +34,16 @@ import {
   useNavigationControlAccessibility,
   useTownsGeoJSON,
   useMapContainerResize,
+  useMapViewLibreEffects,
 } from "@/hooks/map";
 import type { MapViewState } from "@/hooks/map";
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
+import { MapViewDarkBasemap } from "./MapViewDarkBasemap";
 import { TownMarkers } from "./TownMarkers";
 import { useMapStyleMode } from "@/context/MapStyleContext";
 import { lightTheme } from "@/theme/theme";
 
 type MapLibreMaxBounds = [[number, number], [number, number]];
-
-/**
- * Night basemap CSS `filter` on the **terrain** map (split basemap only). This is what actually
- * shapes land/mountain tone; the overlay map only draws borders + population (no duplicate hillshade).
- */
-const DARK_BASEMAP_FILTER =
-  "brightness(0.9) invert(1) contrast(0.6) hue-rotate(200deg) saturate(0.25) brightness(0.65)";
-
-type MapInstance = NonNullable<ReturnType<MapRef["getMap"]>>;
 
 interface MapViewComponentProps {
   towns: Town[];
@@ -173,41 +169,15 @@ const MapView: React.FC<MapViewComponentProps> = ({
     requestCameraFitTo,
   ]);
 
-  // Apply maxBounds whenever they change or become available (e.g. after towns load).
-  // MapLibre only applies bounds at init when passed as option; prop updates may not apply reliably.
-  const maxBoundsRef = React.useRef(maxBounds);
-  maxBoundsRef.current = maxBounds;
-  React.useEffect(() => {
-    if (!maxBounds) return;
-    mapRef.current?.getMap()?.setMaxBounds(maxBounds);
-    if (isSplitBasemap) {
-      basemapMapRef.current?.getMap()?.setMaxBounds(maxBounds);
-    }
-  }, [maxBounds, isSplitBasemap]);
-
-  const applyMapLoad = React.useCallback((map: MapInstance) => {
-    const mapWithPrefetchControl = map as MapInstance & {
-      setPrefetchZoomDelta?: (delta: number) => void;
-    };
-    mapWithPrefetchControl.setPrefetchZoomDelta?.(0);
-    if (maxBoundsRef.current) map.setMaxBounds(maxBoundsRef.current);
-  }, []);
-
-  const handleOverlayMapLoad = React.useCallback(() => {
-    const map = mapRef.current?.getMap();
-    if (map) applyMapLoad(map);
-  }, [applyMapLoad]);
-
-  const handleBasemapLoad = React.useCallback(() => {
-    const basemap = basemapMapRef.current?.getMap();
-    if (!basemap) return;
-    applyMapLoad(basemap);
-    const overlay = mapRef.current?.getMap();
-    if (overlay) {
-      const c = overlay.getCenter();
-      basemap.jumpTo({ center: [c.lng, c.lat], zoom: overlay.getZoom() });
-    }
-  }, [applyMapLoad]);
+  const { handleOverlayMapLoad, handleBasemapLoad } = useMapViewLibreEffects({
+    mapRef,
+    basemapMapRef,
+    mapReady,
+    isSplitBasemap,
+    mapStyleMode,
+    viewState,
+    maxBounds,
+  });
 
   const handleMapIdle = React.useCallback(() => {
     onFirstIdle?.();
@@ -293,32 +263,11 @@ const MapView: React.FC<MapViewComponentProps> = ({
         tabIndex={0}
       >
         {isSplitBasemap && (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 0,
-              pointerEvents: "none",
-              filter: DARK_BASEMAP_FILTER,
-            }}
-          >
-            <Map
-              ref={basemapMapRef}
-              {...sharedViewProps}
-              mapStyle={getTerrainStyle()}
-              mapLib={MaplibreGL}
-              attributionControl={false}
-              style={{ width: "100%", height: "100%" }}
-              interactive={false}
-              cancelPendingTileRequestsWhileZooming={true}
-              maxTileCacheZoomLevels={
-                TILE_LOADING_OPTIONS.maxTileCacheZoomLevels
-              }
-              maxTileCacheSize={TILE_LOADING_OPTIONS.maxTileCacheSize}
-              onLoad={handleBasemapLoad}
-              canvasContextAttributes={{ preserveDrawingBuffer: true }}
-            />
-          </div>
+          <MapViewDarkBasemap
+            basemapRef={basemapMapRef}
+            sharedViewProps={sharedViewProps}
+            onLoad={handleBasemapLoad}
+          />
         )}
         <Map
           ref={mapRef}
@@ -337,6 +286,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
           }}
           onLoad={handleOverlayMapLoad}
           onIdle={handleMapIdle}
+          fadeDuration={isSplitBasemap ? 0 : undefined}
           onClick={e => {
             if (e.features && e.features.length > 0) {
               const feature = e.features[0];
@@ -369,8 +319,16 @@ const MapView: React.FC<MapViewComponentProps> = ({
           touchZoomRotate={true}
           dragPan={true}
           cancelPendingTileRequestsWhileZooming={true}
-          maxTileCacheZoomLevels={TILE_LOADING_OPTIONS.maxTileCacheZoomLevels}
-          maxTileCacheSize={TILE_LOADING_OPTIONS.maxTileCacheSize}
+          maxTileCacheZoomLevels={
+            isSplitBasemap
+              ? SPLIT_OVERLAY_TILE_OPTIONS.maxTileCacheZoomLevels
+              : TILE_LOADING_OPTIONS.maxTileCacheZoomLevels
+          }
+          maxTileCacheSize={
+            isSplitBasemap
+              ? SPLIT_OVERLAY_TILE_OPTIONS.maxTileCacheSize
+              : TILE_LOADING_OPTIONS.maxTileCacheSize
+          }
         >
           {interactiveMapChildren}
         </Map>

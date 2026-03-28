@@ -340,6 +340,10 @@ vi.mock("@/hooks/map", () => ({
   useMapKeyboardPanning: vi.fn(),
   useNavigationControlAccessibility: vi.fn(),
   useMapContainerResize: vi.fn(() => null),
+  useMapViewLibreEffects: vi.fn(() => ({
+    handleOverlayMapLoad: vi.fn(),
+    handleBasemapLoad: vi.fn(),
+  })),
   useTownsGeoJSON: vi.fn(() => ({ type: "FeatureCollection", features: [] })),
   useMapLayerExpressions: vi.fn(() => ({
     populationSortKey: "population",
