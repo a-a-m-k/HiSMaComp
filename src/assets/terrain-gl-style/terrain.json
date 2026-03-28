@@ -5,12 +5,6 @@
   "center": [-89.35835562648674, 43.21634985542326],
   "zoom": 13.348999,
   "sources": {
-    "global_landcover_v1": {
-      "type": "vector",
-      "maxzoom": 6,
-      "scheme": "xyz",
-      "url": "https://tiles.stadiamaps.com/data/global_landcover_v1.json?api_key={{STADIA_API_KEY}}"
-    },
     "stamen-omt": {
       "type": "vector",
       "scheme": "xyz",

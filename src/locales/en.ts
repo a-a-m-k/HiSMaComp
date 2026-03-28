@@ -40,6 +40,10 @@ export const en = {
       "On tablets, use pinch-to-zoom gestures to zoom.",
     descriptionMarkersColor: "Town markers are color-coded by population size.",
     resetViewAria: "Reset map to initial center and zoom",
+    /** Hover/focus tooltip (tablet legend + desktop overlay). */
+    resetViewTooltip: "Reset map to initial center and zoom",
+    mapStyleDarkAria: "Use grayscale map (same terrain, muted colors)",
+    mapStyleLightAria: "Use full-color map",
   },
   timeline: {
     selectYearAria: "Select historical year",
@@ -57,6 +61,8 @@ export const en = {
   },
   screenshot: {
     ariaLabel: "Save map as image file. Press Ctrl+S or Cmd+S to save.",
+    tooltip: "Save map as image (Ctrl+S or Cmd+S)",
+    tooltipCapturing: "Capturing screenshot...",
   },
   dev: {
     logDebugAria: "Log debug information to console",

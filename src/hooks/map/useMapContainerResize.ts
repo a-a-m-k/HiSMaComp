@@ -9,7 +9,8 @@ import { RESIZE_DEBOUNCE_MS } from "@/constants";
  */
 export function useMapContainerResize(
   containerRef: RefObject<HTMLDivElement | null>,
-  mapRef: RefObject<MapRef | null>
+  mapRef: RefObject<MapRef | null>,
+  secondaryMapRef?: RefObject<MapRef | null>
 ): { width: number; height: number } | null {
   const [containerSize, setContainerSize] = useState<{
     width: number;
@@ -63,6 +64,7 @@ export function useMapContainerResize(
       resizeTimeoutRef.current = setTimeout(() => {
         resizeTimeoutRef.current = null;
         mapRef.current?.getMap()?.resize();
+        secondaryMapRef?.current?.getMap()?.resize();
       }, RESIZE_DEBOUNCE_MS);
     };
     window.addEventListener("resize", scheduleResize);
@@ -72,7 +74,13 @@ export function useMapContainerResize(
       window.removeEventListener("resize", scheduleResize);
       window.removeEventListener("orientationchange", scheduleResize);
     };
-  }, [mapRef]);
+  }, [mapRef, secondaryMapRef]);
+
+  useEffect(() => {
+    if (!containerSize) return;
+    mapRef.current?.getMap()?.resize();
+    secondaryMapRef?.current?.getMap()?.resize();
+  }, [containerSize, mapRef, secondaryMapRef]);
 
   return containerSize;
 }

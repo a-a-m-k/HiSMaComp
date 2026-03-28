@@ -2,14 +2,13 @@
  * Map-related style generators: container focus ring, navigation control, tooltips.
  * Split from constants/ui so theme and style logic live with theme; constants stay pure.
  */
-import { Theme } from "@mui/material/styles";
+import { Theme, alpha } from "@mui/material/styles";
 import {
-  COLORS,
-  Z_INDEX,
-  TRANSITIONS,
-  SHADOWS,
-  TOOLTIP_STYLES,
-} from "./themeValues";
+  MAP_NAV_CONTROL_BUTTON_PX,
+  MAP_NAV_CONTROL_ICON_PX,
+} from "@/constants/map";
+import { mapOverlayControlSurfaceBackground } from "@/theme/mapOverlayIconButtonSharedStyles";
+import { Z_INDEX, TRANSITIONS, SHADOWS, TOOLTIP_STYLES } from "./themeValues";
 
 type TooltipPosition = "top" | "right";
 
@@ -18,8 +17,13 @@ export interface TooltipStylesOptions {
   selector: string;
 }
 
-function getTooltipContentStyles(options: TooltipStylesOptions): string {
+function getTooltipContentStyles(
+  options: TooltipStylesOptions,
+  theme: Theme
+): string {
   const { position, selector } = options;
+  const tooltipBg = theme.custom.colors.tooltipBackground;
+  const tooltipFg = theme.custom.colors.tooltipText;
 
   if (position === "top") {
     return `
@@ -28,8 +32,8 @@ function getTooltipContentStyles(options: TooltipStylesOptions): string {
         position: absolute;
         bottom: calc(100% + ${TOOLTIP_STYLES.OFFSET}px);
         right: 0;
-        background-color: ${COLORS.TOOLTIP_BACKGROUND};
-        color: ${COLORS.TOOLTIP_TEXT};
+        background-color: ${tooltipBg};
+        color: ${tooltipFg};
         padding: ${TOOLTIP_STYLES.PADDING};
         border-radius: ${TOOLTIP_STYLES.BORDER_RADIUS};
         font-size: ${TOOLTIP_STYLES.FONT_SIZE};
@@ -50,8 +54,8 @@ function getTooltipContentStyles(options: TooltipStylesOptions): string {
       left: calc(100% + ${TOOLTIP_STYLES.OFFSET + 2}px);
       top: 50%;
       transform: translateY(-50%);
-      background-color: ${COLORS.TOOLTIP_BACKGROUND};
-      color: ${COLORS.TOOLTIP_TEXT};
+      background-color: ${tooltipBg};
+      color: ${tooltipFg};
       padding: ${TOOLTIP_STYLES.PADDING};
       border-radius: ${TOOLTIP_STYLES.BORDER_RADIUS};
       font-size: ${TOOLTIP_STYLES.FONT_SIZE};
@@ -66,8 +70,12 @@ function getTooltipContentStyles(options: TooltipStylesOptions): string {
   `;
 }
 
-function getTooltipArrowStyles(options: TooltipStylesOptions): string {
+function getTooltipArrowStyles(
+  options: TooltipStylesOptions,
+  theme: Theme
+): string {
   const { position, selector } = options;
+  const tooltipBg = theme.custom.colors.tooltipBackground;
 
   if (position === "top") {
     return `
@@ -80,7 +88,7 @@ function getTooltipArrowStyles(options: TooltipStylesOptions): string {
         height: 0;
         border-left: ${TOOLTIP_STYLES.ARROW_SIZE}px solid transparent;
         border-right: ${TOOLTIP_STYLES.ARROW_SIZE}px solid transparent;
-        border-top: ${TOOLTIP_STYLES.ARROW_SIZE}px solid ${COLORS.TOOLTIP_BACKGROUND};
+        border-top: ${TOOLTIP_STYLES.ARROW_SIZE}px solid ${tooltipBg};
         opacity: 0;
         visibility: hidden;
         transition: ${TRANSITIONS.TOOLTIP};
@@ -99,7 +107,7 @@ function getTooltipArrowStyles(options: TooltipStylesOptions): string {
       height: 0;
       border-top: ${TOOLTIP_STYLES.ARROW_SIZE}px solid transparent;
       border-bottom: ${TOOLTIP_STYLES.ARROW_SIZE}px solid transparent;
-      border-right: ${TOOLTIP_STYLES.ARROW_SIZE}px solid ${COLORS.TOOLTIP_BACKGROUND};
+      border-right: ${TOOLTIP_STYLES.ARROW_SIZE}px solid ${tooltipBg};
       opacity: 0;
       visibility: hidden;
       transition: ${TRANSITIONS.TOOLTIP};
@@ -110,14 +118,14 @@ function getTooltipArrowStyles(options: TooltipStylesOptions): string {
 
 export function getTooltipStyles(
   options: TooltipStylesOptions,
-  themeArg?: Theme
+  themeArg: Theme
 ): string {
   const { selector } = options;
-  const mdBreakpoint = themeArg ? themeArg.breakpoints.values.md - 1 : 900;
+  const mdBreakpoint = themeArg.breakpoints.values.md - 1;
 
   return `
-    ${getTooltipContentStyles(options)}
-    ${getTooltipArrowStyles(options)}
+    ${getTooltipContentStyles(options, themeArg)}
+    ${getTooltipArrowStyles(options, themeArg)}
     @media (max-width: ${mdBreakpoint}px) {
       ${selector}::after,
       ${selector}::before {
@@ -137,7 +145,9 @@ export function getTooltipStyles(
   `;
 }
 
-export function getMapContainerStyles(): string {
+export function getMapContainerStyles(themeArg: Theme): string {
+  const focusRing = themeArg.custom.colors.focusBlue;
+
   return `
   #map-container-area {
     position: relative;
@@ -158,11 +168,11 @@ export function getMapContainerStyles(): string {
   }
   #map-container-area:focus-visible {
     outline: none !important;
-    box-shadow: 0 0 0 3px ${COLORS.FOCUS_BLUE} !important;
+    box-shadow: 0 0 0 3px ${focusRing} !important;
   }
   #map-container-area:focus-visible::before {
-    border: 3px solid ${COLORS.FOCUS_BLUE} !important;
-    box-shadow: 0 0 3px 3px ${COLORS.FOCUS_BLUE} !important;
+    border: 3px solid ${focusRing} !important;
+    box-shadow: 0 0 3px 3px ${focusRing} !important;
     z-index: ${Z_INDEX.MAP_CONTAINER_FOCUS_OVERLAY} !important;
   }
   #map-container-area:focus:not(:focus-visible)::before {
@@ -178,11 +188,14 @@ export function getMapContainerStyles(): string {
 export function getNavigationControlStyles(themeArg: Theme): string {
   const gutter = themeArg.spacing(3);
   const info = themeArg.palette.info.main;
-  const borderPaper = "rgba(226, 232, 240, 1)";
-  const hoverBg = "rgba(86, 128, 165, 0.1)";
+  const frostedSurface = mapOverlayControlSurfaceBackground(themeArg);
+  const borderPaper = themeArg.palette.divider;
+  const hoverBg = alpha(info, 0.12);
+  const controlShadow =
+    themeArg.custom?.shadows?.medium ?? "0 4px 20px rgba(0, 0, 0, 0.08)";
 
-  const zoomInSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${info}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-  const zoomOutSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${info}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  const zoomInSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${MAP_NAV_CONTROL_ICON_PX}" height="${MAP_NAV_CONTROL_ICON_PX}" viewBox="0 0 24 24" fill="none" stroke="${info}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+  const zoomOutSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${MAP_NAV_CONTROL_ICON_PX}" height="${MAP_NAV_CONTROL_ICON_PX}" viewBox="0 0 24 24" fill="none" stroke="${info}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
   const zoomInUrl = `url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(zoomInSvg)}')`;
   const zoomOutUrl = `url('data:image/svg+xml;charset=utf-8,${encodeURIComponent(zoomOutSvg)}')`;
 
@@ -199,11 +212,11 @@ export function getNavigationControlStyles(themeArg: Theme): string {
   .maplibregl-ctrl-group {
     z-index: ${Z_INDEX.MAP + 10} !important;
     position: relative !important;
-    background: rgba(255, 255, 255, 0.97) !important;
+    background: ${frostedSurface} !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
     border: 1px solid ${borderPaper} !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+    box-shadow: ${controlShadow} !important;
     border-radius: ${themeArg.spacing(1)} !important;
     overflow: hidden !important;
     display: flex !important;
@@ -216,12 +229,12 @@ export function getNavigationControlStyles(themeArg: Theme): string {
     z-index: ${Z_INDEX.MAP + 11} !important;
     position: relative !important;
     cursor: pointer !important;
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    max-width: 36px !important;
-    max-height: 36px !important;
+    width: ${MAP_NAV_CONTROL_BUTTON_PX}px !important;
+    height: ${MAP_NAV_CONTROL_BUTTON_PX}px !important;
+    min-width: ${MAP_NAV_CONTROL_BUTTON_PX}px !important;
+    min-height: ${MAP_NAV_CONTROL_BUTTON_PX}px !important;
+    max-width: ${MAP_NAV_CONTROL_BUTTON_PX}px !important;
+    max-height: ${MAP_NAV_CONTROL_BUTTON_PX}px !important;
     box-sizing: border-box !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
@@ -237,7 +250,7 @@ export function getNavigationControlStyles(themeArg: Theme): string {
   }
 
   .maplibregl-ctrl-icon {
-    background-size: 18px !important;
+    background-size: ${MAP_NAV_CONTROL_ICON_PX}px !important;
     background-position: center !important;
   }
 
@@ -293,10 +306,13 @@ export function getNavigationControlStyles(themeArg: Theme): string {
     display: none !important;
   }
 
-  ${getTooltipStyles({
-    position: "top",
-    selector: ".maplibregl-ctrl-group button[data-tooltip]",
-  })}
+  ${getTooltipStyles(
+    {
+      position: "top",
+      selector: ".maplibregl-ctrl-group button[data-tooltip]",
+    },
+    themeArg
+  )}
   `;
 }
 
@@ -314,5 +330,5 @@ function getOverlayButtonsHiddenStyles(): string {
 
 /** Combined map styles: container + navigation controls. Use a single <style> tag in MapView. */
 export function getMapStyles(themeArg: Theme): string {
-  return `${getNavigationControlStyles(themeArg)}\n${getMapContainerStyles()}\n${getOverlayButtonsHiddenStyles()}`;
+  return `${getNavigationControlStyles(themeArg)}\n${getMapContainerStyles(themeArg)}\n${getOverlayButtonsHiddenStyles()}`;
 }

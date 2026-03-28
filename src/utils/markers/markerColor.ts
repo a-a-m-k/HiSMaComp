@@ -1,19 +1,22 @@
+import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
+
 import {
   calculateMarkerColorFromPopulation,
-  getDefaultMarkerScaleConfig,
+  getMarkerScaleConfigForMapMode,
 } from "./markerScale";
 
 /**
- * Calculates marker color from the shared marker scale model.
+ * Calculates marker color from the shared marker scale model (light vs dark ramp).
  *
  * @param population - Population value for the town
- * @returns Color string for the marker
+ * @param mapStyleMode - Basemap mode; dark uses `MAP_LEGEND_COLORS_DARK`
  */
 export const calculateMarkerColor = (
-  population: number | null | undefined
+  population: number | null | undefined,
+  mapStyleMode: MapBaseStyleMode = "light"
 ): string => {
   return calculateMarkerColorFromPopulation(
     population,
-    getDefaultMarkerScaleConfig()
+    getMarkerScaleConfigForMapMode(mapStyleMode)
   );
 };

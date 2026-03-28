@@ -1,21 +1,29 @@
-/**
- * Returns the screen-reader description for the map area.
- * Used by MapView for aria-describedby content so the text stays in one place.
- */
-export function getMapDescription(options: {
+import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
+
+export interface GetMapDescriptionOptions {
   isMobile: boolean;
   isDesktop: boolean;
-}): string {
-  const { isMobile, isDesktop } = options;
+  /** Basemap mode; affects spoken “grayscale” vs “full color” wording only. */
+  mapStyleMode?: MapBaseStyleMode;
+}
+
+/**
+ * Builds the screen-reader description string for the main map region (`aria-describedby`).
+ * @param options - Layout flags and optional basemap mode.
+ * @returns Full prose description including controls, pan/zoom hints, and save shortcut.
+ */
+export function getMapDescription(options: GetMapDescriptionOptions): string {
+  const { isMobile, isDesktop, mapStyleMode = "light" } = options;
   const controls = [
     "Timeline",
     ...(isMobile ? ["Save button", "Reset view button"] : ["Save button"]),
+    "Map style toggle",
     ...(isDesktop ? ["Zoom controls"] : []),
     "map area",
     "town markers",
   ].join(", ");
 
-  let text = `Interactive map displaying European towns and their populations. Use Tab to navigate controls: ${controls}. Click on the map or press Tab to focus the map area, then use arrow keys to pan. When a town marker is focused, use arrow keys to navigate between markers.`;
+  let text = `Interactive map displaying European towns and their populations. Use Tab to navigate controls: ${controls}. The base map is ${mapStyleMode === "dark" ? "grayscale" : "full color"}. Click on the map or press Tab to focus the map area, then use arrow keys to pan. When a town marker is focused, use arrow keys to navigate between markers.`;
   text += " Press Ctrl+S or Cmd+S to save the map as an image.";
   if (isDesktop) {
     text +=

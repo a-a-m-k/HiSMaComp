@@ -1,30 +1,38 @@
-import { useEffect, useRef, RefObject } from "react";
+import { useEffect, RefObject } from "react";
 import { MapRef } from "react-map-gl/maplibre";
 import type { CameraFitTarget } from "./useMapViewState";
 
-const CAMERA_FIT_ANIMATION_DURATION_MS = 480;
-const CAMERA_FIT_ANIMATION_FALLBACK_MS = CAMERA_FIT_ANIMATION_DURATION_MS + 120;
-const easeInOutCubic = (t: number) =>
-  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+import type { FlyToOptions } from "maplibre-gl";
+
+/** Single flight path: zooms out along an arc then in — feels much less “static” than easeTo. */
+export const FLY_DURATION_MS = 500;
+/** >1.42 = more pronounced zoom-out mid-flight (MapLibre default curve is 1.42). */
+export const FLY_CURVE = 1.58;
 
 interface UseAnimateCameraToFitParams {
   mapRef: RefObject<MapRef | null>;
+  secondaryMapRef?: RefObject<MapRef | null>;
   cameraFitTarget: CameraFitTarget | null;
   onCameraFitComplete: () => void;
   syncViewStateFromMap: (state: CameraFitTarget) => void;
   cameraFitTargetRefForSync: RefObject<CameraFitTarget | null>;
+  prefersReducedMotion?: boolean;
 }
 
-/** Animates map to cameraFitTarget (e.g. after resize); ref is true during animation so consumer can ignore onMove. */
+/**
+ * Imperative camera animation to `cameraFitTarget`.
+ * Map props must stay on `viewState` only (see MapView) so React does not snap to the target
+ * and cancel this animation.
+ */
 export function useAnimateCameraToFit({
   mapRef,
+  secondaryMapRef,
   cameraFitTarget,
   onCameraFitComplete,
   syncViewStateFromMap,
   cameraFitTargetRefForSync,
+  prefersReducedMotion = false,
 }: UseAnimateCameraToFitParams) {
-  const isCameraFitAnimatingRef = useRef(false);
-
   useEffect(() => {
     if (!cameraFitTarget) return;
 
@@ -38,58 +46,80 @@ export function useAnimateCameraToFit({
 
     let cancelled = false;
     let syncFallbackId: ReturnType<typeof setTimeout> | null = null;
-    isCameraFitAnimatingRef.current = true;
     const target = cameraFitTarget;
     const refForSyncCurrent = cameraFitTargetRefForSync.current;
 
-    const onMoveEnd = () => {
-      map.off("moveend", onMoveEnd);
+    const map2 = secondaryMapRef?.current?.getMap();
+
+    const finishAnimation = () => {
       if (syncFallbackId !== null) {
         clearTimeout(syncFallbackId);
         syncFallbackId = null;
       }
       if (cancelled) return;
-      isCameraFitAnimatingRef.current = false;
       onCameraFitComplete();
     };
 
-    map.once("moveend", onMoveEnd);
-
-    syncFallbackId = setTimeout(() => {
-      syncFallbackId = null;
+    const onFinalMoveEnd = () => {
       if (cancelled) return;
-      map.off("moveend", onMoveEnd);
-      isCameraFitAnimatingRef.current = false;
-      onCameraFitComplete();
-    }, CAMERA_FIT_ANIMATION_FALLBACK_MS);
+      finishAnimation();
+    };
 
-    const runEase = () => {
+    const scheduleFallback = (ms: number) => {
+      if (syncFallbackId !== null) clearTimeout(syncFallbackId);
+      syncFallbackId = setTimeout(() => {
+        syncFallbackId = null;
+        if (cancelled) return;
+        finishAnimation();
+      }, ms);
+    };
+
+    const runFly = () => {
       if (cancelled) return;
       map.stop();
-      const center: [number, number] = [target.longitude, target.latitude];
-      map.jumpTo({ center, zoom: map.getZoom() });
-      map.easeTo({
-        center,
-        zoom: target.zoom,
-        duration: CAMERA_FIT_ANIMATION_DURATION_MS,
-        easing: easeInOutCubic,
-      });
+      map2?.stop();
+
+      const centerTarget: [number, number] = [
+        target.longitude,
+        target.latitude,
+      ];
+      const zTarget = target.zoom;
+
+      if (prefersReducedMotion) {
+        map.jumpTo({ center: centerTarget, zoom: zTarget });
+        map2?.jumpTo({ center: centerTarget, zoom: zTarget });
+        finishAnimation();
+        return;
+      }
+
+      const flyOpts: FlyToOptions = {
+        center: centerTarget,
+        zoom: zTarget,
+        duration: FLY_DURATION_MS,
+        curve: FLY_CURVE,
+        essential: true,
+      };
+
+      map.flyTo(flyOpts);
+      map2?.flyTo(flyOpts);
+
+      scheduleFallback(FLY_DURATION_MS + 400);
+      map.once("moveend", onFinalMoveEnd);
     };
 
     const rafId = requestAnimationFrame(() => {
       if (cancelled) return;
       requestAnimationFrame(() => {
-        if (!cancelled) runEase();
+        if (!cancelled) runFly();
       });
     });
 
     return () => {
       cancelled = true;
-      isCameraFitAnimatingRef.current = false;
       if (syncFallbackId !== null) clearTimeout(syncFallbackId);
       cancelAnimationFrame(rafId);
-      map.off("moveend", onMoveEnd);
       map.stop();
+      map2?.stop();
       if (refForSyncCurrent !== null) {
         syncViewStateFromMap(target);
       }
@@ -99,8 +129,8 @@ export function useAnimateCameraToFit({
     onCameraFitComplete,
     syncViewStateFromMap,
     mapRef,
+    secondaryMapRef,
     cameraFitTargetRefForSync,
+    prefersReducedMotion,
   ]);
-
-  return isCameraFitAnimatingRef;
 }

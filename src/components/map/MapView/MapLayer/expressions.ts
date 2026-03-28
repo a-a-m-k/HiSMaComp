@@ -1,4 +1,5 @@
 import { ExpressionSpecification } from "maplibre-gl";
+import { MAP_LEGEND_COLORS } from "@/constants";
 import {
   getDefaultMarkerScaleConfig,
   getMarkerColorStops,
@@ -115,7 +116,7 @@ export const getCircleRadiusExpression = (
 export const getCircleColorExpression = (
   selectedCentury: string,
   populationThresholds: number[] = DEFAULT_MARKER_SCALE.populationThresholds,
-  legendColors = DEFAULT_MARKER_SCALE.legendColors
+  legendColors: string[] = MAP_LEGEND_COLORS
 ): ExpressionSpecification => [
   "step",
   ["coalesce", getPopulationExpression(selectedCentury), 0],

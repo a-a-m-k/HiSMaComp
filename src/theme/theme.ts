@@ -1,19 +1,31 @@
-import { createTheme } from "@mui/material/styles";
-import { blue, grey, common } from "@mui/material/colors";
+import { createTheme, alpha } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
+import { grey, common } from "@mui/material/colors";
+
+import {
+  MAP_NIGHT_BACKGROUND_DEFAULT,
+  MAP_NIGHT_BORDER_SUBTLE,
+  MAP_NIGHT_DIVIDER,
+  MAP_NIGHT_PAPER,
+  MAP_NIGHT_TEXT_PRIMARY,
+  MAP_NIGHT_TEXT_SECONDARY,
+  MAP_NIGHT_TYPOGRAPHY_ROOT,
+} from "./mapTokens";
 
 // Blue primary for clear affordances (buttons, links); grey for text and backgrounds so the map stays the focus.
-const theme = createTheme({
+export const lightTheme = createTheme({
   palette: {
     primary: {
-      main: blue[800],
-      dark: blue[900],
-      light: blue[100],
+      /** Slightly desaturated vs. default `blue[800]` so UI reads calmer next to the map. */
+      main: "#1a4d7a",
+      dark: "#143a5c",
+      light: "#e6edf5",
     },
     secondary: {
       main: grey[900],
     },
     info: {
-      main: "#5680a5",
+      main: "#5a7890",
       contrastText: common.white,
     },
     background: {
@@ -137,28 +149,28 @@ const theme = createTheme({
     },
     MuiCard: {
       styleOverrides: {
-        root: {
+        root: ({ theme }: { theme: Theme }) => ({
           borderRadius: 16,
-          boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-          backgroundColor: "rgba(255,255,255,0.95)",
+          boxShadow: theme.custom.shadows.medium,
+          backgroundColor: alpha(theme.palette.background.paper, 0.95),
           backdropFilter: "blur(10px)",
-          border: "1px solid rgba(255,255,255,0.2)",
-          transition: "all 0.2s ease-in-out",
+          border: `1px solid ${alpha(theme.palette.divider, 0.55)}`,
+          transition: theme.custom.transitions.normal,
           "&:hover": {
-            boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+            boxShadow: theme.custom.shadows.heavy,
           },
-        },
+        }),
       },
     },
     MuiPaper: {
       styleOverrides: {
-        root: () => ({
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
+        root: ({ theme }: { theme: Theme }) => ({
+          backgroundColor: alpha(theme.palette.background.paper, 0.95),
           borderRadius: 4, // BORDER_RADIUS.CONTROL (4px) - Match MapLibre control container
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
           backdropFilter: "blur(16px) saturate(180%)",
-          border: "1px solid rgba(255, 255, 255, 0.4)",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          border: `1px solid ${alpha(theme.palette.divider, 0.35)}`,
+          transition: theme.custom.transitions.slow,
         }),
         elevation1: {
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
@@ -173,11 +185,11 @@ const theme = createTheme({
     },
     MuiSlider: {
       styleOverrides: {
-        thumb: ({ theme }) => ({
+        thumb: ({ theme }: { theme: Theme }) => ({
           borderRadius: "50%",
           width: 20,
           height: 20,
-          border: "2px solid white",
+          border: `2px solid ${theme.palette.background.paper}`,
           boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
           transition: "box-shadow 0.2s ease-in-out",
           "&:hover": {
@@ -259,17 +271,17 @@ const theme = createTheme({
   },
   custom: {
     colors: {
-      focus: "#646cff",
-      focusHover: "#535bf2",
-      focusShadow: "rgba(100, 108, 255, 0.4)",
-      focusShadowInset: "rgba(100, 108, 255, 0.2)",
+      focus: "#5c6bb8",
+      focusHover: "#575fa8",
+      focusShadow: "rgba(92, 107, 184, 0.32)",
+      focusShadowInset: "rgba(92, 107, 184, 0.16)",
       textBlack: "#000000",
       tooltipBackground: "rgba(0, 0, 0, 0.87)",
       tooltipText: common.white,
       buttonBackground: common.white,
       buttonHover: grey[100],
       buttonActive: grey[200],
-      focusBlue: "rgba(0, 150, 255, 1)",
+      focusBlue: "rgba(72, 118, 165, 0.95)",
       controlBorder: "rgba(0, 0, 0, 0.1)",
     },
     shadows: {
@@ -321,14 +333,14 @@ const theme = createTheme({
     },
     legend: {
       colors: {
-        title: "#2d3e50",
-        scaleHeading: "#64748b",
-        layerLabel: "#334155",
+        title: grey[900],
+        scaleHeading: grey[600],
+        layerLabel: grey[800],
       },
       borders: {
-        paper: "1px solid rgba(226, 232, 240, 1)",
-        sectionDivider: "1px solid rgba(203, 213, 225, 0.4)",
-        layerIndicator: "2px solid rgba(203, 213, 225, 0.8)",
+        paper: `1px solid ${alpha(grey[400], 0.45)}`,
+        sectionDivider: `1px solid ${alpha(grey[400], 0.32)}`,
+        layerIndicator: `2px solid ${alpha(grey[500], 0.42)}`,
       },
       shadows: {
         paper: "0 4px 20px rgba(0, 0, 0, 0.08)",
@@ -342,4 +354,241 @@ const theme = createTheme({
   },
 });
 
-export default theme;
+/** Dark MUI theme for night basemap; merged with `lightTheme` via `createTheme`. */
+export const darkTheme = createTheme(lightTheme, {
+  palette: {
+    mode: "dark",
+    primary: {
+      main: "#3b82f6",
+      dark: "#2563eb",
+      light: "#60a5fa",
+    },
+    secondary: {
+      main: grey[400],
+    },
+    info: {
+      main: "#62a5ff",
+      contrastText: common.white,
+    },
+    background: {
+      default: MAP_NIGHT_BACKGROUND_DEFAULT,
+      paper: MAP_NIGHT_PAPER,
+    },
+    text: {
+      primary: MAP_NIGHT_TEXT_PRIMARY,
+      secondary: MAP_NIGHT_TEXT_SECONDARY,
+    },
+    divider: MAP_NIGHT_DIVIDER,
+    action: {
+      hover: alpha("#ffffff", 0.06),
+      disabled: alpha("#ffffff", 0.3),
+    },
+    common,
+  },
+  shape: {
+    borderRadius: 14,
+  },
+  typography: {
+    fontFamily: '"Inter", sans-serif',
+    fontSize: 13,
+    h6: {
+      fontSize: 14,
+      fontWeight: 600,
+      letterSpacing: 0.2,
+    },
+    body2: {
+      color: MAP_NIGHT_TEXT_SECONDARY,
+    },
+  },
+  components: {
+    MuiPaper: {
+      styleOverrides: {
+        root: ({ theme }: { theme: Theme }) => ({
+          backgroundColor: theme.palette.background.paper,
+          backgroundImage: "none",
+          backdropFilter: "blur(12px)",
+          border: `1px solid ${MAP_NIGHT_BORDER_SUBTLE}`,
+          boxShadow:
+            "0 10px 30px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.02)",
+          borderRadius: theme.shape.borderRadius,
+          transition: theme.custom.transitions.slow,
+        }),
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: ({ theme }: { theme: Theme }) => ({
+          borderRadius: 16,
+          backgroundColor: alpha("#1e293b", 0.72),
+          border: `1px solid ${MAP_NIGHT_BORDER_SUBTLE}`,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+          transition: theme.custom.transitions.normal,
+          "&:hover": {
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+          },
+        }),
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: "none",
+          borderRadius: 10,
+          padding: "6px 12px",
+          fontWeight: 500,
+          boxShadow: "none",
+          transition: "all 0.18s ease",
+          "&:hover": {
+            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+            transform: "translateY(-1px)",
+          },
+          "&:active": {
+            transform: "translateY(0)",
+          },
+        },
+        text: {
+          backgroundColor: "transparent",
+        },
+        outlined: {
+          backgroundColor: "transparent",
+        },
+        contained: ({ theme }: { theme: Theme }) => ({
+          backgroundColor: theme.palette.background.paper,
+          color: theme.palette.text.primary,
+          "&:hover": {
+            backgroundColor: "rgba(148,163,184,0.12)",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+            transform: "translateY(-1px)",
+          },
+        }),
+        containedPrimary: ({ theme }: { theme: Theme }) => ({
+          backgroundColor: theme.palette.primary.main,
+          color: theme.palette.primary.contrastText,
+          "&:hover": {
+            backgroundColor: theme.palette.primary.dark,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+            transform: "translateY(-1px)",
+          },
+        }),
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          color: MAP_NIGHT_TEXT_SECONDARY,
+          transition: "all 0.18s ease",
+          "&:hover": {
+            backgroundColor: "rgba(148,163,184,0.08)",
+          },
+          "&:focus": {
+            outline: "none",
+            boxShadow: "none",
+          },
+          "&:focus-visible": {
+            outline: "none",
+          },
+        },
+      },
+    },
+    MuiTypography: {
+      styleOverrides: {
+        root: {
+          color: MAP_NIGHT_TYPOGRAPHY_ROOT,
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          borderColor: "rgba(148,163,184,0.08)",
+        },
+      },
+    },
+    MuiSlider: {
+      styleOverrides: {
+        root: {
+          color: "#3b82f6",
+        },
+        rail: {
+          borderRadius: 6,
+          height: 6,
+          opacity: 0.2,
+        },
+        track: {
+          border: "none",
+        },
+        thumb: ({ theme }: { theme: Theme }) => ({
+          borderRadius: "50%",
+          width: 16,
+          height: 16,
+          backgroundColor: MAP_NIGHT_TEXT_SECONDARY,
+          border: `2px solid ${MAP_NIGHT_BACKGROUND_DEFAULT}`,
+          boxShadow: "none",
+          transition: "all 0.18s ease",
+          "&:hover": {
+            boxShadow: "0 0 0 6px rgba(59,130,246,0.15)",
+          },
+          "&:focus": {
+            boxShadow: "0 0 0 6px rgba(59,130,246,0.15)",
+          },
+          [theme.breakpoints.down("md")]: {
+            width: 24,
+            height: 24,
+          },
+          [theme.breakpoints.down("sm")]: {
+            width: 28,
+            height: 28,
+          },
+        }),
+      },
+    },
+  },
+  custom: {
+    colors: {
+      focus: "#60a5fa",
+      focusHover: "#3b82f6",
+      focusShadow: "rgba(59, 130, 246, 0.35)",
+      focusShadowInset: "rgba(59, 130, 246, 0.18)",
+      textBlack: MAP_NIGHT_TEXT_PRIMARY,
+      tooltipBackground: "#334155",
+      tooltipText: MAP_NIGHT_TEXT_PRIMARY,
+      buttonBackground: "#334155",
+      buttonHover: "#475569",
+      buttonActive: "#64748b",
+      focusBlue: "#3b82f6",
+      controlBorder: "rgba(148,163,184,0.12)",
+    },
+    shadows: {
+      light: "0 1px 2px rgba(0,0,0,0.5)",
+      medium: "0 4px 16px rgba(0,0,0,0.5)",
+      heavy: "0 20px 40px rgba(0,0,0,0.5)",
+      tooltip: "0 4px 16px rgba(0,0,0,0.6)",
+      buttonHover: "0 8px 24px rgba(0,0,0,0.6)",
+      buttonDefault: "0 4px 16px rgba(0,0,0,0.5)",
+      buttonActive: "0 2px 8px rgba(0,0,0,0.6)",
+      controlOutline: "0 0 0 1px rgba(148,163,184,0.12)",
+    },
+    legend: {
+      colors: {
+        title: MAP_NIGHT_TEXT_PRIMARY,
+        scaleHeading: MAP_NIGHT_TEXT_SECONDARY,
+        layerLabel: MAP_NIGHT_TEXT_PRIMARY,
+      },
+      borders: {
+        paper: `1px solid ${MAP_NIGHT_BORDER_SUBTLE}`,
+        sectionDivider: "1px solid rgba(148,163,184,0.06)",
+        layerIndicator: "2px solid rgba(148,163,184,0.22)",
+      },
+      shadows: {
+        paper: "0 10px 30px rgba(0,0,0,0.4)",
+        layerDot: "0 1px 4px rgba(0,0,0,0.5)",
+      },
+      collapseIconButton: {
+        size: 32,
+        iconFontSize: 20,
+      },
+    },
+  },
+});
+
+export default lightTheme;

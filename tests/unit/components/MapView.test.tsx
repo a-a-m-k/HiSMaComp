@@ -5,6 +5,7 @@ import MapView from "@/components/map/MapView/MapView";
 import { AppProvider } from "@/context/AppContext";
 import { Town } from "@/common/types";
 import { DEFAULT_MAP_CONTAINER_PROPS } from "@/components/map/MapView/constants";
+import { lightTheme } from "@/theme/theme";
 
 vi.mock("@mui/material", async importOriginal => {
   const actual = await importOriginal<typeof import("@mui/material")>();
@@ -34,6 +35,7 @@ vi.mock("@mui/material/styles", async importOriginal => {
 
   return {
     ...actual,
+    useTheme: () => lightTheme,
     styled: (component: any) => {
       return (styles: any) => {
         const StyledComponent = ({ children, ...props }: any) => {
@@ -46,11 +48,19 @@ vi.mock("@mui/material/styles", async importOriginal => {
   };
 });
 
+vi.mock("@/context/MapStyleContext", () => ({
+  useMapStyleMode: () => ({
+    mode: "light" as const,
+    setMode: vi.fn(),
+    toggleMode: vi.fn(),
+  }),
+}));
+
 vi.mock("@/utils/map", async importOriginal => {
   const actual = await importOriginal<typeof import("@/utils/map")>();
   return {
     ...actual,
-    getTerrainStyle: vi.fn().mockReturnValue({
+    getMapBaseStyle: vi.fn().mockReturnValue({
       version: 8,
       sources: {},
       layers: [],
@@ -480,7 +490,7 @@ describe("MapView", () => {
     expect(screen.getByTestId("town-markers")).toBeInTheDocument();
   });
 
-  it("shows screenshot and reset view controls on mobile (alongside)", async () => {
+  it("hides snapshot on mobile but keeps reset and style controls", async () => {
     viewportState.width = 375;
     viewportState.height = 667;
 
@@ -500,9 +510,10 @@ describe("MapView", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId("screenshot-button")).toBeInTheDocument();
+      expect(screen.getByTestId("map-reset-view-button")).toBeInTheDocument();
     });
-    expect(screen.getByTestId("map-reset-view-button")).toBeInTheDocument();
+    expect(screen.getByTestId("map-style-toggle")).toBeInTheDocument();
+    expect(screen.queryByTestId("screenshot-button")).not.toBeInTheDocument();
   });
 
   it("shows zoom buttons on desktop/tablet and hides them on mobile", async () => {

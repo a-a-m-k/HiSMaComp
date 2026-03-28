@@ -19,7 +19,7 @@ type ScreenshotButtonProps = {
 
 /**
  * Screenshot button component.
- * Rendered in `MapView` (including mobile) or in the legend header on tablet.
+ * Rendered in `MapView` overlay (tablet/desktop) or in the legend header on tablet.
  * Keyboard shortcut (Ctrl+S/Cmd+S) is only active when component is mounted.
  */
 const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
@@ -60,8 +60,8 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
       data-testid="screenshot-button"
       data-tooltip={
         isCapturing
-          ? "Capturing screenshot..."
-          : "Save map as image (Ctrl+S or Cmd+S)"
+          ? strings.screenshot.tooltipCapturing
+          : strings.screenshot.tooltip
       }
       onClick={captureScreenshot}
       size="medium"

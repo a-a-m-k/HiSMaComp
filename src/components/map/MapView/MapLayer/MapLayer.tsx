@@ -1,18 +1,27 @@
+/**
+ * GeoJSON `Source` with circle + symbol layers for town population markers and labels.
+ */
 import React from "react";
 import { Layer, Source, LayerProps } from "react-map-gl/maplibre";
 import {
   POPULATION_THRESHOLDS,
   MIN_MARKER_SIZE,
   MAX_MARKER_SIZE,
+  MAP_GEOJSON_MARKERS,
+  getMapTextLabelPaint,
 } from "@/constants";
 import { GeoJSON } from "geojson";
 import { useMapLayerExpressions } from "@/hooks/map";
+import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
 
-interface MapLayerProps
-  extends Omit<LayerProps, "id" | "type" | "layout" | "paint"> {
+interface MapLayerProps extends Omit<
+  LayerProps,
+  "id" | "type" | "layout" | "paint"
+> {
   layerId: string;
   data: GeoJSON;
   selectedYear: number;
+  mapStyleMode: MapBaseStyleMode;
   minPopulation?: number;
   maxPopulation?: number;
   minMarkerSize?: number;
@@ -23,6 +32,7 @@ const MapLayer = ({
   layerId,
   data,
   selectedYear,
+  mapStyleMode,
   minPopulation = POPULATION_THRESHOLDS[0],
   maxPopulation = POPULATION_THRESHOLDS[POPULATION_THRESHOLDS.length - 1],
   minMarkerSize = MIN_MARKER_SIZE,
@@ -36,6 +46,7 @@ const MapLayer = ({
     populationExpression,
   } = useMapLayerExpressions({
     selectedYear,
+    mapStyleMode,
     minPopulation,
     maxPopulation,
     minMarkerSize,
@@ -50,8 +61,8 @@ const MapLayer = ({
         paint={{
           "circle-radius": circleRadiusExpression,
           "circle-color": circleColorExpression,
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "#fff",
+          "circle-stroke-width": MAP_GEOJSON_MARKERS.circleStrokeWidth,
+          "circle-stroke-color": MAP_GEOJSON_MARKERS.outline[mapStyleMode],
         }}
         layout={{
           "circle-sort-key": populationSortKey,
@@ -78,11 +89,7 @@ const MapLayer = ({
           "text-allow-overlap": false,
           "symbol-sort-key": populationSortKey,
         }}
-        paint={{
-          "text-color": "#222",
-          "text-halo-color": "#fff",
-          "text-halo-width": 0.8,
-        }}
+        paint={getMapTextLabelPaint(mapStyleMode) as Record<string, unknown>}
         {...rest}
       />
     </Source>

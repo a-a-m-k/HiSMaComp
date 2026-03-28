@@ -25,6 +25,7 @@ import {
 } from "@/components/controls/ScreenshotButton/utils";
 import { getLegendYearLabel, LEGEND_CONTENT_SPACING } from "./legendHelpers";
 import { MapResetViewButton } from "@/components/controls/MapResetViewButton/MapResetViewButton";
+import { MapStyleToggle } from "@/components/map/MapView/MapStyleToggle";
 import { LegendItem } from "./LegendItem";
 import { useLegendContentStyles } from "./useLegendContentStyles";
 
@@ -213,6 +214,7 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
                     <ScreenshotButtonLazy variant="inline" />
                   </Suspense>
                   <MapResetViewButton variant="inline" />
+                  <MapStyleToggle variant="inline" />
                 </>
               )}
               {collapseControl}

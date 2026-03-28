@@ -3,9 +3,7 @@
   line-height: 1.6;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* color-scheme, text, and page background come from MUI CssBaseline + ThemeProvider (light/dark via map style toggle). Do not fix light theme here — it prevented dark mode from applying. */
 
   /* CSS variables mapped to TypeScript constants in src/constants/ui.ts */
   --color-focus: #646cff;
@@ -19,9 +17,10 @@
   --overlay-edge-spacing: 8px;
   --overlay-edge-spacing-lg: 16px;
   
-  --timeline-height-mobile: 87px;
-  --timeline-height-tablet: 120px;
-  --timeline-height-desktop: 100px;
+  /* Mirror TIMELINE_HEIGHTS in src/constants/uiConstants.ts (measured #timeline height). */
+  --timeline-height-mobile: 138px;
+  --timeline-height-tablet: 81px;
+  --timeline-height-desktop: 92px;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -61,16 +60,6 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
 }
 
 /* Narrow layout (hysteresis: enter ≤280px, leave ≥300px) so legend/timeline stay in flow and don't jump during resize.

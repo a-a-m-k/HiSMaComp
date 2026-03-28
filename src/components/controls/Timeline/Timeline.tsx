@@ -5,10 +5,11 @@ import Paper from "@mui/material/Paper";
 import Slider from "@mui/material/Slider";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 
 import { useApp } from "@/context/AppContext";
 import { strings } from "@/locales";
+import { TIMELINE_NIGHT_PAPER_SX } from "@/theme/mapTheme";
 
 export interface TimelineProps {
   marks: Array<{ value: number; label: string }>;
@@ -49,9 +50,9 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
   );
 
   const accent = theme.palette.info.main;
-  const activeText = "#3d5d7e";
-  const mutedText = "#6b7c8e";
-  const neighborMuted = "#8899aa";
+  const activeText = theme.palette.text.primary;
+  const mutedText = theme.palette.text.secondary;
+  const neighborMuted = alpha(theme.palette.text.secondary, 0.88);
 
   return (
     <Box
@@ -80,25 +81,35 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
         transform: { md: "translateX(-50%)" },
         zIndex: theme.custom.zIndex.timeline,
         width: { xs: "auto", md: "auto" },
-        maxWidth: { xs: "100%", md: 800 },
-        minWidth: { md: 650 },
+        maxWidth: { xs: "100%", md: "min(700px, 90%)" },
+        minWidth: { md: "min(650px, 90%)" },
       }}
     >
       <Paper
         elevation={0}
         sx={{
-          bgcolor: "background.paper",
-          border: 1,
-          borderColor: "divider",
-          borderRadius: 2,
-          boxShadow: {
-            xs: "0 2px 12px rgba(0, 0, 0, 0.1)",
-            md: "0 8px 32px rgba(0, 0, 0, 0.12)",
-          },
-          transition: "all 0.3s ease",
-          "@media (prefers-reduced-motion: reduce)": {
-            transition: "none",
-          },
+          ...(theme.palette.mode === "dark"
+            ? {
+                ...TIMELINE_NIGHT_PAPER_SX,
+                transition: "all 0.3s ease",
+                "@media (prefers-reduced-motion: reduce)": {
+                  transition: "none",
+                },
+              }
+            : {
+                // Background + blur from theme `components.MuiPaper.styleOverrides.root` (sx bgcolor would override).
+                border: 1,
+                borderColor: "divider",
+                borderRadius: 2,
+                boxShadow: {
+                  xs: theme.custom.shadows.light,
+                  md: theme.custom.shadows.heavy,
+                },
+                transition: "all 0.3s ease",
+                "@media (prefers-reduced-motion: reduce)": {
+                  transition: "none",
+                },
+              }),
         }}
       >
         <Box
@@ -130,34 +141,60 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
                 color: accent,
                 height: { xs: 8, sm: 6, md: 6 },
                 py: { xs: 1, sm: 0 },
-                "& .MuiSlider-thumb": {
-                  bgcolor: accent,
-                  border: "3px solid #ffffff",
-                  boxShadow: "0 3px 10px rgba(86, 128, 165, 0.4)",
-                  width: { xs: 28, sm: 22, md: 24 },
-                  height: { xs: 28, sm: 22, md: 24 },
-                  transition: "all 0.2s ease",
-                  "&:hover, &:active": {
-                    boxShadow: "0 4px 14px rgba(86, 128, 165, 0.6)",
-                  },
-                  "&:focus-visible": {
-                    outline: `3px solid ${accent}`,
-                    outlineOffset: "2px",
-                  },
-                  "@media (prefers-reduced-motion: reduce)": {
-                    transition: "none",
-                  },
-                },
+                "& .MuiSlider-thumb":
+                  theme.palette.mode === "dark"
+                    ? {
+                        bgcolor: theme.palette.text.secondary,
+                        border: `2px solid ${theme.palette.background.default}`,
+                        boxShadow: "none",
+                        width: { xs: 28, sm: 16, md: 16 },
+                        height: { xs: 28, sm: 16, md: 16 },
+                        transition: "all 0.18s ease",
+                        "&:hover, &:active": {
+                          boxShadow: "0 0 0 6px rgba(59,130,246,0.15)",
+                        },
+                        "&:focus-visible": {
+                          outline: `3px solid ${accent}`,
+                          outlineOffset: "2px",
+                        },
+                        "@media (prefers-reduced-motion: reduce)": {
+                          transition: "none",
+                        },
+                      }
+                    : {
+                        bgcolor: accent,
+                        border: `3px solid ${theme.palette.background.paper}`,
+                        boxShadow: `0 3px 10px ${alpha(accent, 0.38)}`,
+                        width: { xs: 28, sm: 22, md: 24 },
+                        height: { xs: 28, sm: 22, md: 24 },
+                        transition: "all 0.2s ease",
+                        "&:hover, &:active": {
+                          boxShadow: `0 4px 14px ${alpha(accent, 0.5)}`,
+                        },
+                        "&:focus-visible": {
+                          outline: `3px solid ${accent}`,
+                          outlineOffset: "2px",
+                        },
+                        "@media (prefers-reduced-motion: reduce)": {
+                          transition: "none",
+                        },
+                      },
                 "& .MuiSlider-track": {
                   bgcolor: accent,
                   height: { xs: 7, sm: 6, md: 6 },
                   border: "none",
-                  boxShadow: "0 1px 4px rgba(86, 128, 165, 0.25)",
+                  boxShadow:
+                    theme.palette.mode === "dark"
+                      ? "none"
+                      : `0 1px 4px ${alpha(accent, 0.28)}`,
                 },
                 "& .MuiSlider-rail": {
-                  bgcolor: "#cbd5e1",
+                  bgcolor:
+                    theme.palette.mode === "dark"
+                      ? theme.palette.grey[800]
+                      : theme.palette.grey[300],
                   height: { xs: 7, sm: 6, md: 6 },
-                  opacity: 1,
+                  opacity: theme.palette.mode === "dark" ? 0.2 : 1,
                 },
               }}
             />
@@ -191,15 +228,15 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
                       ? {
                           color: activeText,
                           fontWeight: 700,
-                          bgcolor: "#e8f0f5",
-                          boxShadow: "0 1px 4px rgba(86, 128, 165, 0.15)",
+                          bgcolor: alpha(accent, 0.14),
+                          boxShadow: `0 1px 4px ${alpha(accent, 0.2)}`,
                         }
                       : {
                           color: mutedText,
                           fontWeight: 600,
                           "&:hover": {
-                            color: "#2d3e50",
-                            bgcolor: "#f1f5f9",
+                            color: theme.palette.text.primary,
+                            bgcolor: alpha(accent, 0.08),
                             transform: "translateY(-1px)",
                           },
                         }),
@@ -247,15 +284,15 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
                         ? {
                             color: activeText,
                             fontWeight: 700,
-                            bgcolor: "#e8f0f5",
-                            boxShadow: "0 1px 4px rgba(86, 128, 165, 0.15)",
+                            bgcolor: alpha(accent, 0.14),
+                            boxShadow: `0 1px 4px ${alpha(accent, 0.2)}`,
                           }
                         : {
                             color: neighborMuted,
                             fontWeight: 500,
                             "&:hover": {
-                              color: "#2d3e50",
-                              bgcolor: "#f1f5f9",
+                              color: theme.palette.text.primary,
+                              bgcolor: alpha(accent, 0.08),
                             },
                           }),
                     }}
@@ -271,12 +308,13 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
             <Box
               sx={{
                 textAlign: "center",
-                bgcolor: "#e8f0f5",
+                bgcolor: alpha(accent, 0.12),
                 borderRadius: 2,
                 py: 1.5,
                 px: 2,
-                border: "1px solid #d0dce5",
-                boxShadow: "0 1px 4px rgba(86, 128, 165, 0.1)",
+                border: "1px solid",
+                borderColor: alpha(accent, 0.28),
+                boxShadow: theme.custom.shadows.light,
               }}
             >
               <Typography

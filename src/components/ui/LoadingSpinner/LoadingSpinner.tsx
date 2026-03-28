@@ -2,7 +2,7 @@ import React from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import { strings } from "@/locales";
 
 interface LoadingSpinnerProps {
@@ -32,8 +32,8 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         justifyContent: "center",
         gap: 3,
         zIndex: 1000,
-        backgroundColor: "rgba(255, 255, 255, 0.95)",
-        backdropFilter: "blur(4px)",
+        backgroundColor: alpha(theme.palette.background.paper, 0.94),
+        backdropFilter: "blur(8px)",
       }}
     >
       <CircularProgress

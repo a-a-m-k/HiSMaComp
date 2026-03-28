@@ -5,6 +5,7 @@ import {
   OVERLAY_POSITIONS,
 } from "@/constants";
 import { SIZING_CONSTANTS } from "@/constants/sizing";
+import { LEGEND_NIGHT_SHELL_SX } from "@/theme/mapTheme";
 
 export interface LegendLayoutOptions {
   isMobile: boolean;
@@ -40,10 +41,18 @@ export const LEGEND_CONTENT_SPACING = {
 /** Frosted card shell shared by all legend breakpoints (matches reference Paper). */
 export function getLegendPaperSurface(theme: Theme): SxProps<Theme> {
   const { borders, shadows } = theme.custom.legend;
+  if (theme.palette.mode === "dark") {
+    return {
+      ...LEGEND_NIGHT_SHELL_SX,
+      overflow: "hidden",
+      transition: "all 0.3s ease",
+      "@media (prefers-reduced-motion: reduce)": {
+        transition: "none",
+      },
+    };
+  }
   return {
-    bgcolor: "rgba(255, 255, 255, 0.97)",
-    backdropFilter: "blur(16px)",
-    WebkitBackdropFilter: "blur(16px)",
+    // Background + blur from theme `components.MuiPaper.styleOverrides.root` (sx bgcolor/backdropFilter would override).
     border: borders.paper,
     /** Match `Timeline` root `Paper` (`borderRadius: 2`). */
     borderRadius: 2,

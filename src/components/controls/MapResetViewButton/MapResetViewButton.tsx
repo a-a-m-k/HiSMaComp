@@ -20,6 +20,7 @@ export const MapResetViewButton: React.FC<MapResetViewButtonProps> = ({
     type="button"
     data-testid="map-reset-view-button"
     data-variant={variant === "inline" ? "inline" : undefined}
+    data-tooltip={strings.map.resetViewTooltip}
     aria-label={strings.map.resetViewAria}
     disableRipple
     onClick={() => window.dispatchEvent(new Event(MAP_RESET_CAMERA_EVENT))}

@@ -8,6 +8,14 @@ import type { Town } from "@/common/types";
 import theme from "@/theme/theme";
 import { MapContainer } from "@/components/containers";
 
+vi.mock("@/context/MapStyleContext", () => ({
+  useMapStyleMode: () => ({
+    mode: "light" as const,
+    setMode: vi.fn(),
+    toggleMode: vi.fn(),
+  }),
+}));
+
 const mapViewSpy = vi.hoisted(() => vi.fn());
 const retrySpy = vi.hoisted(() => vi.fn());
 

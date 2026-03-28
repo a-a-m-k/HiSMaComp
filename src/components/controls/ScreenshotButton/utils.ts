@@ -23,6 +23,7 @@ export function hideMapControls(
     ".maplibregl-control-container",
     ".maplibregl-ctrl",
     "#map-reset-view-button",
+    "#map-style-toggle",
     "#legend-collapse-button",
     "#info-button",
     "#timeline",

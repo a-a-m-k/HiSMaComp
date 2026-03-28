@@ -3,6 +3,12 @@ export const DEFAULT_ZOOM = 4;
 /** Slightly zoom out from fit so the initial view isn’t tight. */
 export const INITIAL_ZOOM_OUT_OFFSET = 0.25;
 
+/**
+ * Muted slate for night overlay country borders & legend attribution.
+ * Equivalent to `#94a3b180` — `rgb(93, 99, 105)` at alpha `128/255`.
+ */
+export const MAP_MUTED_SLATE_RGBA = `rgba(93, 99, 105, ${128 / 255})`;
+
 export const MAP_LAYER_ID = "towns-population-layer";
 
 /** Dispatched to return the map to its initial center and zoom (`MapView` listens). */
@@ -22,3 +28,12 @@ export const FLOATING_BUTTON_SIZE = 45;
 export const SCREENSHOT_BUTTON_SIZE = 36;
 /** Floating snapshot + reset on map overlay at `md+` (slightly larger targets). */
 export const MAP_OVERLAY_FLOATING_TOOL_SIZE_DESKTOP = 40;
+/**
+ * Shared hit area for `.maplibregl-ctrl-group` zoom buttons and `MapOverlayToolsStack` (md+).
+ * Keep in sync with `getNavigationControlStyles` in theme/mapStyles.ts.
+ */
+export const MAP_NAV_CONTROL_BUTTON_PX = 40;
+/** Zoom glyph / overlay icon size (scales with button; baseline was 18×36). */
+export const MAP_NAV_CONTROL_ICON_PX = Math.round(
+  (18 * MAP_NAV_CONTROL_BUTTON_PX) / 36
+);

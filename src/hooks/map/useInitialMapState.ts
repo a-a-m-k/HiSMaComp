@@ -7,7 +7,7 @@ import {
   INITIAL_ZOOM_OUT_OFFSET,
 } from "@/constants";
 import { useViewport } from "@/hooks/ui";
-import { useTheme } from "@mui/material/styles";
+import { lightTheme } from "@/theme/theme";
 import {
   calculateBoundsCenter,
   calculateResponsiveZoom,
@@ -19,7 +19,10 @@ import type { MapArea } from "@/utils/mapZoom";
 import { isValidPositiveNumber } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";
 
-/** Initial center, fit zoom, and bounds (for maxBounds). Pass mapArea from MapLayout so bounds and min-zoom use the same dimensions. */
+/**
+ * Initial center, fit zoom, and bounds (for maxBounds). Pass `mapArea` from MapLayout so bounds and min-zoom use the same dimensions.
+ * Uses `lightTheme` for layout math so toggling light/dark basemap does not recompute fit bounds.
+ */
 export function useInitialMapState(
   towns: Town[],
   mapArea: MapArea | undefined
@@ -29,7 +32,6 @@ export function useInitialMapState(
   bounds: Bounds | undefined;
 } {
   const { screenWidth, screenHeight } = useViewport();
-  const theme = useTheme();
 
   return useMemo(() => {
     if (!towns || towns.length === 0) {
@@ -50,7 +52,7 @@ export function useInitialMapState(
         towns,
         validScreenWidth,
         validScreenHeight,
-        theme
+        lightTheme
       );
       const fitZoom = Math.max(
         1,
@@ -58,7 +60,8 @@ export function useInitialMapState(
       );
 
       const area =
-        mapArea ?? calculateMapArea(validScreenWidth, validScreenHeight, theme);
+        mapArea ??
+        calculateMapArea(validScreenWidth, validScreenHeight, lightTheme);
       const bounds = getGeographicalBoxFromViewport(
         { longitude: center.longitude, latitude: center.latitude },
         fitZoom,
@@ -71,5 +74,5 @@ export function useInitialMapState(
       logger.error("Error computing initial map state:", error);
       return { center: undefined, fitZoom: DEFAULT_ZOOM, bounds: undefined };
     }
-  }, [towns, mapArea, screenWidth, screenHeight, theme]);
+  }, [towns, mapArea, screenWidth, screenHeight]);
 }

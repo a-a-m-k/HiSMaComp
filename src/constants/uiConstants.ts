@@ -42,10 +42,15 @@ export const TIMELINE_WIDTHS = {
   DESKTOP: "60%",
 } as const;
 
+/**
+ * Approximate rendered height of `#timeline` (outer nav Box) from getBoundingClientRect.
+ * Recheck after Timeline layout changes; keep in sync with `--timeline-height-*` in index.css.
+ * Reference viewports: mobile below 600px, tablet 600–899px, desktop 900px+ (see getDeviceType).
+ */
 export const TIMELINE_HEIGHTS = {
-  MOBILE: 87,
-  TABLET: 120,
-  DESKTOP: 110,
+  MOBILE: 138,
+  TABLET: 81,
+  DESKTOP: 92,
 } as const;
 
 export const OVERLAY_POSITIONS = {

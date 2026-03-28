@@ -1,10 +1,12 @@
 import {
   MAP_LEGEND_COLORS,
+  getLegendColorsForMapMode,
   MAX_MARKER_SIZE,
   MIN_MARKER_SIZE,
   NO_DATA_MARKER_SIZE,
   POPULATION_THRESHOLDS,
 } from "@/constants";
+import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
 
 export interface MarkerScaleConfig {
   populationThresholds: number[];
@@ -20,6 +22,13 @@ export const getDefaultMarkerScaleConfig = (): MarkerScaleConfig => ({
   minMarkerSize: MIN_MARKER_SIZE,
   maxMarkerSize: MAX_MARKER_SIZE,
   noDataMarkerSize: NO_DATA_MARKER_SIZE,
+});
+
+export const getMarkerScaleConfigForMapMode = (
+  mode: MapBaseStyleMode
+): MarkerScaleConfig => ({
+  ...getDefaultMarkerScaleConfig(),
+  legendColors: getLegendColorsForMapMode(mode),
 });
 
 export const getMarkerScaleBounds = (config: MarkerScaleConfig) => ({

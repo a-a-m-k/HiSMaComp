@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Box from "@mui/material/Box";
 
 import { ErrorOverlay } from "@/components/ui";
 import { AppProvider } from "@/context/AppContext";
+import { useMapStyleMode } from "@/context/MapStyleContext";
 import { useLegendLayers, useTownsData } from "@/hooks";
 
+import { getLegendColorsForMapMode } from "@/constants/population";
 import { strings } from "@/locales";
 import { MapLayout } from "./MapLayout";
 import { TIMELINE_MARKS } from "./MapLayoutHelpers";
@@ -14,7 +16,12 @@ import { TIMELINE_MARKS } from "./MapLayoutHelpers";
  * Renders MapLayout (legend + timeline + map) when towns are available.
  */
 const MapScreen: React.FC = () => {
-  const legendLayers = useLegendLayers();
+  const { mode: mapStyleMode } = useMapStyleMode();
+  const legendColors = useMemo(
+    () => getLegendColorsForMapMode(mapStyleMode),
+    [mapStyleMode]
+  );
+  const legendLayers = useLegendLayers(legendColors);
   const {
     towns,
     isLoading: townsLoading,

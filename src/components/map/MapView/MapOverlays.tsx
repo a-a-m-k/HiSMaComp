@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import { NavigationControl } from "react-map-gl/maplibre";
 import { MapResetViewButton } from "@/components/controls/MapResetViewButton/MapResetViewButton";
 import { MapOverlayToolsStack } from "@/components/controls/ScreenshotButton/ScreenshotButton.styles";
+import { MapStyleToggle } from "./MapStyleToggle";
 import { TRANSITIONS } from "@/constants";
 
 const ScreenshotButton = React.lazy(
@@ -14,16 +15,19 @@ interface MapOverlaysProps {
   showZoomButtons: boolean;
   /** When true, snapshot + reset live in the legend header instead of a fixed overlay. */
   isTablet: boolean;
+  /** Floating snapshot is hidden on phone; tablet uses legend header, desktop uses overlay. */
+  isMobile: boolean;
 }
 
 /**
- * Overlay UI on top of the map: screenshot button and zoom controls.
+ * Overlay UI on top of the map: screenshot (non-mobile), reset, style toggle, and zoom controls.
  * Pointer events and visibility follow showOverlayButtons.
  */
 export const MapOverlays: React.FC<MapOverlaysProps> = ({
   showOverlayButtons,
   showZoomButtons,
   isTablet,
+  isMobile,
 }) => (
   <Box
     sx={{
@@ -37,12 +41,16 @@ export const MapOverlays: React.FC<MapOverlaysProps> = ({
   >
     {!isTablet && (
       <MapOverlayToolsStack
+        data-map-overlay-tool-group="true"
         sx={{ pointerEvents: showOverlayButtons ? "auto" : "none" }}
       >
-        <Suspense fallback={null}>
-          <ScreenshotButton />
-        </Suspense>
+        {!isMobile && (
+          <Suspense fallback={null}>
+            <ScreenshotButton />
+          </Suspense>
+        )}
         <MapResetViewButton />
+        <MapStyleToggle />
       </MapOverlayToolsStack>
     )}
     {showZoomButtons && (

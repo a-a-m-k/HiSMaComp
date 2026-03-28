@@ -9,6 +9,14 @@ import type { LayerItem } from "@/common/types";
 const wrap = (ui: React.ReactElement) =>
   React.createElement(ThemeProvider, { theme }, ui);
 
+vi.mock("@/context/MapStyleContext", () => ({
+  useMapStyleMode: () => ({
+    mode: "light" as const,
+    setMode: vi.fn(),
+    toggleMode: vi.fn(),
+  }),
+}));
+
 vi.mock("@/hooks/ui", async () => {
   const { createResponsiveMock } =
     await import("../../../../helpers/mocks/responsive");
