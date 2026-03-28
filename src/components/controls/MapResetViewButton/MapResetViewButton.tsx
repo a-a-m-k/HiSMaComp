@@ -3,6 +3,7 @@ import CenterFocusStrong from "@mui/icons-material/CenterFocusStrong";
 
 import { MAP_RESET_CAMERA_EVENT } from "@/constants/map";
 import { strings } from "@/locales";
+import { preventFocusOnMouseDown } from "@/utils/keyboard";
 
 import { MapResetViewControl } from "./MapResetViewButton.styles";
 
@@ -22,7 +23,9 @@ export const MapResetViewButton: React.FC<MapResetViewButtonProps> = ({
     data-variant={variant === "inline" ? "inline" : undefined}
     data-tooltip={strings.map.resetViewTooltip}
     aria-label={strings.map.resetViewAria}
+    aria-keyshortcuts="Shift+R"
     disableRipple
+    onMouseDown={preventFocusOnMouseDown}
     onClick={() => window.dispatchEvent(new Event(MAP_RESET_CAMERA_EVENT))}
   >
     <CenterFocusStrong />

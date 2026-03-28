@@ -62,7 +62,6 @@ export const MapOverlayToolsStack = styled(Box)(({ theme }) => ({
     border: `1px solid ${theme.palette.divider}`,
     boxShadow: theme.custom.shadows.medium,
     borderRadius: theme.spacing(1),
-    /** `overflow: hidden` clips `data-tooltip` pseudo-elements to the right. */
     overflow: "visible",
     "& > .MuiIconButton-root + .MuiIconButton-root": {
       borderTop: `1px solid ${theme.palette.divider}`,

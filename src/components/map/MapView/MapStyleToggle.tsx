@@ -5,6 +5,7 @@ import LightMode from "@mui/icons-material/LightMode";
 import { MapResetViewControl } from "@/components/controls/MapResetViewButton/MapResetViewButton.styles";
 import { useMapStyleMode } from "@/context/MapStyleContext";
 import { strings } from "@/locales";
+import { preventFocusOnMouseDown } from "@/utils/keyboard";
 
 export type MapStyleToggleVariant = "floating" | "inline";
 
@@ -20,10 +21,14 @@ export const MapStyleToggle: React.FC<MapStyleToggleProps> = ({
 }) => {
   const { mode, toggleMode } = useMapStyleMode();
 
-  const styleToggleLabel =
+  const styleToggleAria =
     mode === "dark"
       ? strings.map.mapStyleLightAria
       : strings.map.mapStyleDarkAria;
+  const styleToggleTooltip =
+    mode === "dark"
+      ? strings.map.mapStyleLightTooltip
+      : strings.map.mapStyleDarkTooltip;
 
   return (
     <MapResetViewControl
@@ -31,10 +36,12 @@ export const MapStyleToggle: React.FC<MapStyleToggleProps> = ({
       type="button"
       data-testid="map-style-toggle"
       data-variant={variant === "inline" ? "inline" : undefined}
-      data-tooltip={styleToggleLabel}
-      aria-label={styleToggleLabel}
+      data-tooltip={styleToggleTooltip}
+      aria-label={styleToggleAria}
+      aria-keyshortcuts="Control+Shift+N Meta+Shift+N"
       aria-pressed={mode === "dark"}
       disableRipple
+      onMouseDown={preventFocusOnMouseDown}
       onClick={toggleMode}
     >
       {mode === "dark" ? <LightMode /> : <DarkMode />}

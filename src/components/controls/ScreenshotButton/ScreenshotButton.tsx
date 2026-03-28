@@ -6,7 +6,7 @@ import { ScreenshotButton as StyledScreenshotButton } from "./ScreenshotButton.s
 import { TRANSITIONS, OPACITY, SIZES } from "@/constants/ui";
 import { strings } from "@/locales";
 import { useScreenshot } from "@/hooks/ui";
-import { isInputField } from "@/utils/keyboard";
+import { isInputField, preventFocusOnMouseDown } from "@/utils/keyboard";
 
 export type ScreenshotButtonVariant = "floating" | "inline";
 
@@ -70,6 +70,7 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
       disabled={isCapturing}
       tabIndex={0}
       disableRipple
+      onMouseDown={preventFocusOnMouseDown}
       sx={{
         opacity: isCapturing ? OPACITY.DISABLED : OPACITY.ACTIVE,
         transition: TRANSITIONS.OPACITY,

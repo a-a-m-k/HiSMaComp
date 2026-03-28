@@ -1,9 +1,11 @@
 /**
  * Tests for useMapKeyboardShortcuts hook
  *
- * Tests keyboard shortcut functionality for map zoom including:
+ * Tests keyboard shortcut functionality for map zoom and reset including:
  * - Ctrl+/Cmd+ zoom in
  * - Ctrl-/Cmd- zoom out
+ * - Shift+R reset view
+ * - Cmd/Ctrl+Shift+N basemap (night) toggle
  * - Input field exclusion
  * - Map instance availability
  * - Event prevention
@@ -13,6 +15,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useRef } from "react";
 import { MapRef } from "react-map-gl/maplibre";
+import { MAP_RESET_CAMERA_EVENT } from "@/constants/map";
 import { useMapKeyboardShortcuts } from "@/hooks/map/useMapKeyboardShortcuts";
 
 // Mock logger
@@ -403,7 +406,7 @@ describe("useMapKeyboardShortcuts", () => {
   });
 
   it("should zoom in with plus key when map container is focused", () => {
-    renderHook(() => useMapKeyboardShortcuts(mapRef, containerRef, true));
+    renderHook(() => useMapKeyboardShortcuts(mapRef, true));
 
     containerRef.current?.focus();
     const event = new KeyboardEvent("keydown", {
@@ -424,7 +427,7 @@ describe("useMapKeyboardShortcuts", () => {
   });
 
   it("should zoom with plus key even when map is not focused", () => {
-    renderHook(() => useMapKeyboardShortcuts(mapRef, containerRef, true));
+    renderHook(() => useMapKeyboardShortcuts(mapRef, true));
 
     const event = new KeyboardEvent("keydown", {
       key: "+",
@@ -437,6 +440,151 @@ describe("useMapKeyboardShortcuts", () => {
 
     expect(mockZoomIn).toHaveBeenCalledTimes(1);
     expect(mockZoomOut).not.toHaveBeenCalled();
+  });
+
+  it("dispatches reset map event when Shift+R is pressed", () => {
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+    renderHook(() => useMapKeyboardShortcuts(mapRef, true));
+
+    const event = new KeyboardEvent("keydown", {
+      key: "R",
+      code: "KeyR",
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    window.dispatchEvent(event);
+
+    expect(
+      dispatchSpy.mock.calls.some(
+        args =>
+          args[0] instanceof Event && args[0].type === MAP_RESET_CAMERA_EVENT
+      )
+    ).toBe(true);
+    expect(mockZoomIn).not.toHaveBeenCalled();
+    expect(mockZoomOut).not.toHaveBeenCalled();
+
+    dispatchSpy.mockRestore();
+  });
+
+  it("dispatches reset when map instance is unavailable", () => {
+    Object.defineProperty(mapRef, "current", {
+      writable: true,
+      value: null,
+    });
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+    renderHook(() => useMapKeyboardShortcuts(mapRef, true));
+
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "R",
+        code: "KeyR",
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+
+    expect(
+      dispatchSpy.mock.calls.some(
+        args =>
+          args[0] instanceof Event && args[0].type === MAP_RESET_CAMERA_EVENT
+      )
+    ).toBe(true);
+
+    dispatchSpy.mockRestore();
+  });
+
+  it("does not dispatch reset when Shift+R is pressed in a text input", () => {
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+    renderHook(() => useMapKeyboardShortcuts(mapRef, true));
+
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+
+    const event = new KeyboardEvent("keydown", {
+      key: "R",
+      code: "KeyR",
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.defineProperty(event, "target", { writable: false, value: input });
+
+    window.dispatchEvent(event);
+
+    expect(
+      dispatchSpy.mock.calls.some(
+        args =>
+          args[0] instanceof Event && args[0].type === MAP_RESET_CAMERA_EVENT
+      )
+    ).toBe(false);
+
+    document.body.removeChild(input);
+    dispatchSpy.mockRestore();
+  });
+
+  it("calls onToggleBasemapMode when Cmd+Shift+N is pressed", () => {
+    const onToggle = vi.fn();
+    renderHook(() => useMapKeyboardShortcuts(mapRef, true, 300, onToggle));
+
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "N",
+        code: "KeyN",
+        shiftKey: true,
+        metaKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+
+    expect(onToggle).toHaveBeenCalledTimes(1);
+    expect(mockZoomIn).not.toHaveBeenCalled();
+  });
+
+  it("calls onToggleBasemapMode when Ctrl+Shift+N is pressed", () => {
+    const onToggle = vi.fn();
+    renderHook(() => useMapKeyboardShortcuts(mapRef, true, 300, onToggle));
+
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "N",
+        code: "KeyN",
+        shiftKey: true,
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+
+    expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call onToggleBasemapMode when Cmd+Shift+N is pressed in a text input", () => {
+    const onToggle = vi.fn();
+    renderHook(() => useMapKeyboardShortcuts(mapRef, true, 300, onToggle));
+
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+
+    const event = new KeyboardEvent("keydown", {
+      key: "N",
+      code: "KeyN",
+      shiftKey: true,
+      metaKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.defineProperty(event, "target", { writable: false, value: input });
+
+    window.dispatchEvent(event);
+
+    expect(onToggle).not.toHaveBeenCalled();
+    document.body.removeChild(input);
   });
 
   it("should handle errors gracefully", async () => {

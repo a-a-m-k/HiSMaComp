@@ -1,10 +1,11 @@
 import { useEffect, RefObject } from "react";
 import { logger } from "@/utils/logger";
 import { DOM_SETTLE_TIMEOUT_MS } from "@/constants/keyboard";
+import { strings } from "@/locales";
 
 /**
- * Improves NavigationControl button accessibility (tab order, aria-labels).
- * Does not add or remove any click handlers – MapLibre handles zoom.
+ * Improves NavigationControl button accessibility (tab order, aria-labels, tooltips).
+ * MapLibre still handles zoom; primary mouse clicks skip focus to avoid sticky hover/focus.
  */
 export const useNavigationControlAccessibility = (
   enabled: boolean,
@@ -12,6 +13,25 @@ export const useNavigationControlAccessibility = (
 ) => {
   useEffect(() => {
     if (!enabled) return;
+
+    const mapContainer =
+      containerRef?.current || document.querySelector('[role="application"]');
+
+    const preventMouseFocusOnZoomButtons = (e: Event) => {
+      if (!(e instanceof MouseEvent) || e.button !== 0) return;
+      const t = e.target;
+      if (t instanceof Element && t.closest(".maplibregl-ctrl-group button")) {
+        e.preventDefault();
+      }
+    };
+
+    if (mapContainer) {
+      mapContainer.addEventListener(
+        "mousedown",
+        preventMouseFocusOnZoomButtons,
+        true
+      );
+    }
 
     const applyAccessibility = () => {
       try {
@@ -27,24 +47,13 @@ export const useNavigationControlAccessibility = (
 
           const className = el.className || "";
           if (className.includes("maplibregl-ctrl-zoom-in")) {
-            el.setAttribute("data-tooltip", "Zoom in (Ctrl+Plus or Cmd+Plus)");
-            if (!el.getAttribute("aria-label")) {
-              el.setAttribute(
-                "aria-label",
-                "Zoom in. Press Ctrl+Plus or Cmd+Plus to zoom in."
-              );
-            }
+            el.setAttribute("data-tooltip", strings.map.zoomInTooltip);
+            el.setAttribute("aria-label", strings.map.zoomInTooltip);
+            el.setAttribute("aria-keyshortcuts", "Control+Equal Meta+Equal");
           } else if (className.includes("maplibregl-ctrl-zoom-out")) {
-            el.setAttribute(
-              "data-tooltip",
-              "Zoom out (Ctrl+Minus or Cmd+Minus)"
-            );
-            if (!el.getAttribute("aria-label")) {
-              el.setAttribute(
-                "aria-label",
-                "Zoom out. Press Ctrl+Minus or Cmd+Minus to zoom out."
-              );
-            }
+            el.setAttribute("data-tooltip", strings.map.zoomOutTooltip);
+            el.setAttribute("aria-label", strings.map.zoomOutTooltip);
+            el.setAttribute("aria-keyshortcuts", "Control+Minus Meta+Minus");
           }
         });
       } catch (error) {
@@ -59,8 +68,6 @@ export const useNavigationControlAccessibility = (
     });
 
     try {
-      const mapContainer =
-        containerRef?.current || document.querySelector('[role="application"]');
       if (mapContainer) {
         observer.observe(mapContainer, {
           childList: true,
@@ -74,6 +81,11 @@ export const useNavigationControlAccessibility = (
     return () => {
       clearTimeout(timeoutId);
       observer.disconnect();
+      mapContainer?.removeEventListener(
+        "mousedown",
+        preventMouseFocusOnZoomButtons,
+        true
+      );
     };
   }, [enabled, containerRef]);
 };

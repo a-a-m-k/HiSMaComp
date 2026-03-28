@@ -60,7 +60,7 @@ vi.mock("@/utils/map", async importOriginal => {
   const actual = await importOriginal<typeof import("@/utils/map")>();
   return {
     ...actual,
-    getMapBaseStyle: vi.fn().mockReturnValue({
+    getTerrainStyle: vi.fn().mockReturnValue({
       version: 8,
       sources: {},
       layers: [],
@@ -139,6 +139,19 @@ const viewportState = vi.hoisted(() => ({
 }));
 
 vi.mock("react-map-gl/maplibre", () => {
+  const mockMapInstance = {
+    getLayer: vi.fn((id: string) => (id.endsWith("-text") ? {} : null)),
+    moveLayer: vi.fn(),
+    once: vi.fn((_e: string, fn: () => void) => {
+      fn();
+    }),
+    on: vi.fn(),
+    off: vi.fn(),
+  };
+  const mockMapRef = {
+    getMap: () => mockMapInstance,
+  };
+
   const MockMap = React.forwardRef(
     (props: { children: React.ReactNode }, ref: React.Ref<any>) => {
       lastMapProps = props;
@@ -161,6 +174,7 @@ vi.mock("react-map-gl/maplibre", () => {
     Marker: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="map-marker">{children}</div>
     ),
+    useMap: () => ({ current: mockMapRef }),
     __getLastMapProps: () => lastMapProps,
   };
 });
@@ -242,7 +256,7 @@ vi.mock("@/utils/utils", () => ({
   isValidCoordinate: () => true,
 }));
 
-vi.mock("../MapLayer/MapLayer", () => ({
+vi.mock("@/components/map/MapView/MapLayer/MapLayer", () => ({
   default: ({
     layerId,
     data,

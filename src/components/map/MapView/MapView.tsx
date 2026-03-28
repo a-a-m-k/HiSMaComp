@@ -12,7 +12,7 @@ import {
 import MapLayer from "./MapLayer/MapLayer";
 import { MapOverlays } from "./MapOverlays";
 import {
-  getMapBaseStyle,
+  getTerrainStyle,
   getMapDescription,
   getPopulationOverlayStyle,
   handleMapFeatureClick,
@@ -67,7 +67,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
   showOverlayButtons = true,
 }) => {
   const theme = useTheme();
-  const { mode: mapStyleMode } = useMapStyleMode();
+  const { mode: mapStyleMode, toggleMode: toggleBasemapMode } =
+    useMapStyleMode();
   const viewport = useViewport();
   const prefersReducedMotion = usePrefersReducedMotion();
   const { isMobile, isDesktop, isTablet } = viewport;
@@ -122,7 +123,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
   useMapKeyboardShortcuts(
     mapRef,
     enableZoomControls,
-    prefersReducedMotion ? 0 : ZOOM_ANIMATION_DURATION_MS
+    prefersReducedMotion ? 0 : ZOOM_ANIMATION_DURATION_MS,
+    toggleBasemapMode
   );
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
   useNavigationControlAccessibility(showZoomButtons, containerRef);
@@ -174,7 +176,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
     basemapMapRef,
     mapReady,
     isSplitBasemap,
-    mapStyleMode,
     viewState,
     maxBounds,
   });
@@ -190,8 +191,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
   );
 
   const overlayMapStyle = useMemo(
-    () => (isSplitBasemap ? getPopulationOverlayStyle() : getMapBaseStyle()),
-    [isSplitBasemap, mapStyleMode, POPULATION_OVERLAY_STYLE_REVISION]
+    () => (isSplitBasemap ? getPopulationOverlayStyle() : getTerrainStyle()),
+    [isSplitBasemap, POPULATION_OVERLAY_STYLE_REVISION]
   );
 
   /**
