@@ -1,6 +1,6 @@
 /**
  * Map-related style generators: container focus ring, navigation control, tooltips.
- * Split from constants/ui so theme and style logic live with theme; constants stay pure.
+ * Split from constants/ui so theme and map tokens live with theme; constants stay pure.
  */
 import { Theme, alpha } from "@mui/material/styles";
 import {
@@ -8,142 +8,14 @@ import {
   MAP_NAV_CONTROL_ICON_PX,
 } from "@/constants/map";
 import { mapOverlayControlSurfaceBackground } from "@/theme/mapOverlayIconButtonSharedStyles";
-import { Z_INDEX, TRANSITIONS, SHADOWS, TOOLTIP_STYLES } from "./themeValues";
+import { getTooltipStyles } from "@/theme/mapTooltipShared";
+import { Z_INDEX, TRANSITIONS } from "./themeValues";
 
-type TooltipPosition = "top" | "right";
-
-export interface TooltipStylesOptions {
-  position: TooltipPosition;
-  selector: string;
-}
-
-function getTooltipContentStyles(
-  options: TooltipStylesOptions,
-  theme: Theme
-): string {
-  const { position, selector } = options;
-  const tooltipBg = theme.custom.colors.tooltipBackground;
-  const tooltipFg = theme.custom.colors.tooltipText;
-
-  if (position === "top") {
-    return `
-      ${selector}::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: calc(100% + ${TOOLTIP_STYLES.OFFSET}px);
-        right: 0;
-        background-color: ${tooltipBg};
-        color: ${tooltipFg};
-        padding: ${TOOLTIP_STYLES.PADDING};
-        border-radius: ${TOOLTIP_STYLES.BORDER_RADIUS};
-        font-size: ${TOOLTIP_STYLES.FONT_SIZE};
-        white-space: nowrap;
-        pointer-events: none;
-        opacity: 0;
-        visibility: hidden;
-        transition: ${TRANSITIONS.TOOLTIP};
-        z-index: ${Z_INDEX.TOOLTIP};
-        box-shadow: ${SHADOWS.TOOLTIP};
-      }
-    `;
-  }
-  return `
-    ${selector}::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      left: calc(100% + ${TOOLTIP_STYLES.OFFSET + 2}px);
-      top: 50%;
-      transform: translateY(-50%);
-      background-color: ${tooltipBg};
-      color: ${tooltipFg};
-      padding: ${TOOLTIP_STYLES.PADDING};
-      border-radius: ${TOOLTIP_STYLES.BORDER_RADIUS};
-      font-size: ${TOOLTIP_STYLES.FONT_SIZE};
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      visibility: hidden;
-      transition: ${TRANSITIONS.TOOLTIP};
-      z-index: ${Z_INDEX.TOOLTIP};
-      box-shadow: ${SHADOWS.TOOLTIP};
-    }
-  `;
-}
-
-function getTooltipArrowStyles(
-  options: TooltipStylesOptions,
-  theme: Theme
-): string {
-  const { position, selector } = options;
-  const tooltipBg = theme.custom.colors.tooltipBackground;
-
-  if (position === "top") {
-    return `
-      ${selector}::before {
-        content: '';
-        position: absolute;
-        bottom: calc(100% + ${TOOLTIP_STYLES.OFFSET - 6}px);
-        right: ${TOOLTIP_STYLES.ARROW_OFFSET}px;
-        width: 0;
-        height: 0;
-        border-left: ${TOOLTIP_STYLES.ARROW_SIZE}px solid transparent;
-        border-right: ${TOOLTIP_STYLES.ARROW_SIZE}px solid transparent;
-        border-top: ${TOOLTIP_STYLES.ARROW_SIZE}px solid ${tooltipBg};
-        opacity: 0;
-        visibility: hidden;
-        transition: ${TRANSITIONS.TOOLTIP};
-        z-index: ${Z_INDEX.TOOLTIP_ARROW};
-      }
-    `;
-  }
-  return `
-    ${selector}::before {
-      content: '';
-      position: absolute;
-      left: calc(100% + ${TOOLTIP_STYLES.OFFSET - 6}px);
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-top: ${TOOLTIP_STYLES.ARROW_SIZE}px solid transparent;
-      border-bottom: ${TOOLTIP_STYLES.ARROW_SIZE}px solid transparent;
-      border-right: ${TOOLTIP_STYLES.ARROW_SIZE}px solid ${tooltipBg};
-      opacity: 0;
-      visibility: hidden;
-      transition: ${TRANSITIONS.TOOLTIP};
-      z-index: ${Z_INDEX.TOOLTIP_ARROW};
-    }
-  `;
-}
-
-export function getTooltipStyles(
-  options: TooltipStylesOptions,
-  themeArg: Theme
-): string {
-  const { selector } = options;
-  const mdBreakpoint = themeArg.breakpoints.values.md - 1;
-
-  return `
-    ${getTooltipContentStyles(options, themeArg)}
-    ${getTooltipArrowStyles(options, themeArg)}
-    @media (max-width: ${mdBreakpoint}px) {
-      ${selector}::after,
-      ${selector}::before {
-        display: none !important;
-      }
-    }
-    ${selector}:focus-visible::after,
-    ${selector}:hover::after {
-      opacity: 1;
-      visibility: visible;
-    }
-    ${selector}:focus-visible::before,
-    ${selector}:hover::before {
-      opacity: 1;
-      visibility: visible;
-    }
-  `;
-}
+export {
+  getTooltipStyles,
+  type MapTooltipPosition,
+  type TooltipStylesOptions,
+} from "@/theme/mapTooltipShared";
 
 export function getMapContainerStyles(themeArg: Theme): string {
   const focusRing = themeArg.custom.colors.focusBlue;
@@ -218,7 +90,7 @@ export function getNavigationControlStyles(themeArg: Theme): string {
     border: 1px solid ${borderPaper} !important;
     box-shadow: ${controlShadow} !important;
     border-radius: ${themeArg.spacing(1)} !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box !important;
@@ -308,7 +180,7 @@ export function getNavigationControlStyles(themeArg: Theme): string {
 
   ${getTooltipStyles(
     {
-      position: "top",
+      position: "left",
       selector: ".maplibregl-ctrl-group button[data-tooltip]",
     },
     themeArg

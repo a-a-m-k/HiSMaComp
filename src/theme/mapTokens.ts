@@ -5,7 +5,7 @@
 export const MAP_NIGHT_BACKGROUND_DEFAULT = "#0f1720";
 export const MAP_NIGHT_PAPER = "rgba(34, 35, 37, 0.75)";
 export const MAP_NIGHT_BORDER_SUBTLE = "rgba(148, 163, 184, 0.08)";
-export const MAP_NIGHT_TEXT_PRIMARY = "#e2e8f0";
+export const MAP_NIGHT_TEXT_PRIMARY = "rgb(177, 179, 181)";
 export const MAP_NIGHT_TEXT_SECONDARY = "#94a3b8";
 export const MAP_NIGHT_DIVIDER = "rgba(148, 163, 184, 0.12)";
 export const MAP_NIGHT_TYPOGRAPHY_ROOT = "#cbd5f1";
