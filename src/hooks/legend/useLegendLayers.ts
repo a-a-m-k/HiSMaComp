@@ -10,6 +10,7 @@ import { useViewport } from "@/hooks/ui";
 type LegendLayer = {
   color: string;
   layer: string;
+  variant?: "noData";
 };
 
 const getPopulationThresholds = (isMobile: boolean): (string | number)[] =>
@@ -33,6 +34,7 @@ const createPopulationLayers = (
 const createNoDataLayer = (isMobile: boolean, color: string): LegendLayer => ({
   color,
   layer: isMobile ? "No data" : "No data for the current time period",
+  variant: "noData" as const,
 });
 
 /** Legend layers from population thresholds; uses useViewport for isMobile (single source). */
@@ -46,6 +48,6 @@ export const useLegendLayers = (
     const populationLayers = createPopulationLayers(thresholds, legendColors);
     const noDataLayer = createNoDataLayer(isMobile, legendColors[0]);
 
-    return [noDataLayer, ...populationLayers];
+    return [...populationLayers, noDataLayer];
   }, [isMobile, legendColors]);
 };

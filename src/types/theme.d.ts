@@ -62,6 +62,27 @@ declare module "@mui/material/styles" {
         offset: number;
         arrowOffset: number;
       };
+      /** Map legend card — colors, borders, and shell styles shared with legend UI. */
+      legend: {
+        colors: {
+          title: string;
+          scaleHeading: string;
+          layerLabel: string;
+        };
+        borders: {
+          paper: string;
+          sectionDivider: string;
+          layerIndicator: string;
+        };
+        shadows: {
+          paper: string;
+          layerDot: string;
+        };
+        collapseIconButton: {
+          size: number;
+          iconFontSize: number;
+        };
+      };
     };
   }
 
@@ -125,6 +146,26 @@ declare module "@mui/material/styles" {
         arrowSize?: number;
         offset?: number;
         arrowOffset?: number;
+      };
+      legend?: {
+        colors?: {
+          title?: string;
+          scaleHeading?: string;
+          layerLabel?: string;
+        };
+        borders?: {
+          paper?: string;
+          sectionDivider?: string;
+          layerIndicator?: string;
+        };
+        shadows?: {
+          paper?: string;
+          layerDot?: string;
+        };
+        collapseIconButton?: {
+          size?: number;
+          iconFontSize?: number;
+        };
       };
     };
   }

@@ -4,24 +4,28 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 import { ScreenshotButton as StyledScreenshotButton } from "./ScreenshotButton.styles";
 import { TRANSITIONS, OPACITY, SIZES } from "@/constants/ui";
-import { SIZING_CONSTANTS } from "@/constants/sizing";
 import { strings } from "@/locales";
 import { useScreenshot } from "@/hooks/ui";
-import { isInputField } from "@/utils/keyboard";
+import { isInputField, preventFocusOnMouseDown } from "@/utils/keyboard";
+
+export type ScreenshotButtonVariant = "floating" | "inline";
 
 type ScreenshotButtonProps = {
   mapContainerSelector?: string;
   filename?: string;
+  /** Legend header (tablet): match collapse control; default frosted circle for desktop overlay. */
+  variant?: ScreenshotButtonVariant;
 };
 
 /**
  * Screenshot button component.
- * Note: This component is conditionally rendered in MapView and is not shown on mobile devices (< 600px).
+ * Rendered in `MapView` overlay (tablet/desktop) or in the legend header on tablet.
  * Keyboard shortcut (Ctrl+S/Cmd+S) is only active when component is mounted.
  */
 const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
   mapContainerSelector = "#map-container",
   filename = "map.png",
+  variant = "floating",
 }) => {
   const { captureScreenshot, isCapturing } = useScreenshot({
     mapContainerSelector,
@@ -52,11 +56,12 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
   return (
     <StyledScreenshotButton
       id="map-screenshot-button"
+      data-variant={variant === "inline" ? "inline" : undefined}
       data-testid="screenshot-button"
       data-tooltip={
         isCapturing
-          ? "Capturing screenshot..."
-          : "Save map as image (Ctrl+S or Cmd+S)"
+          ? strings.screenshot.tooltipCapturing
+          : strings.screenshot.tooltip
       }
       onClick={captureScreenshot}
       size="medium"
@@ -65,15 +70,15 @@ const ScreenshotButton: React.FC<ScreenshotButtonProps> = ({
       disabled={isCapturing}
       tabIndex={0}
       disableRipple
+      onMouseDown={preventFocusOnMouseDown}
       sx={{
         opacity: isCapturing ? OPACITY.DISABLED : OPACITY.ACTIVE,
         transition: TRANSITIONS.OPACITY,
-        "& .MuiSvgIcon-root": {
-          fontSize: {
-            xs: SIZING_CONSTANTS.FONT_SIZES.ICON_DEFAULT,
-            xl: SIZING_CONSTANTS.FONT_SIZES.ICON_XL,
+        ...(variant === "floating" && {
+          "& .MuiSvgIcon-root": {
+            fontSize: "1.25rem",
           },
-        },
+        }),
       }}
     >
       {isCapturing ? (

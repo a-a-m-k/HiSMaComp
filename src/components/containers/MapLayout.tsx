@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
-import { useTheme } from "@mui/material/styles";
 
 import { ErrorBoundary } from "@/components/dev";
 import { Legend, Timeline } from "@/components/controls";
@@ -21,6 +20,7 @@ import {
   useOverlayButtonsVisible,
 } from "@/hooks/ui";
 import { strings } from "@/locales";
+import { lightTheme } from "@/theme/theme";
 import { calculateMapArea } from "@/utils/utils";
 import { getInitialMapProps, useStableMapKey } from "./MapLayoutHelpers";
 
@@ -44,7 +44,6 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
   const { towns, filteredTowns, selectedYear, isLoading, error, retry } =
     useApp();
   const viewport = useViewport();
-  const theme = useTheme();
   const narrowLayout = useNarrowLayout(viewport.rawScreenWidth);
   const [isMapIdle, setIsMapIdle] = React.useState(false);
   const { showOverlayButtons, isResizing } =
@@ -70,9 +69,11 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
     setIsRemounting(false);
   }, []);
 
+  /** `lightTheme` only: spacing/breakpoints match `darkTheme`; avoids refitting when toggling basemap mode. */
   const mapArea = React.useMemo(
-    () => calculateMapArea(viewport.screenWidth, viewport.screenHeight, theme),
-    [viewport.screenWidth, viewport.screenHeight, theme]
+    () =>
+      calculateMapArea(viewport.screenWidth, viewport.screenHeight, lightTheme),
+    [viewport.screenWidth, viewport.screenHeight]
   );
   const initialMapState = useInitialMapState(towns, mapArea);
   const useDefaultView =
@@ -172,7 +173,7 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
         <ErrorBoundary>
           <MapView
             key={deviceKey}
-            towns={filteredTowns}
+            towns={towns}
             selectedYear={selectedYear}
             initialPosition={initialPosition}
             initialZoom={initialZoom}

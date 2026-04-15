@@ -2,17 +2,21 @@ import React from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material/styles";
+import { alpha, useTheme } from "@mui/material/styles";
 import { strings } from "@/locales";
 
 interface LoadingSpinnerProps {
   message?: string;
   size?: number;
+  overlayOpacity?: number;
+  blurPx?: number;
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   message = strings.loading.default,
   size = 48,
+  overlayOpacity = 0.94,
+  blurPx = 8,
 }) => {
   const theme = useTheme();
 
@@ -32,8 +36,8 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         justifyContent: "center",
         gap: 3,
         zIndex: 1000,
-        backgroundColor: "rgba(255, 255, 255, 0.95)",
-        backdropFilter: "blur(4px)",
+        backgroundColor: alpha(theme.palette.background.paper, overlayOpacity),
+        ...(blurPx > 0 && { backdropFilter: `blur(${blurPx}px)` }),
       }}
     >
       <CircularProgress

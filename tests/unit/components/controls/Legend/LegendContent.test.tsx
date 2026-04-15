@@ -3,18 +3,40 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ThemeProvider } from "@mui/material/styles";
 import theme from "@/theme/theme";
-import { LegendContent } from "@/components/controls/Legend/LegendContent";
+import { LegendContent } from "@/ui/legend";
 import type { LayerItem } from "@/common/types";
 
 const wrap = (ui: React.ReactElement) =>
   React.createElement(ThemeProvider, { theme }, ui);
 
+vi.mock("@/context/MapStyleContext", () => ({
+  useMapStyleMode: () => ({
+    mode: "light" as const,
+    setMode: vi.fn(),
+    toggleMode: vi.fn(),
+  }),
+}));
+
 vi.mock("@/hooks/ui", async () => {
-  const { createResponsiveMock } = await import(
-    "../../../../helpers/mocks/responsive"
-  );
+  const { createResponsiveMock } =
+    await import("../../../../helpers/mocks/responsive");
   return {
     useResponsive: vi.fn(() => createResponsiveMock()),
+    useViewport: vi.fn(() => ({
+      isTablet: false,
+      isMobile: false,
+      isDesktop: true,
+      isXLarge: false,
+      screenWidth: 1200,
+      screenHeight: 800,
+      rawScreenWidth: 1200,
+      rawScreenHeight: 800,
+      isMobileLayout: false,
+      isTabletLayout: false,
+      isDesktopLayout: true,
+      isXLargeLayout: false,
+      isBelowMinViewport: false,
+    })),
   };
 });
 
@@ -25,8 +47,9 @@ vi.mock("@/constants/sizing", () => ({
   }),
 }));
 
-vi.mock("./useLegendContentStyles", () => ({
+vi.mock("@/ui/legend/useLegendContentStyles", () => ({
   useLegendContentStyles: () => ({
+    appTitleStyle: {},
     titleStyle: {},
     subtitleStyle: {},
     stackStyles: {},
@@ -99,7 +122,7 @@ describe("LegendContent", () => {
       )
     );
 
-    expect(screen.getByText(/Time around 1000/)).toBeInTheDocument();
+    expect(screen.getByText("1000s")).toBeInTheDocument();
     expect(screen.getByTestId("attribution-links")).toBeInTheDocument();
   });
 
@@ -118,7 +141,7 @@ describe("LegendContent", () => {
     expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
       "Legend"
     );
-    expect(screen.queryByText(/Time around/)).not.toBeInTheDocument();
+    expect(screen.queryByText("1000s")).not.toBeInTheDocument();
     expect(screen.queryByTestId("attribution-links")).not.toBeInTheDocument();
     expect(screen.queryByText("0–1k")).not.toBeInTheDocument();
   });
@@ -135,11 +158,15 @@ describe("LegendContent", () => {
     );
 
     const section = document.querySelector(
-      'section[aria-labelledby="legend-heading"]'
+      'section[aria-labelledby="legend-title"]'
     );
     expect(section).toBeInTheDocument();
+    expect(document.getElementById("legend-title")).toHaveTextContent(
+      "European Population"
+    );
     expect(document.getElementById("legend-heading")).toHaveTextContent(
       "Population"
     );
+    expect(screen.getByText("~800 AD")).toBeInTheDocument();
   });
 });

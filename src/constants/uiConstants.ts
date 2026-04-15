@@ -29,11 +29,17 @@ export const LEGEND_WIDTHS = {
   TABLET: "100%",
   DESKTOP: "22%",
   DESKTOP_MAX: "360px",
+  /**
+   * md–lg desktop: at ~1091px, 22% ≈ 240px and nowrap N/A labels (e.g. “No data for the
+   * current time period”) clip. Min width ensures the legend can grow past the percentage.
+   */
+  DESKTOP_MIN: "250px",
 } as const;
 
 export const LEGEND_WIDTH_CALCULATIONS = {
   LARGE_TABLET: { percentage: 0.21, min: 250 },
-  DESKTOP: { percentage: 0.22, min: 260 },
+  /** Keep in sync with `LEGEND_WIDTHS.DESKTOP_MIN` for `calculateMapArea` / zoom fitting. */
+  DESKTOP: { percentage: 0.22, min: 300 },
 } as const;
 
 export const TIMELINE_WIDTHS = {
@@ -42,10 +48,15 @@ export const TIMELINE_WIDTHS = {
   DESKTOP: "60%",
 } as const;
 
+/**
+ * Approximate rendered height of `#timeline` (outer nav Box) from getBoundingClientRect.
+ * Recheck after Timeline layout changes; keep in sync with `--timeline-height-*` in index.css.
+ * Reference viewports: mobile below 600px, tablet 600–899px, desktop 900px+ (see getDeviceType).
+ */
 export const TIMELINE_HEIGHTS = {
-  MOBILE: 87,
-  TABLET: 120,
-  DESKTOP: 110,
+  MOBILE: 138,
+  TABLET: 81,
+  DESKTOP: 92,
 } as const;
 
 export const OVERLAY_POSITIONS = {
@@ -61,8 +72,6 @@ export const OVERLAY_POSITIONS = {
   SCREENSHOT_BUTTON: {
     LEFT_DESKTOP: 1,
     TOP_DESKTOP: 2,
-    RIGHT_TABLET: 1,
-    BOTTOM_TABLET_CALCULATED: TIMELINE_HEIGHTS.TABLET + 8 + 8,
   },
 } as const;
 

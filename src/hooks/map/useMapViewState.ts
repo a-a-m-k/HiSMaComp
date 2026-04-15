@@ -36,6 +36,8 @@ interface UseMapViewStateReturn {
   onCameraFitComplete: () => void;
   syncViewStateFromMap: (state: CameraFitTarget) => void;
   cameraFitTargetRefForSync: React.RefObject<CameraFitTarget | null>;
+  /** Animate camera to target (same pipeline as resize refit). */
+  requestCameraFitTo: (target: CameraFitTarget) => void;
 }
 
 /** MapLayout remounts on breakpoint change; here we only see same-device resize. We sync viewState to fit so we don't rely on the map's resize. */
@@ -89,6 +91,10 @@ export function useMapViewState({
     setViewState(state);
   }, []);
 
+  const requestCameraFitTo = useCallback((target: CameraFitTarget) => {
+    setCameraFitTarget(target);
+  }, []);
+
   return {
     viewState,
     handleMove,
@@ -96,5 +102,6 @@ export function useMapViewState({
     onCameraFitComplete,
     syncViewStateFromMap,
     cameraFitTargetRefForSync,
+    requestCameraFitTo,
   };
 }

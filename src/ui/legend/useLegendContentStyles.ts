@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import type { CSSProperties } from "react";
 import type { Theme } from "@mui/material/styles";
 
+import { LEGEND_CONTENT_SPACING } from "./legendHelpers";
+
 export interface LegendLayoutFlags {
   isMobileLayout: boolean;
   isTabletLayout: boolean;
@@ -9,6 +11,7 @@ export interface LegendLayoutFlags {
 }
 
 export interface LegendContentStylesResult {
+  appTitleStyle: CSSProperties;
   titleStyle: CSSProperties;
   subtitleStyle: CSSProperties;
   stackStyles: {
@@ -33,23 +36,36 @@ export function useLegendContentStyles(
 ): LegendContentStylesResult {
   const { isMobileLayout, isTabletLayout, isMediumOrLargerLayout } = layout;
 
+  const appTitleStyle = useMemo<CSSProperties>(
+    () => ({
+      margin: 0,
+      marginBottom: 0,
+      textAlign: isTabletLayout || isMobileLayout ? "center" : "left",
+      width: "100%",
+      color: theme.custom.legend.colors.title,
+      fontSize: isMobileLayout ? "13px" : "14px",
+      fontWeight: 700,
+      lineHeight: 1.3,
+      letterSpacing: "-0.01em",
+    }),
+    [isMobileLayout, isTabletLayout, theme]
+  );
+
   const titleStyle = useMemo<CSSProperties>(
     () => ({
       margin: 0,
+      marginTop: 0,
       marginBottom: isMapIdle
-        ? isMobileLayout
-          ? theme.spacing(0.5)
-          : isTabletLayout
-            ? theme.spacing(0.75)
-            : theme.spacing(1.25)
+        ? theme.spacing(LEGEND_CONTENT_SPACING.headingMarginBottom)
         : 0,
       textAlign: isTabletLayout || isMobileLayout ? "center" : "left",
       width: "100%",
-      color: "#2f2f2f",
-      fontSize: isMobileLayout ? "0.78rem" : "0.88rem",
-      fontWeight: 500,
-      lineHeight: 1.25,
-      letterSpacing: "0.01em",
+      color: theme.custom.legend.colors.scaleHeading,
+      fontSize: "11px",
+      fontWeight: 700,
+      lineHeight: 1.3,
+      letterSpacing: "0.05em",
+      textTransform: "uppercase",
     }),
     [isMapIdle, isMobileLayout, isTabletLayout, theme]
   );
@@ -57,32 +73,21 @@ export function useLegendContentStyles(
   const subtitleStyle = useMemo<CSSProperties>(
     () => ({
       margin: 0,
-      marginBottom: isMobileLayout
-        ? theme.spacing(0.5)
-        : isTabletLayout
-          ? theme.spacing(1)
-          : theme.spacing(2),
+      marginTop: 0,
+      marginBottom: 0,
       textAlign: isTabletLayout || isMobileLayout ? "center" : "left",
       width: "100%",
-      color: theme.palette.text.secondary,
-      opacity: 0.9,
-      fontSize: isMobileLayout ? "0.78rem" : "0.88rem",
-      lineHeight: 1.25,
-      fontWeight: 500,
-      letterSpacing: "0.01em",
+      color: theme.palette.info.main,
+      fontSize: isMobileLayout ? "11px" : "11.5px",
+      lineHeight: 1.2,
+      fontWeight: 600,
     }),
     [isMobileLayout, isTabletLayout, theme]
   );
 
   const stackStyles = useMemo(
     () => ({
-      spacing: isMobileLayout
-        ? theme.spacing(0.5)
-        : isTabletLayout
-          ? theme.spacing(2.5)
-          : isMediumOrLargerLayout
-            ? theme.spacing(1.25)
-            : theme.spacing(1.5),
+      spacing: theme.spacing(LEGEND_CONTENT_SPACING.layerStackGap),
       direction: (isMediumOrLargerLayout ? "column" : "row") as
         | "row"
         | "column",
@@ -99,5 +104,5 @@ export function useLegendContentStyles(
     [isMobileLayout, isTabletLayout, isMediumOrLargerLayout, theme]
   );
 
-  return { titleStyle, subtitleStyle, stackStyles };
+  return { appTitleStyle, titleStyle, subtitleStyle, stackStyles };
 }

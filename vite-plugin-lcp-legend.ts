@@ -4,7 +4,7 @@ import { join } from "path";
 
 const LCP_PLACEHOLDER_COMMENT = "<!-- LCP_LEGEND_PLACEHOLDER -->";
 const LEGEND_LABEL_JSON = join(process.cwd(), "src/constants/legendLcp.json");
-const LEGEND_LABEL_FALLBACK = "Town size according to population number";
+const LEGEND_LABEL_FALLBACK = "Population Scale";
 
 /**
  * Injects the LCP legend heading placeholder into index.html at build and dev.

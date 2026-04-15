@@ -2,6 +2,8 @@
  * Utility functions for keyboard event handling and input field detection.
  */
 
+import type { MouseEvent as ReactMouseEvent } from "react";
+
 /**
  * Checks if the target element is an input field where keyboard shortcuts should be disabled.
  * Prevents shortcuts from triggering when user is typing in input fields, textareas, or contentEditable elements.
@@ -20,3 +22,14 @@ export const isInputField = (target: HTMLElement | null): boolean => {
 
   return target.tagName === "TEXTAREA" || target.isContentEditable === true;
 };
+
+/**
+ * Use as `onMouseDown` on icon buttons so primary clicks do not move focus to the
+ * control (avoids sticky hover/focus tooltip and pressed styling after mouse use).
+ * Keyboard users still Tab to the control and activate with Enter or Space.
+ */
+export function preventFocusOnMouseDown(e: ReactMouseEvent<HTMLElement>): void {
+  if (e.button === 0) {
+    e.preventDefault();
+  }
+}

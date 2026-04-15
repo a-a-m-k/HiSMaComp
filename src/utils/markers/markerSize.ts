@@ -19,8 +19,11 @@ export const calculateMarkerRadius = (
 };
 
 /**
- * Calculates marker diameter (for button size)
+ * Calculates marker diameter (for button size).
+ * Pass through `null`/`undefined` for no data (small hit target), same as radius.
  */
-export const calculateMarkerDiameter = (population: number): number => {
+export const calculateMarkerDiameter = (
+  population: number | null | undefined
+): number => {
   return calculateMarkerRadius(population) * 2;
 };

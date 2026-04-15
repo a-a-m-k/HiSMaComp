@@ -4,13 +4,30 @@ import { render, screen, fireEvent } from "@testing-library/react";
 
 import { TownMarkerItem } from "@/components/map/MapView/TownMarkers/TownMarkerItem";
 import type { Town } from "@/common/types";
+import { lightTheme } from "@/theme/theme";
 
 const enableTownMarkerFocusSpy = vi.hoisted(() => vi.fn());
+
+vi.mock("@mui/material/styles", async importOriginal => {
+  const actual = await importOriginal<typeof import("@mui/material/styles")>();
+  return {
+    ...actual,
+    useTheme: () => lightTheme,
+  };
+});
 
 vi.mock("react-map-gl/maplibre", () => ({
   Marker: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="marker-wrapper">{children}</div>
   ),
+}));
+
+vi.mock("@/context/MapStyleContext", () => ({
+  useMapStyleMode: () => ({
+    mode: "light" as const,
+    setMode: vi.fn(),
+    toggleMode: vi.fn(),
+  }),
 }));
 
 vi.mock("@/utils/markers", () => ({

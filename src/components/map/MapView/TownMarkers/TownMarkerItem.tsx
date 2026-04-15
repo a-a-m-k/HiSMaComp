@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTheme } from "@mui/material/styles";
 import { Marker } from "react-map-gl/maplibre";
 import { Town } from "@/common/types";
 import {
@@ -7,6 +8,7 @@ import {
   generateTownMarkerAriaLabel,
   enableTownMarkerFocus,
 } from "@/utils/markers";
+import { useMapStyleMode } from "@/context/MapStyleContext";
 import {
   getTownMarkerContainerStyles,
   getTownMarkerStyles,
@@ -43,15 +45,19 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
     onKeyDown,
     selectedYear,
   }) => {
-    const population = town.populationByYear?.[selectedYear] || 0;
+    const { mode: mapStyleMode } = useMapStyleMode();
+    const theme = useTheme();
+    const yearKey = String(selectedYear);
+    const rawPopulation = town.populationByYear?.[yearKey];
+    const population = rawPopulation ?? 0;
 
     const markerProps = useMemo(
       () => ({
-        size: calculateMarkerDiameter(population),
-        color: calculateMarkerColor(population),
+        size: calculateMarkerDiameter(rawPopulation),
+        color: calculateMarkerColor(rawPopulation, mapStyleMode),
         ariaLabel: generateTownMarkerAriaLabel(town, selectedYear),
       }),
-      [town, population, selectedYear]
+      [town, rawPopulation, selectedYear, mapStyleMode]
     );
 
     const markerStyles = useMemo(
@@ -61,8 +67,15 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
           markerColor: markerProps.color,
           isFocused,
           isHovered,
+          buttonOutlineColor: theme.custom.colors.buttonBackground,
         }),
-      [markerProps.size, markerProps.color, isFocused, isHovered]
+      [
+        markerProps.size,
+        markerProps.color,
+        isFocused,
+        isHovered,
+        theme.custom.colors.buttonBackground,
+      ]
     );
 
     const containerStyles = useMemo(
@@ -98,7 +111,7 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
               target.focus();
             }}
           />
-          {isFocused && (
+          {(isFocused || isHovered) && (
             <TownMarkerLabel
               townName={town.name}
               population={population}

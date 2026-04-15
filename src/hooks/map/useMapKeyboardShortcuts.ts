@@ -1,19 +1,20 @@
 import { useEffect, RefObject } from "react";
 import { MapRef } from "react-map-gl/maplibre";
+import { MAP_RESET_CAMERA_EVENT } from "@/constants/map";
 import { ZOOM_ANIMATION_DURATION_MS } from "@/constants/keyboard";
 import { logger } from "@/utils/logger";
 import { isInputField } from "@/utils/keyboard";
 
 /**
- * Keyboard shortcuts for map zoom (Cmd/Ctrl +/- and +/-). Smooth zoom animation.
- * Only active when enabled (e.g. desktop only).
- * Uses capture phase so the handler runs before the browser's default zoom behavior.
+ * Keyboard shortcuts for map zoom (Cmd/Ctrl +/- and +/-), Shift+R reset, Cmd/Ctrl+Shift+N basemap (night) toggle, and plain +/-.
+ * Smooth zoom animation. Only active when enabled (e.g. desktop only).
  * Pass zoomDurationMs 0 when user prefers reduced motion.
  */
 export const useMapKeyboardShortcuts = (
   mapRef: RefObject<MapRef>,
   enabled: boolean,
-  zoomDurationMs: number = ZOOM_ANIMATION_DURATION_MS
+  zoomDurationMs: number = ZOOM_ANIMATION_DURATION_MS,
+  onToggleBasemapMode?: () => void
 ) => {
   useEffect(() => {
     if (!enabled) {
@@ -21,6 +22,43 @@ export const useMapKeyboardShortcuts = (
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target;
+      if (target instanceof HTMLElement && isInputField(target)) {
+        return;
+      }
+
+      const isNightBasemapToggle =
+        e.shiftKey &&
+        (e.metaKey || e.ctrlKey) &&
+        e.code === "KeyN" &&
+        !e.altKey;
+
+      if (isNightBasemapToggle) {
+        if (!onToggleBasemapMode) {
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation?.();
+        onToggleBasemapMode();
+        return;
+      }
+
+      const isResetView =
+        e.shiftKey &&
+        e.code === "KeyR" &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey;
+
+      if (isResetView) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation?.();
+        window.dispatchEvent(new Event(MAP_RESET_CAMERA_EVENT));
+        return;
+      }
+
       const isZoomIn =
         e.key === "=" ||
         e.key === "+" ||
@@ -35,11 +73,6 @@ export const useMapKeyboardShortcuts = (
         e.code === "NumpadSubtract";
 
       if (!isZoomIn && !isZoomOut) return;
-
-      const target = e.target;
-      if (target instanceof HTMLElement && isInputField(target)) {
-        return;
-      }
 
       e.preventDefault();
       e.stopPropagation();
@@ -73,5 +106,5 @@ export const useMapKeyboardShortcuts = (
         passive: false,
       } as EventListenerOptions);
     };
-  }, [mapRef, enabled, zoomDurationMs]);
+  }, [mapRef, enabled, zoomDurationMs, onToggleBasemapMode]);
 };

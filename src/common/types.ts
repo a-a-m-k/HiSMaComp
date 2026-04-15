@@ -15,6 +15,8 @@ export interface PerformanceMemory {
 export interface LayerItem {
   layer: string;
   color: string;
+  /** Legend: render in a separate band below population bands (divider above). */
+  variant?: "noData";
 }
 
 export interface TimelineMark {

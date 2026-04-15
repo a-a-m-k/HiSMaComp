@@ -5,6 +5,7 @@ import MapView from "@/components/map/MapView/MapView";
 import { AppProvider } from "@/context/AppContext";
 import { Town } from "@/common/types";
 import { DEFAULT_MAP_CONTAINER_PROPS } from "@/components/map/MapView/constants";
+import { lightTheme } from "@/theme/theme";
 
 vi.mock("@mui/material", async importOriginal => {
   const actual = await importOriginal<typeof import("@mui/material")>();
@@ -34,6 +35,7 @@ vi.mock("@mui/material/styles", async importOriginal => {
 
   return {
     ...actual,
+    useTheme: () => lightTheme,
     styled: (component: any) => {
       return (styles: any) => {
         const StyledComponent = ({ children, ...props }: any) => {
@@ -45,6 +47,14 @@ vi.mock("@mui/material/styles", async importOriginal => {
     },
   };
 });
+
+vi.mock("@/context/MapStyleContext", () => ({
+  useMapStyleMode: () => ({
+    mode: "light" as const,
+    setMode: vi.fn(),
+    toggleMode: vi.fn(),
+  }),
+}));
 
 vi.mock("@/utils/map", async importOriginal => {
   const actual = await importOriginal<typeof import("@/utils/map")>();
@@ -91,6 +101,8 @@ vi.mock(
       }: {
         children: React.ReactNode;
       }) => React.createElement("div", null, children),
+      MapOverlayToolsStack: ({ children }: { children: React.ReactNode }) =>
+        React.createElement("div", null, children),
       ScreenshotButton,
     };
   }
@@ -127,6 +139,19 @@ const viewportState = vi.hoisted(() => ({
 }));
 
 vi.mock("react-map-gl/maplibre", () => {
+  const mockMapInstance = {
+    getLayer: vi.fn((id: string) => (id.endsWith("-text") ? {} : null)),
+    moveLayer: vi.fn(),
+    once: vi.fn((_e: string, fn: () => void) => {
+      fn();
+    }),
+    on: vi.fn(),
+    off: vi.fn(),
+  };
+  const mockMapRef = {
+    getMap: () => mockMapInstance,
+  };
+
   const MockMap = React.forwardRef(
     (props: { children: React.ReactNode }, ref: React.Ref<any>) => {
       lastMapProps = props;
@@ -149,6 +174,7 @@ vi.mock("react-map-gl/maplibre", () => {
     Marker: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="map-marker">{children}</div>
     ),
+    useMap: () => ({ current: mockMapRef }),
     __getLastMapProps: () => lastMapProps,
   };
 });
@@ -230,7 +256,7 @@ vi.mock("@/utils/utils", () => ({
   isValidCoordinate: () => true,
 }));
 
-vi.mock("../MapLayer/MapLayer", () => ({
+vi.mock("@/components/map/MapView/MapLayer/MapLayer", () => ({
   default: ({
     layerId,
     data,
@@ -248,9 +274,8 @@ vi.mock("../MapLayer/MapLayer", () => ({
 // Single viewport source: MapView uses useViewport() for dimensions + device flags.
 // Derive device from viewportState.width (MUI breakpoints) so mock stays in sync with test.
 vi.mock("@/hooks/ui", async () => {
-  const { createResponsiveMock } = await import(
-    "../../helpers/mocks/responsive"
-  );
+  const { createResponsiveMock } =
+    await import("../../helpers/mocks/responsive");
   const viewportFromWidth = (w: number) => {
     const isMobile = w < 600;
     const isTablet = w >= 600 && w < 900;
@@ -329,12 +354,20 @@ vi.mock("@/hooks/map", () => ({
   useMapKeyboardPanning: vi.fn(),
   useNavigationControlAccessibility: vi.fn(),
   useMapContainerResize: vi.fn(() => null),
+  useMapViewLibreEffects: vi.fn(() => ({
+    handleOverlayMapLoad: vi.fn(),
+    handleBasemapLoad: vi.fn(),
+  })),
+  useMapStyleSwitchLoader: vi.fn(({ onFirstIdle }) => ({
+    isStyleSwitching: false,
+    onOverlayIdle: () => onFirstIdle?.(),
+    onBasemapIdle: vi.fn(),
+  })),
   useTownsGeoJSON: vi.fn(() => ({ type: "FeatureCollection", features: [] })),
   useMapLayerExpressions: vi.fn(() => ({
     populationSortKey: "population",
     circleRadiusExpression: ["get", "radius"],
     circleColorExpression: ["get", "color"],
-    populationExpression: ["get", "population"],
   })),
   useMarkerKeyboardNavigation: vi.fn(() => vi.fn()),
 }));
@@ -453,6 +486,7 @@ describe("MapView", () => {
     expect(props?.maxZoom).toBe(DEFAULT_MAP_CONTAINER_PROPS.maxZoom);
     expect(props?.keyboard).toBe(true);
     expect(props?.scrollZoom).toBe(true);
+    expect(props?.crossSourceCollisions).toBe(false);
   });
 
   it("should defer overlays until first map idle event", async () => {
@@ -479,7 +513,7 @@ describe("MapView", () => {
     expect(screen.getByTestId("town-markers")).toBeInTheDocument();
   });
 
-  it("should hide screenshot button on mobile", async () => {
+  it("hides snapshot on mobile but keeps reset and style controls", async () => {
     viewportState.width = 375;
     viewportState.height = 667;
 
@@ -498,6 +532,10 @@ describe("MapView", () => {
       expect(screen.getByTestId("map-container")).toBeInTheDocument();
     });
 
+    await waitFor(() => {
+      expect(screen.getByTestId("map-reset-view-button")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("map-style-toggle")).toBeInTheDocument();
     expect(screen.queryByTestId("screenshot-button")).not.toBeInTheDocument();
   });
 

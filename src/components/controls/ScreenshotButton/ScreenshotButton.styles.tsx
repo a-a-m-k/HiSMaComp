@@ -2,20 +2,19 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import { styled } from "@mui/material/styles";
 
+import { MAP_NAV_CONTROL_BUTTON_PX } from "@/constants/map";
+import { OVERLAY_POSITIONS } from "@/constants/ui";
 import {
-  FLOATING_BUTTON_SIZE,
-  SCREENSHOT_BUTTON_DESKTOP_SIZE,
-} from "@/constants";
-import { BORDER_RADIUS, OVERLAY_POSITIONS } from "@/constants/ui";
-import { SIZING_CONSTANTS } from "@/constants/sizing";
+  mapOverlayControlSurfaceBackground,
+  mapOverlayIconButtonFloatingStyles,
+  mapOverlayIconButtonInlineStyles,
+  mapOverlayIconButtonRootStyles,
+} from "@/theme/mapOverlayIconButtonSharedStyles";
+import { mapOverlayNavGroupIconButtonStyles } from "@/theme/mapOverlayNavGroupStyles";
 
 /**
- * Container for the screenshot button with responsive positioning.
- *
- * Positioning Strategy:
- * - Desktop: Fixed at top-left corner
- * - Tablet: Fixed at bottom-right, above timeline (uses CSS variable for bottom calculation)
- * - Mobile: Not rendered (handled in MapView component)
+ * Fixed container for the screenshot control when used alone (legacy).
+ * Prefer `MapOverlayToolsStack` for snapshot + reset; tablet still uses the legend header row.
  */
 export const ScreenshotButtonContainer = styled(Box)(({ theme }) => ({
   position: "fixed",
@@ -27,126 +26,61 @@ export const ScreenshotButtonContainer = styled(Box)(({ theme }) => ({
     bottom: "auto",
     right: "auto",
   },
-  [theme.breakpoints.between("sm", "md")]: {
-    "&&": {
-      right: theme.spacing(OVERLAY_POSITIONS.SCREENSHOT_BUTTON.RIGHT_TABLET),
-      bottom: "var(--screenshot-button-tablet-bottom)",
-      top: "auto",
-      left: "auto",
+}));
+
+/**
+ * Snapshot + reset + map style: phone = right-aligned column above timeline; `sm`–`md` = row; `md+` = column grouped like MapLibre zoom (`.maplibregl-ctrl-group`).
+ * Phone: bottom-right (safe area), stacked above the fixed timeline (see `--timeline-height-mobile` in index.css).
+ */
+export const MapOverlayToolsStack = styled(Box)(({ theme }) => ({
+  position: "fixed",
+  zIndex: theme.custom.zIndex.floatingButton,
+  transition: theme.custom.transitions.normal,
+  display: "flex",
+  alignItems: "center",
+  gap: theme.spacing(1),
+  flexDirection: "row",
+  left: theme.spacing(OVERLAY_POSITIONS.SCREENSHOT_BUTTON.LEFT_DESKTOP),
+  top: theme.spacing(OVERLAY_POSITIONS.SCREENSHOT_BUTTON.TOP_DESKTOP),
+  [theme.breakpoints.down("sm")]: {
+    left: "auto",
+    top: "auto",
+    right: `max(${theme.spacing(2)}, env(safe-area-inset-right, 0px))`,
+    transform: "none",
+    /** Timeline uses bottom: max(8px, safe-area); lift stack by timeline height + gap. */
+    bottom: `calc(var(--timeline-height-mobile) + max(${theme.spacing(1)}, env(safe-area-inset-bottom, 0px)) + ${theme.spacing(1.5)})`,
+    flexDirection: "column",
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  [theme.breakpoints.up("md")]: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 0,
+    alignSelf: "flex-start",
+    width: MAP_NAV_CONTROL_BUTTON_PX,
+    backgroundColor: mapOverlayControlSurfaceBackground(theme),
+    backdropFilter: "blur(16px)",
+    WebkitBackdropFilter: "blur(16px)",
+    border: `1px solid ${theme.palette.divider}`,
+    boxShadow: theme.custom.shadows.medium,
+    borderRadius: theme.spacing(1),
+    overflow: "visible",
+    "& > .MuiIconButton-root + .MuiIconButton-root": {
+      borderTop: `1px solid ${theme.palette.divider}`,
     },
   },
 }));
 
 /**
- * Styled screenshot button matching MapLibre control container appearance.
- * Border radius matches MapLibre controls (4px) for visual consistency.
+ * `data-variant="inline"` — legend header (tablet): matches collapse `IconButton`.
+ * Default / floating — frosted circles on small screens; in `MapOverlayToolsStack` at `md+`, matches zoom `.maplibregl-ctrl-group`.
  */
 export const ScreenshotButton = styled(IconButton, {
   shouldForwardProp: () => true,
 })(({ theme }) => ({
-  "&&": {
-    borderRadius: `${BORDER_RADIUS.CONTROL}px`,
-    width: FLOATING_BUTTON_SIZE,
-    height: FLOATING_BUTTON_SIZE,
-    minWidth: FLOATING_BUTTON_SIZE,
-    minHeight: FLOATING_BUTTON_SIZE,
-    padding: 0,
-    color: theme.palette.text.primary,
-    background: theme.custom.colors.buttonBackground,
-    boxShadow: theme.custom.shadows.controlOutline,
-    border: `1px solid ${theme.custom.colors.controlBorder}`,
-    position: "relative",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    transition: theme.custom.transitions.normal,
-  },
-  "&, &:hover, &:focus, &:focus-visible, &:active": {
-    borderRadius: `${BORDER_RADIUS.CONTROL}px`,
-  },
-  "& .MuiTouchRipple-root": {
-    borderRadius: `${BORDER_RADIUS.CONTROL}px`,
-  },
-  "& .MuiTouchRipple-ripple": {
-    borderRadius: `${BORDER_RADIUS.CONTROL}px`,
-  },
-  "&:hover": {
-    backgroundColor: theme.custom.colors.buttonHover,
-    border: `1px solid ${theme.custom.colors.controlBorder}`,
-    outline: "none",
-    boxShadow: theme.custom.shadows.controlOutline,
-  },
-  "&:focus": {
-    backgroundColor: theme.custom.colors.buttonHover,
-    outline: "none",
-    boxShadow: theme.custom.shadows.controlOutline,
-  },
-  "&:focus-visible": {
-    outline: "none",
-    boxShadow: `0 0 2px 2px ${theme.custom.colors.focusBlue}`,
-  },
-  "&:active": {
-    backgroundColor: theme.custom.colors.buttonActive,
-  },
-  "&[data-tooltip]::after": {
-    content: "attr(data-tooltip)",
-    position: "absolute",
-    left: `calc(100% + ${theme.custom.tooltip.offset + 2}px)`,
-    top: "50%",
-    transform: "translateY(-50%)",
-    backgroundColor: theme.custom.colors.tooltipBackground,
-    color: theme.custom.colors.tooltipText,
-    padding: theme.custom.tooltip.padding,
-    borderRadius: theme.custom.tooltip.borderRadius,
-    fontSize: theme.custom.tooltip.fontSize,
-    whiteSpace: "nowrap",
-    pointerEvents: "none",
-    opacity: 0,
-    visibility: "hidden",
-    transition: theme.custom.transitions.tooltip,
-    zIndex: theme.custom.zIndex.tooltip,
-    boxShadow: theme.custom.shadows.tooltip,
-    [theme.breakpoints.down("md")]: {
-      display: "none",
-    },
-  },
-  "&[data-tooltip]:focus-visible::after, &[data-tooltip]:hover::after": {
-    opacity: 1,
-    visibility: "visible",
-  },
-  "&[data-tooltip]::before": {
-    content: '""',
-    position: "absolute",
-    left: `calc(100% + ${theme.custom.tooltip.offset - 6}px)`,
-    top: "50%",
-    transform: "translateY(-50%)",
-    width: 0,
-    height: 0,
-    borderTop: `${theme.custom.tooltip.arrowSize}px solid transparent`,
-    borderBottom: `${theme.custom.tooltip.arrowSize}px solid transparent`,
-    borderRight: `${theme.custom.tooltip.arrowSize}px solid ${theme.custom.colors.tooltipBackground}`,
-    opacity: 0,
-    visibility: "hidden",
-    transition: theme.custom.transitions.tooltip,
-    zIndex: theme.custom.zIndex.tooltipArrow,
-    [theme.breakpoints.down("md")]: {
-      display: "none",
-    },
-  },
-  "&[data-tooltip]:focus-visible::before, &[data-tooltip]:hover::before": {
-    opacity: 1,
-    visibility: "visible",
-  },
-  [theme.breakpoints.up("md")]: {
-    width: SCREENSHOT_BUTTON_DESKTOP_SIZE,
-    height: SCREENSHOT_BUTTON_DESKTOP_SIZE,
-    minWidth: SCREENSHOT_BUTTON_DESKTOP_SIZE,
-    minHeight: SCREENSHOT_BUTTON_DESKTOP_SIZE,
-  },
-  [theme.breakpoints.up("xl")]: {
-    width: FLOATING_BUTTON_SIZE * SIZING_CONSTANTS.XL_SIZE_MULTIPLIER,
-    height: FLOATING_BUTTON_SIZE * SIZING_CONSTANTS.XL_SIZE_MULTIPLIER,
-    minWidth: FLOATING_BUTTON_SIZE * SIZING_CONSTANTS.XL_SIZE_MULTIPLIER,
-    minHeight: FLOATING_BUTTON_SIZE * SIZING_CONSTANTS.XL_SIZE_MULTIPLIER,
-  },
+  ...mapOverlayIconButtonRootStyles(theme),
+  ...mapOverlayIconButtonFloatingStyles(theme),
+  ...mapOverlayNavGroupIconButtonStyles(theme),
+  ...mapOverlayIconButtonInlineStyles(theme),
 }));

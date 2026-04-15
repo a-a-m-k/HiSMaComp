@@ -1,10 +1,12 @@
 import {
   MAP_LEGEND_COLORS,
+  getLegendColorsForMapMode,
   MAX_MARKER_SIZE,
   MIN_MARKER_SIZE,
   NO_DATA_MARKER_SIZE,
   POPULATION_THRESHOLDS,
 } from "@/constants";
+import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
 
 export interface MarkerScaleConfig {
   populationThresholds: number[];
@@ -20,6 +22,13 @@ export const getDefaultMarkerScaleConfig = (): MarkerScaleConfig => ({
   minMarkerSize: MIN_MARKER_SIZE,
   maxMarkerSize: MAX_MARKER_SIZE,
   noDataMarkerSize: NO_DATA_MARKER_SIZE,
+});
+
+export const getMarkerScaleConfigForMapMode = (
+  mode: MapBaseStyleMode
+): MarkerScaleConfig => ({
+  ...getDefaultMarkerScaleConfig(),
+  legendColors: getLegendColorsForMapMode(mode),
 });
 
 export const getMarkerScaleBounds = (config: MarkerScaleConfig) => ({
@@ -60,7 +69,10 @@ export const calculateMarkerColorFromPopulation = (
   population: number | null | undefined,
   config: MarkerScaleConfig
 ): string => {
-  const pop = population ?? 0;
+  if (population == null) {
+    return config.legendColors[0];
+  }
+  const pop = population;
 
   for (let i = config.populationThresholds.length - 1; i >= 0; i--) {
     if (pop >= config.populationThresholds[i]) {
@@ -68,5 +80,6 @@ export const calculateMarkerColorFromPopulation = (
     }
   }
 
-  return config.legendColors[0];
+  /** 0…4999: visible grey — same as GeoJSON circles (not N/A white). */
+  return config.legendColors[1];
 };

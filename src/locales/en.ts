@@ -16,6 +16,7 @@ export const en = {
   loading: {
     default: "Processing data...",
     resizingMap: "Resizing map...",
+    switchingMapStyle: "Switching map style...",
     loadingHistoricalData: "Loading historical data...",
   },
   map: {
@@ -36,20 +37,44 @@ export const en = {
       "Press Ctrl+S or Cmd+S to save the map as an image.",
     descriptionShortcutZoomDesktop:
       "Press Ctrl+Plus or Cmd+Plus to zoom in, and Ctrl+Minus or Cmd+Minus to zoom out.",
+    descriptionShortcutResetDesktop:
+      "Press Shift+R to reset the map to its initial center and zoom.",
+    descriptionShortcutBasemapDesktop:
+      "Press Ctrl+Shift+N or Cmd+Shift+N to switch between full-color map and night (grayscale) map.",
     descriptionShortcutZoomTablet:
       "On tablets, use pinch-to-zoom gestures to zoom.",
     descriptionMarkersColor: "Town markers are color-coded by population size.",
+    resetViewAria:
+      "Reset map to initial center and zoom. Keyboard shortcut: Shift+R.",
+    /** Hover/focus tooltip (tablet legend + desktop overlay). */
+    resetViewTooltip: "Reset map to initial center and zoom (Shift+R)",
+    zoomInTooltip: "Zoom in (Ctrl+Plus or Cmd+Plus)",
+    zoomOutTooltip: "Zoom out (Ctrl+Minus or Cmd+Minus)",
+    mapStyleDarkAria:
+      "Use grayscale night map (same terrain, muted colors). Keyboard shortcut: Control+Shift+N or Command+Shift+N.",
+    mapStyleLightAria:
+      "Use full-color map. Keyboard shortcut: Control+Shift+N or Command+Shift+N.",
+    mapStyleDarkTooltip: "Grayscale night map (Ctrl+Shift+N or Cmd+Shift+N)",
+    mapStyleLightTooltip: "Full-color map (Ctrl+Shift+N or Cmd+Shift+N)",
   },
   timeline: {
     selectYearAria: "Select historical year",
     yearSuffix: " AD",
+    navigationAria: "Timeline navigation",
+    centurySliderAria: "Century slider",
+    currentPeriod: "Current Period",
   },
   legend: {
     attributionLinksAria: "Attribution links",
     opensInNewTab: "Opens in new tab",
+    collapseLegend: "Collapse legend",
+    expandLegend: "Expand legend",
+    scaleDetailsAria: "Population scale details",
   },
   screenshot: {
     ariaLabel: "Save map as image file. Press Ctrl+S or Cmd+S to save.",
+    tooltip: "Save map as image (Ctrl+S or Cmd+S)",
+    tooltipCapturing: "Capturing screenshot...",
   },
   dev: {
     logDebugAria: "Log debug information to console",

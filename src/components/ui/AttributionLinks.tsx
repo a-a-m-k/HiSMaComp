@@ -1,77 +1,130 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
+import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { ATTRIBUTION_LINKS } from "@/constants";
-import { SPACING, BORDER_RADIUS } from "@/constants";
+import {
+  ATTRIBUTION_LINKS,
+  type AttributionLink,
+  getAttributionLinkInlineSx,
+  getLegendAttributionTypographySx,
+} from "@/constants";
 import { strings } from "@/locales";
-import { getLegendStyles } from "@/constants/sizing";
-import { useMemo } from "react";
 
-export const AttributionLinks: React.FC = () => {
+function AttributionAnchor({ link }: { link: AttributionLink }) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const sizingStyles = useMemo(() => getLegendStyles(theme), [theme]);
+  return (
+    <Link
+      href={link.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      underline="none"
+      sx={getAttributionLinkInlineSx(theme)}
+      aria-label={`${link.label} - ${strings.legend.opensInNewTab}`}
+    >
+      {link.label}
+    </Link>
+  );
+}
 
-  const linkSx = {
-    ...sizingStyles.attributionLinks,
-    px: theme.spacing(SPACING.XS / 2),
-    py: theme.spacing(SPACING.XS / 5),
-    borderRadius: BORDER_RADIUS.SMALL,
-    transition: theme.custom.transitions.color,
-    "&:hover": {
-      color: theme.palette.action.hover,
-    },
-    "&:focus-visible": {
-      outline: "none",
-      color: theme.custom.colors.textBlack,
-      fontWeight: 600,
-      textDecoration: "none",
-    },
-    "&:focus:not(:focus-visible)": {
-      outline: "none",
-      textDecoration: "none",
-    },
-    textAlign: "center" as const,
-    width: "auto",
-    minWidth: 0,
+function AttributionLine({ links }: { links: readonly AttributionLink[] }) {
+  const theme = useTheme();
+  return (
+    <Typography
+      component="p"
+      sx={{
+        ...getLegendAttributionTypographySx(theme),
+        m: 0,
+      }}
+    >
+      {links.map((link, i) => (
+        <React.Fragment key={link.href}>
+          {i > 0 ? " " : null}
+          <AttributionAnchor link={link} />
+        </React.Fragment>
+      ))}
+    </Typography>
+  );
+}
+
+export interface AttributionLinksProps {
+  /**
+   * How the block sits in the footer on `lg+`. Below `lg` (mobile through `md`), attribution is
+   * always one centered line regardless of this prop.
+   */
+  rowAlignment?: "center" | "left";
+}
+
+/** Two grouped rows for large screens: Stadia + Stamen, then OpenMapTiles + OpenStreetMap. */
+const ATTRIBUTION_ROW_1 = ATTRIBUTION_LINKS.slice(0, 2);
+const ATTRIBUTION_ROW_2 = ATTRIBUTION_LINKS.slice(2, 4);
+
+export const AttributionLinks: React.FC<AttributionLinksProps> = ({
+  rowAlignment,
+}) => {
+  const theme = useTheme();
+  /** Mobile + tablet + md: single centered line; `lg+`: two lines, left by default. */
+  const isLgDown = useMediaQuery(theme.breakpoints.down("lg"));
+  const alignLgUp = rowAlignment ?? "left";
+
+  const navShellProps = {
+    component: "nav" as const,
+    "aria-label": strings.legend.attributionLinksAria,
+    "data-legend-attribution": "",
   };
+
+  if (isLgDown) {
+    return (
+      <Box
+        {...navShellProps}
+        sx={{
+          width: "100%",
+          mt: 0,
+          mb: 0,
+          textAlign: "center",
+        }}
+      >
+        <AttributionLine links={ATTRIBUTION_LINKS} />
+      </Box>
+    );
+  }
 
   return (
     <Box
-      id="attribution"
-      component="nav"
-      aria-label={strings.legend.attributionLinksAria}
+      {...navShellProps}
       sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: isMobile ? theme.spacing(0.25) : theme.spacing(SPACING.XS * 0.6),
         width: "100%",
-        mt: isMobile ? theme.spacing(1) : theme.spacing(1.5),
-        mb: isMobile ? theme.spacing(0.5) : theme.spacing(SPACING.SM),
-        alignItems: "center",
-        justifyContent: "center",
-        wordBreak: "normal",
-        overflowWrap: "normal",
-        whiteSpace: "nowrap",
+        mt: 0,
+        mb: 0,
       }}
     >
-      {ATTRIBUTION_LINKS.map(({ href, label }) => (
-        <Link
-          key={href}
-          href={href}
-          target="_blank"
-          underline="none"
-          rel="noopener noreferrer"
-          color="text.primary"
-          sx={linkSx}
-          tabIndex={-1}
-          aria-label={`${label} - ${strings.legend.opensInNewTab}`}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: alignLgUp === "center" ? "center" : "flex-start",
+          gap: 0.25,
+          width: "100%",
+        }}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            textAlign: alignLgUp,
+          }}
         >
-          {label}
-        </Link>
-      ))}
+          <AttributionLine links={ATTRIBUTION_ROW_1} />
+        </Box>
+        <Box
+          sx={{
+            width: "100%",
+            textAlign: alignLgUp,
+          }}
+        >
+          <AttributionLine links={ATTRIBUTION_ROW_2} />
+        </Box>
+      </Box>
     </Box>
   );
 };

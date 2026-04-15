@@ -1,9 +1,37 @@
-import { Theme } from "@mui/material/styles";
-import { ATTRIBUTION_TEXT } from "@/constants";
-export function hideMapControls(mapContainer: HTMLElement) {
-  const controls = mapContainer.querySelectorAll(
-    ".maplibregl-control-container, .maplibregl-ctrl, #attribution, #map-screenshot-button, #info-button, #timeline"
-  );
+/** Fired before capture so the legend can expand if it was collapsed. */
+export const LEGEND_SCREENSHOT_EXPAND_EVENT =
+  "hismacomp:legend-screenshot-expand";
+/** Fired after capture (finally) so the legend can restore its prior open state. */
+export const LEGEND_SCREENSHOT_RESTORE_EVENT =
+  "hismacomp:legend-screenshot-restore";
+/** Allow MUI `Collapse` open animation to finish (`timeout` 300ms + buffer). */
+export const LEGEND_SCREENSHOT_EXPAND_WAIT_MS = 320;
+
+export type HideMapControlsOptions = {
+  /**
+   * When true, the save control stays visible during capture (e.g. narrow screens).
+   * The reset/centering control is always hidden for a clean export.
+   */
+  keepScreenshotButtonVisibleDuringCapture?: boolean;
+};
+
+export function hideMapControls(
+  mapContainer: HTMLElement,
+  options?: HideMapControlsOptions
+) {
+  const parts = [
+    ".maplibregl-control-container",
+    ".maplibregl-ctrl",
+    "#map-reset-view-button",
+    "#map-style-toggle",
+    "#legend-collapse-button",
+    "#info-button",
+    "#timeline",
+  ];
+  if (!options?.keepScreenshotButtonVisibleDuringCapture) {
+    parts.push("#map-screenshot-button");
+  }
+  const controls = mapContainer.querySelectorAll(parts.join(", "));
   const prevDisplay: string[] = [];
 
   controls.forEach((el, i) => {
@@ -22,42 +50,4 @@ export function restoreMapControls(
   controls.forEach((el, i) => {
     (el as HTMLElement).style.display = prevDisplay[i] || "";
   });
-}
-
-export function addAttributionOverlay(
-  mapContainer: HTMLElement,
-  theme: Theme,
-  isMobile: boolean = false,
-  isTablet: boolean = false
-) {
-  const attributionDiv = document.createElement("div");
-  attributionDiv.innerText = ATTRIBUTION_TEXT;
-
-  let fontSize: number;
-  if (isMobile) {
-    fontSize = 8;
-  } else if (isTablet) {
-    fontSize = 10;
-  } else {
-    fontSize = 12;
-  }
-
-  Object.assign(attributionDiv.style, {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    background: theme.palette.background.paper,
-    color: theme.palette.text.primary,
-    fontSize: theme.typography.pxToRem(fontSize),
-    padding: theme.spacing(0.25, 1),
-    pointerEvents: "none",
-    zIndex: "9999",
-    opacity: "0.8",
-    whiteSpace: "pre-line",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-  });
-
-  mapContainer.appendChild(attributionDiv);
-  return attributionDiv;
 }

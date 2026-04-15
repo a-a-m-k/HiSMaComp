@@ -1,10 +1,10 @@
 import React, { Suspense } from "react";
-import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 
-import theme from "@/theme/theme";
 import MapPage from "@/pages/MapPage";
 import { ErrorBoundary } from "@/components/dev";
+import { MapStyleProvider } from "@/context/MapStyleContext";
+import { AppThemeProvider } from "@/theme/AppThemeProvider";
 
 const PerformanceMonitor = React.lazy(
   () => import("@/components/dev/PerformanceMonitor/PerformanceMonitor")
@@ -17,22 +17,24 @@ const ErrorTestHelper = React.lazy(() =>
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <ErrorBoundary>
-        {import.meta.env.DEV && (
-          <Suspense fallback={null}>
-            <ErrorTestHelper />
-          </Suspense>
-        )}
-        <MapPage />
+    <MapStyleProvider>
+      <AppThemeProvider>
+        <CssBaseline enableColorScheme />
+        <ErrorBoundary>
+          {import.meta.env.DEV && (
+            <Suspense fallback={null}>
+              <ErrorTestHelper />
+            </Suspense>
+          )}
+          <MapPage />
+        </ErrorBoundary>
         {import.meta.env.DEV && (
           <Suspense fallback={null}>
             <PerformanceMonitor />
           </Suspense>
         )}
-      </ErrorBoundary>
-    </ThemeProvider>
+      </AppThemeProvider>
+    </MapStyleProvider>
   );
 };
 

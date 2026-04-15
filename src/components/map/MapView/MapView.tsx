@@ -4,22 +4,29 @@ import MaplibreGL from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "@mui/material/styles";
 
-import { DEFAULT_MAP_CONTAINER_PROPS, TILE_LOADING_OPTIONS } from "./constants";
+import {
+  DEFAULT_MAP_CONTAINER_PROPS,
+  SPLIT_OVERLAY_TILE_OPTIONS,
+  TILE_LOADING_OPTIONS,
+} from "./constants";
 import MapLayer from "./MapLayer/MapLayer";
 import { MapOverlays } from "./MapOverlays";
 import {
   getTerrainStyle,
   getMapDescription,
+  getPopulationOverlayStyle,
   handleMapFeatureClick,
+  POPULATION_OVERLAY_STYLE_REVISION,
 } from "@/utils/map";
 import { getZoomToFitBounds } from "@/utils/mapZoom";
 import { calculateMapArea } from "@/utils/utils";
-import { MAP_LAYER_ID } from "@/constants";
+import { MAP_LAYER_ID, MAP_RESET_CAMERA_EVENT } from "@/constants";
 import { ZOOM_ANIMATION_DURATION_MS } from "@/constants/keyboard";
 import { getMapStyles } from "@/constants/ui";
 import { strings } from "@/locales";
 import { useViewport, usePrefersReducedMotion } from "@/hooks/ui";
 import type { Town } from "@/common/types";
+import { LoadingSpinner } from "@/components/ui";
 import {
   useMapViewState,
   useAnimateCameraToFit,
@@ -28,10 +35,15 @@ import {
   useNavigationControlAccessibility,
   useTownsGeoJSON,
   useMapContainerResize,
+  useMapViewLibreEffects,
+  useMapStyleSwitchLoader,
 } from "@/hooks/map";
 import type { MapViewState } from "@/hooks/map";
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
+import { MapViewDarkBasemap } from "./MapViewDarkBasemap";
 import { TownMarkers } from "./TownMarkers";
+import { useMapStyleMode } from "@/context/MapStyleContext";
+import { lightTheme } from "@/theme/theme";
 
 type MapLibreMaxBounds = [[number, number], [number, number]];
 
@@ -57,13 +69,21 @@ const MapView: React.FC<MapViewComponentProps> = ({
   showOverlayButtons = true,
 }) => {
   const theme = useTheme();
+  const { mode: mapStyleMode, toggleMode: toggleBasemapMode } =
+    useMapStyleMode();
   const viewport = useViewport();
   const prefersReducedMotion = usePrefersReducedMotion();
-  const { isMobile, isDesktop } = viewport;
+  const { isMobile, isDesktop, isTablet } = viewport;
   const mapRef = useRef<MapRef>(null);
+  const basemapMapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
-  const containerSize = useMapContainerResize(containerRef, mapRef);
+  const isSplitBasemap = mapStyleMode === "dark";
+  const containerSize = useMapContainerResize(
+    containerRef,
+    mapRef,
+    isSplitBasemap ? basemapMapRef : undefined
+  );
   const enableZoomControls = !isMobile;
   const showZoomButtons = isDesktop;
 
@@ -83,34 +103,39 @@ const MapView: React.FC<MapViewComponentProps> = ({
     onCameraFitComplete,
     syncViewStateFromMap,
     cameraFitTargetRefForSync,
+    requestCameraFitTo,
   } = useMapViewState({
     longitude: safeProps.longitude,
     latitude: safeProps.latitude,
     zoom: safeProps.zoom,
   });
 
-  const isCameraFitAnimatingRef = useAnimateCameraToFit({
+  useAnimateCameraToFit({
     mapRef,
+    secondaryMapRef: isSplitBasemap ? basemapMapRef : undefined,
     cameraFitTarget,
     onCameraFitComplete,
     syncViewStateFromMap,
     cameraFitTargetRefForSync,
+    prefersReducedMotion,
   });
 
-  const townsGeojson = useTownsGeoJSON(towns);
+  const townsGeojson = useTownsGeoJSON(towns, selectedYear);
 
   useMapKeyboardShortcuts(
     mapRef,
     enableZoomControls,
-    prefersReducedMotion ? 0 : ZOOM_ANIMATION_DURATION_MS
+    prefersReducedMotion ? 0 : ZOOM_ANIMATION_DURATION_MS,
+    toggleBasemapMode
   );
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
   useNavigationControlAccessibility(showZoomButtons, containerRef);
 
   /** Fallback map size when container not yet measured (prop from parent, or local). */
   const fallbackMapSizeLocal = useMemo(
-    () => calculateMapArea(viewport.screenWidth, viewport.screenHeight, theme),
-    [viewport.screenWidth, viewport.screenHeight, theme]
+    () =>
+      calculateMapArea(viewport.screenWidth, viewport.screenHeight, lightTheme),
+    [viewport.screenWidth, viewport.screenHeight]
   );
   const fallbackMapSize = fallbackMapSizeProp ?? fallbackMapSizeLocal;
 
@@ -129,40 +154,91 @@ const MapView: React.FC<MapViewComponentProps> = ({
     return Math.max(safeProps.zoom, zoomToFit);
   }, [maxBounds, containerSize, safeProps.zoom, fallbackMapSize]);
 
-  // Apply maxBounds whenever they change or become available (e.g. after towns load).
-  // MapLibre only applies bounds at init when passed as option; prop updates may not apply reliably.
-  const maxBoundsRef = React.useRef(maxBounds);
-  maxBoundsRef.current = maxBounds;
   React.useEffect(() => {
-    if (!maxBounds) return;
-    const map = mapRef.current?.getMap();
-    if (!map) return;
-    map.setMaxBounds(maxBounds);
-  }, [maxBounds]);
-
-  const handleMapLoad = React.useCallback(() => {
-    if (!mapRef.current) return;
-    const map = mapRef.current.getMap();
-    if (!map) return;
-
-    const mapWithPrefetchControl = map as typeof map & {
-      setPrefetchZoomDelta?: (delta: number) => void;
+    const onResetCamera = () => {
+      requestCameraFitTo({
+        longitude: safeProps.longitude,
+        latitude: safeProps.latitude,
+        zoom: Math.max(safeProps.zoom, effectiveMinZoom),
+      });
     };
-    mapWithPrefetchControl.setPrefetchZoomDelta?.(0);
-    if (maxBoundsRef.current) map.setMaxBounds(maxBoundsRef.current);
-  }, []);
+    window.addEventListener(MAP_RESET_CAMERA_EVENT, onResetCamera);
+    return () =>
+      window.removeEventListener(MAP_RESET_CAMERA_EVENT, onResetCamera);
+  }, [
+    safeProps.longitude,
+    safeProps.latitude,
+    safeProps.zoom,
+    effectiveMinZoom,
+    requestCameraFitTo,
+  ]);
+
+  const { handleOverlayMapLoad, handleBasemapLoad } = useMapViewLibreEffects({
+    mapRef,
+    basemapMapRef,
+    mapReady,
+    isSplitBasemap,
+    viewState,
+    maxBounds,
+  });
+
+  const { isStyleSwitching, onOverlayIdle, onBasemapIdle } =
+    useMapStyleSwitchLoader({
+      mapStyleMode,
+      onFirstIdle,
+    });
 
   const handleMapIdle = React.useCallback(() => {
-    onFirstIdle?.();
     setMapReady(true);
-  }, [onFirstIdle]);
+    onOverlayIdle();
+  }, [onOverlayIdle]);
 
   const mapDescription = useMemo(
-    () => getMapDescription({ isMobile, isDesktop }),
-    [isMobile, isDesktop]
+    () => getMapDescription({ isMobile, isDesktop, mapStyleMode }),
+    [isMobile, isDesktop, mapStyleMode]
+  );
+
+  const overlayMapStyle = useMemo(
+    () => (isSplitBasemap ? getPopulationOverlayStyle() : getTerrainStyle()),
+    [isSplitBasemap, POPULATION_OVERLAY_STYLE_REVISION]
+  );
+
+  /**
+   * Always use `viewState` for controlled camera props — never spread `cameraFitTarget` here.
+   * Spreading the target would re-render the Map at the final position every frame and cancel
+   * imperative flyTo/easeTo animations (making motion look instant or “static”).
+   */
+  const sharedViewProps = useMemo(
+    () => ({
+      ...viewState,
+      ...(maxBounds && {
+        maxBounds,
+        maxBoundsViscosity: 1,
+      }),
+      minZoom: effectiveMinZoom,
+      maxZoom: DEFAULT_MAP_CONTAINER_PROPS.maxZoom,
+    }),
+    [viewState, maxBounds, effectiveMinZoom]
   );
 
   const atMinZoom = viewState.zoom <= effectiveMinZoom;
+
+  const interactiveMapChildren = (
+    <>
+      <MapLayer
+        layerId={MAP_LAYER_ID}
+        data={townsGeojson}
+        mapStyleMode={mapStyleMode}
+      />
+      {mapReady && <TownMarkers towns={towns} selectedYear={selectedYear} />}
+      <MapOverlays
+        showOverlayButtons={showOverlayButtons}
+        showZoomButtons={showZoomButtons}
+        isTablet={isTablet}
+        isMobile={isMobile}
+      />
+    </>
+  );
 
   return (
     <div
@@ -177,8 +253,10 @@ const MapView: React.FC<MapViewComponentProps> = ({
         id="map-container-area"
         ref={containerRef}
         role="application"
+        aria-busy={isStyleSwitching}
         aria-label={strings.map.ariaLabel}
         aria-describedby="map-description"
+        data-map-appearance={mapStyleMode}
         data-overlay-buttons-hidden={showOverlayButtons ? undefined : ""}
         style={{
           position: "absolute",
@@ -189,28 +267,37 @@ const MapView: React.FC<MapViewComponentProps> = ({
         }}
         tabIndex={0}
       >
+        {isSplitBasemap && (
+          <MapViewDarkBasemap
+            basemapRef={basemapMapRef}
+            sharedViewProps={sharedViewProps}
+            onLoad={handleBasemapLoad}
+            onIdle={onBasemapIdle}
+          />
+        )}
         <Map
           ref={mapRef}
-          {...(cameraFitTarget ?? viewState)}
-          {...(maxBounds && {
-            maxBounds,
-            maxBoundsViscosity: 1,
-          })}
+          {...sharedViewProps}
+          // Keep town-label collision within the GeoJSON source so basemap symbols
+          // cannot suppress all custom town labels.
+          crossSourceCollisions={false}
           onMove={evt => {
-            if (!isCameraFitAnimatingRef.current) {
-              const z = evt.viewState.zoom;
-              const ZOOM_SNAP_EPSILON = 1e-6;
-              const atOrNearMin = z <= effectiveMinZoom + ZOOM_SNAP_EPSILON;
-              const effectiveZoom = atOrNearMin ? effectiveMinZoom : z;
-              const viewState = {
+            const z = evt.viewState.zoom;
+            const ZOOM_SNAP_EPSILON = 1e-6;
+            const atOrNearMin = z <= effectiveMinZoom + ZOOM_SNAP_EPSILON;
+            const effectiveZoom = atOrNearMin ? effectiveMinZoom : z;
+            handleMove({
+              viewState: {
                 ...evt.viewState,
                 zoom: effectiveZoom,
-              };
-              handleMove({ viewState });
-            }
+              },
+            });
           }}
-          onLoad={handleMapLoad}
+          onLoad={handleOverlayMapLoad}
           onIdle={handleMapIdle}
+          // Disable symbol/tile fade transitions so timeline `setData` updates do not
+          // visually drop and re-fade labels on each year change.
+          fadeDuration={0}
           onClick={e => {
             if (e.features && e.features.length > 0) {
               const feature = e.features[0];
@@ -218,11 +305,23 @@ const MapView: React.FC<MapViewComponentProps> = ({
             }
           }}
           interactiveLayerIds={[`${MAP_LAYER_ID}-circle`]}
-          canvasContextAttributes={{ preserveDrawingBuffer: true }}
-          minZoom={effectiveMinZoom}
-          maxZoom={DEFAULT_MAP_CONTAINER_PROPS.maxZoom}
-          style={{ width: "100%", height: "100%" }}
-          mapStyle={getTerrainStyle()}
+          canvasContextAttributes={
+            isSplitBasemap
+              ? { alpha: true, preserveDrawingBuffer: true }
+              : { preserveDrawingBuffer: true }
+          }
+          style={
+            isSplitBasemap
+              ? {
+                  position: "absolute",
+                  inset: 0,
+                  zIndex: 1,
+                  width: "100%",
+                  height: "100%",
+                }
+              : { width: "100%", height: "100%" }
+          }
+          mapStyle={overlayMapStyle}
           mapLib={MaplibreGL}
           attributionControl={false}
           cursor="pointer"
@@ -231,25 +330,35 @@ const MapView: React.FC<MapViewComponentProps> = ({
           touchZoomRotate={true}
           dragPan={true}
           cancelPendingTileRequestsWhileZooming={true}
-          maxTileCacheZoomLevels={TILE_LOADING_OPTIONS.maxTileCacheZoomLevels}
-          maxTileCacheSize={TILE_LOADING_OPTIONS.maxTileCacheSize}
+          maxTileCacheZoomLevels={
+            isSplitBasemap
+              ? SPLIT_OVERLAY_TILE_OPTIONS.maxTileCacheZoomLevels
+              : TILE_LOADING_OPTIONS.maxTileCacheZoomLevels
+          }
+          maxTileCacheSize={
+            isSplitBasemap
+              ? SPLIT_OVERLAY_TILE_OPTIONS.maxTileCacheSize
+              : TILE_LOADING_OPTIONS.maxTileCacheSize
+          }
         >
-          {mapReady && (
-            <>
-              <MapLayer
-                layerId={MAP_LAYER_ID}
-                data={townsGeojson}
-                selectedYear={selectedYear}
-              />
-              <TownMarkers towns={towns} selectedYear={selectedYear} />
-            </>
-          )}
-          <MapOverlays
-            showOverlayButtons={showOverlayButtons}
-            showZoomButtons={showZoomButtons}
-            isMobile={isMobile}
-          />
+          {interactiveMapChildren}
         </Map>
+        {isStyleSwitching && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 2,
+              pointerEvents: "none",
+            }}
+          >
+            <LoadingSpinner
+              message={strings.loading.switchingMapStyle}
+              overlayOpacity={1}
+              blurPx={0}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

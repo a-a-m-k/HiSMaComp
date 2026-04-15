@@ -30,10 +30,15 @@ vi.mock("@/utils/utils", () => ({
 }));
 
 vi.mock("@/services", () => {
-  const mockGetYearData = vi.fn((towns: any[], year: number) => {
+  const mockGetFilteredTowns = vi.fn((towns: any[], year: number) => {
     const filteredTowns = towns.filter(
       town => town.populationByYear?.[year.toString()] != null
     );
+    return filteredTowns;
+  });
+
+  const mockGetYearData = vi.fn((towns: any[], year: number) => {
+    const filteredTowns = mockGetFilteredTowns(towns, year);
     return {
       filteredTowns,
       bounds: { minLat: 48.0, maxLat: 52.0, minLng: 2.0, maxLng: 12.0 },
@@ -54,6 +59,7 @@ vi.mock("@/services", () => {
 
   return {
     yearDataService: {
+      getFilteredTowns: mockGetFilteredTowns,
       getYearData: mockGetYearData,
       clearCache: vi.fn(),
       getCacheStats: vi.fn(() => ({ yearDataCacheSize: 0, maxCacheSize: 50 })),
@@ -62,9 +68,8 @@ vi.mock("@/services", () => {
 });
 
 vi.mock("@/hooks/ui", async () => {
-  const { createResponsiveMock } = await import(
-    "../../helpers/mocks/responsive"
-  );
+  const { createResponsiveMock } =
+    await import("../../helpers/mocks/responsive");
   const viewportShape = () => {
     const mock = createResponsiveMock();
     return {

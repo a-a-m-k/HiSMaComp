@@ -8,6 +8,14 @@ import type { Town } from "@/common/types";
 import theme from "@/theme/theme";
 import { MapContainer } from "@/components/containers";
 
+vi.mock("@/context/MapStyleContext", () => ({
+  useMapStyleMode: () => ({
+    mode: "light" as const,
+    setMode: vi.fn(),
+    toggleMode: vi.fn(),
+  }),
+}));
+
 const mapViewSpy = vi.hoisted(() => vi.fn());
 const retrySpy = vi.hoisted(() => vi.fn());
 
@@ -72,7 +80,7 @@ vi.mock("@/components/controls/Timeline/Timeline", () => ({
   ),
 }));
 
-vi.mock("@/components/controls/Legend/Legend", () => ({
+vi.mock("@/ui/legend/Legend", () => ({
   __esModule: true,
   default: ({ layers }: { layers: unknown[] }) => (
     <div data-testid="legend">{`Legend layers: ${layers.length}`}</div>
@@ -125,7 +133,6 @@ vi.mock("@/hooks/map", () => ({
     populationSortKey: "population",
     circleRadiusExpression: ["get", "radius"],
     circleColorExpression: ["get", "color"],
-    populationExpression: ["get", "population"],
   })),
   useMarkerKeyboardNavigation: vi.fn(() => vi.fn()),
 }));

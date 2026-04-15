@@ -29,17 +29,16 @@ window.addEventListener("unhandledrejection", event => {
 
 const rootElement = document.getElementById("root");
 if (rootElement) {
+  const app = <App />;
   createRoot(rootElement).render(
-    <StrictMode>
-      <App />
-    </StrictMode>
+    import.meta.env.DEV ? app : <StrictMode>{app}</StrictMode>
   );
 } else {
   logger.error("Failed to find the root element");
   const fallback = document.createElement("div");
   fallback.id = "root-fallback";
   fallback.style.cssText =
-    "display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem;font-family:system-ui,sans-serif;text-align:center;background:#242424;color:#fff;";
+    "display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem;font-family:system-ui,sans-serif;text-align:center;background:#f5f5f5;color:#212121;";
   const message = document.createElement("p");
   message.textContent =
     'App failed to load: root element not found. Check that index.html has an element with id="root".';

@@ -2,75 +2,30 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ThemeProvider } from "@mui/material/styles";
 
+import theme from "@/theme/theme";
 import Timeline from "@/components/controls/Timeline/Timeline";
 
 const setSelectedYearSpy = vi.hoisted(() => vi.fn());
-const getMobileLabelledMarksSpy = vi.hoisted(() => vi.fn());
-const sliderPropsSpy = vi.hoisted(() => vi.fn());
-
-const state = vi.hoisted(() => ({
-  selectedYear: 1000,
-  isMobile: false,
-  isTablet: false,
-  isMobileLayout: false,
-}));
+const mockUseMediaQuery = vi.hoisted(() => vi.fn(() => true));
 
 vi.mock("@/context/AppContext", () => ({
   useApp: () => ({
-    selectedYear: state.selectedYear,
+    selectedYear: 1000,
     setSelectedYear: setSelectedYearSpy,
   }),
 }));
 
-vi.mock("@/hooks/ui", async () => {
-  const { createResponsiveMock: createResponsive } = await import(
-    "../../helpers/mocks/responsive"
-  );
-
-  return {
-    useResponsive: () =>
-      createResponsive({
-        isMobile: state.isMobile,
-        isTablet: state.isTablet,
-        isDesktop: !state.isMobile && !state.isTablet,
-        isMobileLayout: state.isMobileLayout,
-        isTabletLayout: state.isTablet && !state.isMobileLayout,
-        isDesktopLayout: !state.isMobile && !state.isTablet,
-      }),
-  };
-});
-
-vi.mock("@/constants/sizing", () => ({
-  getTimelineStyles: () => ({
-    title: {},
-  }),
+vi.mock("@mui/material/useMediaQuery", () => ({
+  __esModule: true,
+  default: mockUseMediaQuery,
 }));
 
-vi.mock("@/components/controls/Timeline/utils", () => ({
-  getMobileLabelledMarks: (...args: unknown[]) =>
-    getMobileLabelledMarksSpy(...args),
-}));
+const wrap = (ui: React.ReactElement) =>
+  React.createElement(ThemeProvider, { theme }, ui);
 
-vi.mock("@/components/controls/Timeline/TimelineSlider", () => ({
-  TimelineSlider: (props: {
-    marks: Array<{ value: number; label: string }>;
-    min: number;
-    max: number;
-    value: number;
-    onChange: (value: number) => void;
-  }) => {
-    sliderPropsSpy(props);
-    return (
-      <button
-        data-testid="timeline-slider"
-        onClick={() => props.onChange(1200)}
-      >{`Year ${props.value}`}</button>
-    );
-  },
-}));
-
-describe("Timeline flow", () => {
+describe("Timeline", () => {
   const marks = [
     { value: 800, label: "8th ct." },
     { value: 1000, label: "10th ct." },
@@ -79,47 +34,29 @@ describe("Timeline flow", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    state.selectedYear = 1000;
-    state.isMobile = false;
-    state.isTablet = false;
-    state.isMobileLayout = false;
-    getMobileLabelledMarksSpy.mockImplementation(
-      (inputMarks: Array<{ value: number; label: string }>) => inputMarks
-    );
+    mockUseMediaQuery.mockImplementation((query: unknown) => {
+      const q = String(query);
+      if (q.includes("900px")) return true;
+      if (q.includes("600px")) return true;
+      return false;
+    });
   });
 
-  it("passes selected year and bounds into TimelineSlider", () => {
-    render(<Timeline marks={marks} />);
+  it("calls setSelectedYear when a desktop century button is clicked", async () => {
+    const user = userEvent.setup();
+    render(wrap(<Timeline marks={marks} />));
 
-    const sliderCall = sliderPropsSpy.mock.calls.at(-1)?.[0];
-    expect(sliderCall.value).toBe(1000);
-    expect(sliderCall.min).toBe(800);
-    expect(sliderCall.max).toBe(1200);
-    expect(sliderCall.marks).toEqual(marks);
-  });
-
-  it("updates selected year through setSelectedYear on slider interaction", async () => {
-    render(<Timeline marks={marks} />);
-
-    await userEvent.click(screen.getByTestId("timeline-slider"));
+    await user.click(screen.getByRole("button", { name: "12th ct." }));
 
     expect(setSelectedYearSpy).toHaveBeenCalledWith(1200);
   });
 
-  it("uses mobile-labeled marks strategy on mobile layout", () => {
-    state.isMobile = true;
-    state.isMobileLayout = true;
-    const mobileMarks = [
-      { value: 800, label: "8th ct." },
-      { value: 1000, label: "" },
-      { value: 1200, label: "12th ct." },
-    ];
-    getMobileLabelledMarksSpy.mockReturnValue(mobileMarks);
+  it("exposes a slider wired to the year index", () => {
+    render(wrap(<Timeline marks={marks} />));
 
-    render(<Timeline marks={marks} />);
-
-    expect(getMobileLabelledMarksSpy).toHaveBeenCalledWith(marks, 1000);
-    const sliderCall = sliderPropsSpy.mock.calls.at(-1)?.[0];
-    expect(sliderCall.marks).toEqual(mobileMarks);
+    const slider = screen.getByRole("slider");
+    expect(slider).toHaveAttribute("aria-valuenow", "1");
+    expect(slider).toHaveAttribute("aria-valuemin", "0");
+    expect(slider).toHaveAttribute("aria-valuemax", "2");
   });
 });
