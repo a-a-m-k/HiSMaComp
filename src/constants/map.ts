@@ -43,6 +43,8 @@ export const MAP_BASEMAP_WATER_LABEL_LAYER_IDS = [
 
 /** Dispatched to return the map to its initial center and zoom (`MapView` listens). */
 export const MAP_RESET_CAMERA_EVENT = "hismacomp:map-reset-camera";
+/** Broadcast from `MapView` so reset controls can disable when camera is already centered. */
+export const MAP_CAMERA_RESET_STATE_EVENT = "hismacomp:map-reset-state";
 
 export const WORLD_DIMENSIONS = { width: 256, height: 256 };
 export const MAX_ZOOM_LEVEL = 20;

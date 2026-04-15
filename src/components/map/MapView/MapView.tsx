@@ -20,7 +20,11 @@ import {
 } from "@/utils/map";
 import { getZoomToFitBounds } from "@/utils/mapZoom";
 import { calculateMapArea } from "@/utils/utils";
-import { MAP_LAYER_ID, MAP_RESET_CAMERA_EVENT } from "@/constants";
+import {
+  MAP_LAYER_ID,
+  MAP_RESET_CAMERA_EVENT,
+  MAP_CAMERA_RESET_STATE_EVENT,
+} from "@/constants";
 import { ZOOM_ANIMATION_DURATION_MS } from "@/constants/keyboard";
 import { getMapStyles } from "@/constants/ui";
 import { strings } from "@/locales";
@@ -70,6 +74,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
   showOverlayButtons = true,
   isResizing = false,
 }) => {
+  const RESET_CENTER_EPSILON = 1e-4;
+  const RESET_ZOOM_EPSILON = 1e-3;
   const theme = useTheme();
   const { mode: mapStyleMode, toggleMode: toggleBasemapMode } =
     useMapStyleMode();
@@ -334,6 +340,20 @@ const MapView: React.FC<MapViewComponentProps> = ({
   );
 
   const atMinZoom = viewState.zoom <= effectiveMinZoom;
+  const resetZoomTarget = Math.max(safeProps.zoom, effectiveMinZoom);
+  const isAtResetCamera =
+    Math.abs(viewState.longitude - safeProps.longitude) <=
+      RESET_CENTER_EPSILON &&
+    Math.abs(viewState.latitude - safeProps.latitude) <= RESET_CENTER_EPSILON &&
+    Math.abs(viewState.zoom - resetZoomTarget) <= RESET_ZOOM_EPSILON;
+
+  React.useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent(MAP_CAMERA_RESET_STATE_EVENT, {
+        detail: { isAtResetCamera },
+      })
+    );
+  }, [isAtResetCamera]);
 
   const interactiveMapChildren = (
     <>

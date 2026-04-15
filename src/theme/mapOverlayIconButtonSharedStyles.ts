@@ -48,6 +48,18 @@ export function mapOverlayIconButtonFloatingStyles(
   options?: { floatingSvgIconExtras?: MapOverlayFloatingSvgIconExtras }
 ) {
   const accent = theme.palette.info.main;
+  const disabledBg =
+    theme.palette.mode === "dark"
+      ? alpha(theme.palette.background.paper, 0.5)
+      : alpha(theme.palette.background.paper, 0.6);
+  const disabledBorder =
+    theme.palette.mode === "dark"
+      ? alpha(theme.palette.divider, 0.35)
+      : alpha(theme.palette.divider, 0.55);
+  const disabledIcon =
+    theme.palette.mode === "dark"
+      ? alpha(theme.palette.text.secondary, 0.45)
+      : alpha(theme.palette.text.secondary, 0.5);
   const svgExtras = options?.floatingSvgIconExtras;
 
   return {
@@ -82,6 +94,16 @@ export function mapOverlayIconButtonFloatingStyles(
       },
       "&:active": {
         transform: "scale(0.95)",
+      },
+      "&:disabled": {
+        cursor: "not-allowed",
+        pointerEvents: "none",
+        backgroundColor: disabledBg,
+        borderColor: disabledBorder,
+        boxShadow: "none",
+        color: disabledIcon,
+        opacity: 1,
+        transform: "none",
       },
       /* Only when the UA reports real hover (not touch-first). Avoid `pointer: fine` — it hides hover for some trackpads / hybrid setups. */
       "@media (hover: hover)": {
@@ -132,6 +154,10 @@ export function mapOverlayIconButtonFloatingStyles(
  */
 export function mapOverlayIconButtonInlineStyles(theme: Theme) {
   const accent = theme.palette.info.main;
+  const inlineDisabledIcon =
+    theme.palette.mode === "dark"
+      ? alpha(theme.palette.text.secondary, 0.4)
+      : alpha(theme.palette.text.secondary, 0.45);
   const L = theme.custom.legend.collapseIconButton;
   return {
     '&&[data-variant="inline"]': {
@@ -163,6 +189,14 @@ export function mapOverlayIconButtonInlineStyles(theme: Theme) {
       },
       "&:active": {
         transform: "none",
+      },
+      "&:disabled": {
+        cursor: "not-allowed",
+        pointerEvents: "none",
+        color: inlineDisabledIcon,
+        backgroundColor: "transparent",
+        boxShadow: "none",
+        opacity: 1,
       },
       "@media (prefers-reduced-motion: reduce)": {
         transition: "none",
