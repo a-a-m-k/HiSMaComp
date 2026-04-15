@@ -181,6 +181,7 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
             fallbackMapSize={mapArea}
             onFirstIdle={handleFirstIdle}
             showOverlayButtons={showOverlayButtons}
+            isResizing={isResizing}
           />
         </ErrorBoundary>
         {showResizeSpinner && (

@@ -348,6 +348,7 @@ vi.mock("@/hooks/map", () => ({
     onCameraFitComplete: vi.fn(),
     syncViewStateFromMap: vi.fn(),
     cameraFitTargetRefForSync: { current: null },
+    requestCameraFitTo: vi.fn(),
   })),
   useAnimateCameraToFit: vi.fn(() => ({ current: false })),
   useMapKeyboardShortcuts: vi.fn(),
@@ -586,5 +587,126 @@ describe("MapView", () => {
       </TestWrapper>
     );
     expect(screen.queryByTestId("navigation-control")).not.toBeInTheDocument();
+  });
+
+  it("re-centers after container resize using reset-camera flow", async () => {
+    vi.useFakeTimers();
+    try {
+      const hooks = await import("@/hooks/map");
+      const requestCameraFitTo = vi.fn();
+      let currentContainerSize: { width: number; height: number } | null = {
+        width: 1000,
+        height: 700,
+      };
+
+      vi.mocked(hooks.useMapViewState).mockReturnValue({
+        viewState: { longitude: 2.3522, latitude: 48.8566, zoom: 5 },
+        handleMove: vi.fn(),
+        cameraFitTarget: null,
+        onCameraFitComplete: vi.fn(),
+        syncViewStateFromMap: vi.fn(),
+        cameraFitTargetRefForSync: { current: null },
+        requestCameraFitTo,
+      });
+
+      vi.mocked(hooks.useMapContainerResize).mockImplementation(
+        () => currentContainerSize
+      );
+
+      const { rerender } = render(
+        <TestWrapper>
+          <MapView
+            towns={[]}
+            selectedYear={800}
+            initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+            initialZoom={5}
+          />
+        </TestWrapper>
+      );
+
+      const { __getLastMapProps } = await import("react-map-gl/maplibre");
+      const props = __getLastMapProps();
+      await act(async () => {
+        (props?.onIdle as (() => void) | undefined)?.();
+      });
+
+      currentContainerSize = { width: 1200, height: 700 };
+      rerender(
+        <TestWrapper>
+          <MapView
+            towns={[]}
+            selectedYear={800}
+            initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+            initialZoom={5}
+          />
+        </TestWrapper>
+      );
+
+      act(() => {
+        vi.advanceTimersByTime(130);
+      });
+
+      expect(requestCameraFitTo).toHaveBeenCalledTimes(1);
+      expect(requestCameraFitTo).toHaveBeenCalledWith({
+        longitude: 2.3522,
+        latitude: 48.8566,
+        zoom: 5,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("runs one recenter after first idle when measured size is available", async () => {
+    vi.useFakeTimers();
+    try {
+      const hooks = await import("@/hooks/map");
+      const requestCameraFitTo = vi.fn();
+
+      vi.mocked(hooks.useMapViewState).mockReturnValue({
+        viewState: { longitude: 2.3522, latitude: 48.8566, zoom: 5 },
+        handleMove: vi.fn(),
+        cameraFitTarget: null,
+        onCameraFitComplete: vi.fn(),
+        syncViewStateFromMap: vi.fn(),
+        cameraFitTargetRefForSync: { current: null },
+        requestCameraFitTo,
+      });
+
+      vi.mocked(hooks.useMapContainerResize).mockReturnValue({
+        width: 1000,
+        height: 700,
+      });
+
+      render(
+        <TestWrapper>
+          <MapView
+            towns={[]}
+            selectedYear={800}
+            initialPosition={{ latitude: 48.8566, longitude: 2.3522 }}
+            initialZoom={5}
+          />
+        </TestWrapper>
+      );
+
+      const { __getLastMapProps } = await import("react-map-gl/maplibre");
+      const props = __getLastMapProps();
+      await act(async () => {
+        (props?.onIdle as (() => void) | undefined)?.();
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(130);
+      });
+
+      expect(requestCameraFitTo).toHaveBeenCalledTimes(1);
+      expect(requestCameraFitTo).toHaveBeenCalledWith({
+        longitude: 2.3522,
+        latitude: 48.8566,
+        zoom: 5,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

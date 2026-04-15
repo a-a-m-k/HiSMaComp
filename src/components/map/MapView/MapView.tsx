@@ -56,6 +56,7 @@ interface MapViewComponentProps {
   fallbackMapSize?: { effectiveWidth: number; effectiveHeight: number };
   onFirstIdle?: () => void;
   showOverlayButtons?: boolean;
+  isResizing?: boolean;
 }
 
 const MapView: React.FC<MapViewComponentProps> = ({
@@ -67,6 +68,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   fallbackMapSize: fallbackMapSizeProp,
   onFirstIdle,
   showOverlayButtons = true,
+  isResizing = false,
 }) => {
   const theme = useTheme();
   const { mode: mapStyleMode, toggleMode: toggleBasemapMode } =
@@ -84,6 +86,15 @@ const MapView: React.FC<MapViewComponentProps> = ({
     mapRef,
     isSplitBasemap ? basemapMapRef : undefined
   );
+  const previousContainerSizeRef = useRef<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const resizeRecenterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const hasRunInitialReadyFitRef = useRef(false);
+  const previousIsResizingRef = useRef(isResizing);
   const enableZoomControls = !isMobile;
   const showZoomButtons = isDesktop;
 
@@ -172,6 +183,107 @@ const MapView: React.FC<MapViewComponentProps> = ({
     effectiveMinZoom,
     requestCameraFitTo,
   ]);
+
+  React.useEffect(() => {
+    const wasResizing = previousIsResizingRef.current;
+    previousIsResizingRef.current = isResizing;
+    if (!mapReady) return;
+    // Fire when resize lifecycle finishes, even if observer size did not change.
+    if (!wasResizing || isResizing) return;
+
+    if (resizeRecenterTimeoutRef.current) {
+      clearTimeout(resizeRecenterTimeoutRef.current);
+    }
+    resizeRecenterTimeoutRef.current = setTimeout(() => {
+      resizeRecenterTimeoutRef.current = null;
+      requestCameraFitTo({
+        longitude: safeProps.longitude,
+        latitude: safeProps.latitude,
+        zoom: Math.max(safeProps.zoom, effectiveMinZoom),
+      });
+    }, 120);
+  }, [
+    isResizing,
+    mapReady,
+    safeProps.longitude,
+    safeProps.latitude,
+    safeProps.zoom,
+    effectiveMinZoom,
+    requestCameraFitTo,
+  ]);
+
+  React.useEffect(() => {
+    if (!containerSize || !mapReady) return;
+
+    const previous = previousContainerSizeRef.current;
+    previousContainerSizeRef.current = containerSize;
+
+    // Skip first measurement: this is initial mount, not a user resize.
+    if (!previous) return;
+
+    const sizeChanged =
+      previous.width !== containerSize.width ||
+      previous.height !== containerSize.height;
+    if (!sizeChanged) return;
+
+    if (resizeRecenterTimeoutRef.current) {
+      clearTimeout(resizeRecenterTimeoutRef.current);
+    }
+
+    // Run the same camera-fit flow as the reset button after resize settles.
+    resizeRecenterTimeoutRef.current = setTimeout(() => {
+      resizeRecenterTimeoutRef.current = null;
+      requestCameraFitTo({
+        longitude: safeProps.longitude,
+        latitude: safeProps.latitude,
+        zoom: Math.max(safeProps.zoom, effectiveMinZoom),
+      });
+    }, 120);
+  }, [
+    containerSize,
+    mapReady,
+    safeProps.longitude,
+    safeProps.latitude,
+    safeProps.zoom,
+    effectiveMinZoom,
+    requestCameraFitTo,
+  ]);
+
+  React.useEffect(() => {
+    if (!mapReady || !containerSize) return;
+    if (hasRunInitialReadyFitRef.current) return;
+    hasRunInitialReadyFitRef.current = true;
+
+    // After first idle on this mount, run one fit with final measured size.
+    if (resizeRecenterTimeoutRef.current) {
+      clearTimeout(resizeRecenterTimeoutRef.current);
+    }
+    resizeRecenterTimeoutRef.current = setTimeout(() => {
+      resizeRecenterTimeoutRef.current = null;
+      requestCameraFitTo({
+        longitude: safeProps.longitude,
+        latitude: safeProps.latitude,
+        zoom: Math.max(safeProps.zoom, effectiveMinZoom),
+      });
+    }, 120);
+  }, [
+    mapReady,
+    containerSize,
+    safeProps.longitude,
+    safeProps.latitude,
+    safeProps.zoom,
+    effectiveMinZoom,
+    requestCameraFitTo,
+  ]);
+
+  React.useEffect(() => {
+    return () => {
+      if (resizeRecenterTimeoutRef.current) {
+        clearTimeout(resizeRecenterTimeoutRef.current);
+        resizeRecenterTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const { handleOverlayMapLoad, handleBasemapLoad } = useMapViewLibreEffects({
     mapRef,
