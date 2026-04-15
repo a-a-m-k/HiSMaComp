@@ -1,20 +1,25 @@
 /**
- * GeoJSON `Source` with circle + symbol layers for town population markers and labels.
+ * GeoJSON `Source` with a circle layer + a symbol (text) layer, both declarative.
+ *
+ * Both `<Layer>` components live inside the same `<Source>`, so react-map-gl manages their
+ * full lifecycle (create / update / re-create after style swap / cleanup on unmount).
+ * No imperative `map.addLayer` — that pattern kept racing with react-map-gl's own source
+ * cleanup (which removes every layer referencing the source id).
  */
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import type { ExpressionSpecification } from "maplibre-gl";
-import { Layer, Source, LayerProps, useMap } from "react-map-gl/maplibre";
+import { Layer, Source, LayerProps } from "react-map-gl/maplibre";
 import {
+  MAP_LABEL_TEXT_PROP,
   POPULATION_THRESHOLDS,
   MIN_MARKER_SIZE,
   MAX_MARKER_SIZE,
   MAP_GEOJSON_MARKERS,
-  MAP_GEOJSON_TEXT_FONT,
   getMapTextLabelPaint,
 } from "@/constants";
 import { GeoJSON } from "geojson";
 import { useMapLayerExpressions } from "@/hooks/map";
-import { bumpTownTextLayerToTop } from "@/utils/map/mapLabelCollision";
+import { POPULATION_FOR_YEAR_PROP } from "./expressions";
 import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
 
 interface MapLayerProps extends Omit<
@@ -23,7 +28,6 @@ interface MapLayerProps extends Omit<
 > {
   layerId: string;
   data: GeoJSON;
-  selectedYear: number;
   mapStyleMode: MapBaseStyleMode;
   minPopulation?: number;
   maxPopulation?: number;
@@ -34,7 +38,6 @@ interface MapLayerProps extends Omit<
 const MapLayer = ({
   layerId,
   data,
-  selectedYear,
   mapStyleMode,
   minPopulation = POPULATION_THRESHOLDS[0],
   maxPopulation = POPULATION_THRESHOLDS[POPULATION_THRESHOLDS.length - 1],
@@ -42,72 +45,60 @@ const MapLayer = ({
   maxMarkerSize = MAX_MARKER_SIZE,
   ...rest
 }: MapLayerProps) => {
-  const {
-    populationSortKey,
-    circleRadiusExpression,
-    circleColorExpression,
-    populationExpression,
-  } = useMapLayerExpressions({
-    mapStyleMode,
-    minPopulation,
-    maxPopulation,
-    minMarkerSize,
-    maxMarkerSize,
-  });
+  const { populationSortKey, circleRadiusExpression, circleColorExpression } =
+    useMapLayerExpressions({
+      mapStyleMode,
+      minPopulation,
+      maxPopulation,
+      minMarkerSize,
+      maxMarkerSize,
+    });
 
-  const mapRef = useMap().current;
+  const sourceId = `${layerId}-source`;
+  const textLayerId = `${layerId}-text`;
 
-  /** Top symbol layers place first and win cross-layer collision vs basemap water labels. */
-  useEffect(() => {
-    const map = mapRef?.getMap?.();
-    if (!map) return;
-    const bumpToTop = () => bumpTownTextLayerToTop(map, layerId);
-    bumpToTop();
-    const id = window.setTimeout(bumpToTop, 0);
-    map.once("idle", bumpToTop);
-    map.on("style.load", bumpToTop);
-    return () => {
-      window.clearTimeout(id);
-      map.off("style.load", bumpToTop);
-    };
-  }, [layerId, mapRef, mapStyleMode, selectedYear]);
-
-  const textField = useMemo(
-    (): ExpressionSpecification => [
-      "concat",
-      ["coalesce", ["get", "name"], ""],
-      "\n",
-      ["to-string", ["coalesce", populationExpression, "N/A"]],
-    ],
-    [populationExpression]
+  const textPaint = useMemo(
+    () => getMapTextLabelPaint(mapStyleMode),
+    [mapStyleMode]
   );
 
-  const textLayoutBase = useMemo(
+  const textLayout = useMemo(
     () => ({
-      "text-field": textField,
-      "text-font": [...MAP_GEOJSON_TEXT_FONT],
+      // Use a precomputed property to keep label rendering stable during source updates.
+      "text-field": [
+        "coalesce",
+        ["get", MAP_LABEL_TEXT_PROP],
+        ["get", "name"],
+      ] as ExpressionSpecification,
+      "symbol-placement": "point" as const,
       "text-anchor": "top" as const,
       "text-justify": "center" as const,
       "text-offset": [0, 1] as [number, number],
-      "text-size": 10,
+      "text-size": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        3,
+        9,
+        8,
+        17,
+      ] as ExpressionSpecification,
       "text-max-width": 16,
       "text-line-height": 1.2,
-      "text-padding": 4,
+      "text-padding": 2,
       "text-pitch-alignment": "viewport" as const,
       "text-rotation-alignment": "viewport" as const,
       "symbol-sort-key": populationSortKey,
       "symbol-z-order": "source" as const,
+      // Priority-by-population placement: keep larger towns, drop smaller overlaps.
+      "text-allow-overlap": false,
+      "text-ignore-placement": false,
     }),
-    [populationSortKey, textField]
+    [populationSortKey]
   );
 
   return (
-    <Source
-      id={`${layerId}-source`}
-      key={`${layerId}-${selectedYear}`}
-      type="geojson"
-      data={data}
-    >
+    <Source id={sourceId} type="geojson" data={data}>
       <Layer
         id={`${layerId}-circle`}
         type="circle"
@@ -120,20 +111,23 @@ const MapLayer = ({
         layout={{
           "circle-sort-key": populationSortKey,
         }}
+        filter={[
+          "all",
+          ["has", POPULATION_FOR_YEAR_PROP],
+          ["!=", ["get", POPULATION_FOR_YEAR_PROP], ["literal", null]],
+        ]}
         {...rest}
       />
-
       <Layer
-        id={`${layerId}-text`}
+        id={textLayerId}
         type="symbol"
-        layout={{
-          ...textLayoutBase,
-          // Historic years often have no town ≥50k; collision would hide almost all labels on small viewports.
-          "text-allow-overlap": true,
-          "text-ignore-placement": true,
-        }}
-        paint={getMapTextLabelPaint(mapStyleMode) as Record<string, unknown>}
-        {...rest}
+        layout={textLayout}
+        paint={textPaint}
+        filter={[
+          "all",
+          ["has", POPULATION_FOR_YEAR_PROP],
+          ["!=", ["get", POPULATION_FOR_YEAR_PROP], ["literal", null]],
+        ]}
       />
     </Source>
   );

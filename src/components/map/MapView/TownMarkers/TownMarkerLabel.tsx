@@ -13,7 +13,7 @@ export interface TownMarkerLabelProps {
 }
 
 /**
- * Component that displays a label for a focused town marker.
+ * Component that displays a label for a focused/hovered town marker.
  * Shows town name and population information.
  */
 export const TownMarkerLabel: React.FC<TownMarkerLabelProps> = ({

@@ -173,7 +173,7 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
         <ErrorBoundary>
           <MapView
             key={deviceKey}
-            towns={filteredTowns}
+            towns={towns}
             selectedYear={selectedYear}
             initialPosition={initialPosition}
             initialZoom={initialZoom}

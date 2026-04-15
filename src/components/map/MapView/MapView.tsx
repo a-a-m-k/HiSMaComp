@@ -217,17 +217,12 @@ const MapView: React.FC<MapViewComponentProps> = ({
 
   const interactiveMapChildren = (
     <>
-      {mapReady && (
-        <>
-          <MapLayer
-            layerId={MAP_LAYER_ID}
-            data={townsGeojson}
-            selectedYear={selectedYear}
-            mapStyleMode={mapStyleMode}
-          />
-          <TownMarkers towns={towns} selectedYear={selectedYear} />
-        </>
-      )}
+      <MapLayer
+        layerId={MAP_LAYER_ID}
+        data={townsGeojson}
+        mapStyleMode={mapStyleMode}
+      />
+      {mapReady && <TownMarkers towns={towns} selectedYear={selectedYear} />}
       <MapOverlays
         showOverlayButtons={showOverlayButtons}
         showZoomButtons={showZoomButtons}
@@ -273,6 +268,9 @@ const MapView: React.FC<MapViewComponentProps> = ({
         <Map
           ref={mapRef}
           {...sharedViewProps}
+          // Keep town-label collision within the GeoJSON source so basemap symbols
+          // cannot suppress all custom town labels.
+          crossSourceCollisions={false}
           onMove={evt => {
             const z = evt.viewState.zoom;
             const ZOOM_SNAP_EPSILON = 1e-6;
@@ -287,7 +285,9 @@ const MapView: React.FC<MapViewComponentProps> = ({
           }}
           onLoad={handleOverlayMapLoad}
           onIdle={handleMapIdle}
-          fadeDuration={isSplitBasemap ? 0 : undefined}
+          // Disable symbol/tile fade transitions so timeline `setData` updates do not
+          // visually drop and re-fade labels on each year change.
+          fadeDuration={0}
           onClick={e => {
             if (e.features && e.features.length > 0) {
               const feature = e.features[0];

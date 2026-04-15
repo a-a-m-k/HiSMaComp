@@ -41,6 +41,7 @@ export const MAP_TEXT_LABEL_PAINT_LIGHT = {
   "text-color": MAP_GEOJSON_MARKERS.labelLight.text,
   "text-halo-color": MAP_GEOJSON_MARKERS.labelLight.halo,
   "text-halo-width": 0.8,
+  "text-opacity": 1,
 } as const;
 
 /** MapLibre `symbol` layer paint for town name labels on a dark basemap. */
@@ -49,6 +50,7 @@ export const MAP_TEXT_LABEL_PAINT_DARK = {
   "text-halo-color": MAP_GEOJSON_MARKERS.labelDark.halo,
   "text-halo-width": 1,
   "text-halo-blur": 0,
+  "text-opacity": 1,
 };
 
 /**

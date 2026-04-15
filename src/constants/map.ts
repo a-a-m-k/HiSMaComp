@@ -12,12 +12,26 @@ export const MAP_MUTED_SLATE_RGBA = `rgba(93, 99, 105, ${128 / 255})`;
 export const MAP_LAYER_ID = "towns-population-layer";
 
 /**
+ * Set on each town feature in `townsToGeoJSON` for `circle-sort-key` (WebGL circles).
+ * MapLibre draws higher keys on top; this value matches population when known so large cities
+ * sit above small ones. Use a moderate negative floor (not ±1e18) so style expressions stay
+ * within stable float range in MapLibre.
+ */
+export const POPULATION_SORT_KEY_PROP = "populationSortKey" as const;
+/** Precomputed text for the MapLibre symbol `text-field` (name + population / N/A). */
+export const MAP_LABEL_TEXT_PROP = "mapLabelText" as const;
+
+/** Below any realistic population value so N/A towns stay under measured cities. */
+export const POPULATION_SORT_KEY_NO_DATA = -1_000_000_000;
+
+/**
  * Terrain basemap symbol layers for sea / ocean / lake names (`terrain.json` / `terrain-dark.json`).
  *
  * Manual QA:
- * - Light (single map): Town text is bumped to the top of the layer stack; `text-padding` on
- *   the GeoJSON symbol layer plus MapLibre collision should drop overlapping basemap sea/water
- *   line and point labels (not a global hide).
+ * - Light (single map): Town text is rendered declaratively in the overlay map with
+ *   `crossSourceCollisions={false}`, so basemap symbols cannot suppress custom town labels.
+ *   Labels still collide within the town-label source (`text-allow-overlap: false`,
+ *   `text-ignore-placement: false`) to reduce overlap noise.
  * - Dark (split basemap): Two WebGL maps cannot share one collision grid. We hide these layers
  *   on the basemap for the whole viewport — all sea/ocean/lake line & point labels are off, not
  *   only where markers sit. River names (`waterway-label`) stay visible on the basemap.

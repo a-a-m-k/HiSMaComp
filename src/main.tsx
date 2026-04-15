@@ -29,10 +29,9 @@ window.addEventListener("unhandledrejection", event => {
 
 const rootElement = document.getElementById("root");
 if (rootElement) {
+  const app = <App />;
   createRoot(rootElement).render(
-    <StrictMode>
-      <App />
-    </StrictMode>
+    import.meta.env.DEV ? app : <StrictMode>{app}</StrictMode>
   );
 } else {
   logger.error("Failed to find the root element");

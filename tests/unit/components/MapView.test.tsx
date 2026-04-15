@@ -363,7 +363,6 @@ vi.mock("@/hooks/map", () => ({
     populationSortKey: "population",
     circleRadiusExpression: ["get", "radius"],
     circleColorExpression: ["get", "color"],
-    populationExpression: ["get", "population"],
   })),
   useMarkerKeyboardNavigation: vi.fn(() => vi.fn()),
 }));
@@ -482,6 +481,7 @@ describe("MapView", () => {
     expect(props?.maxZoom).toBe(DEFAULT_MAP_CONTAINER_PROPS.maxZoom);
     expect(props?.keyboard).toBe(true);
     expect(props?.scrollZoom).toBe(true);
+    expect(props?.crossSourceCollisions).toBe(false);
   });
 
   it("should defer overlays until first map idle event", async () => {

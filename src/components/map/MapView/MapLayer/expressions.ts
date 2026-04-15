@@ -1,6 +1,10 @@
 import type { ExpressionSpecification } from "maplibre-gl";
 import { MAP_LEGEND_COLORS } from "@/constants";
 import {
+  POPULATION_SORT_KEY_NO_DATA,
+  POPULATION_SORT_KEY_PROP,
+} from "@/constants/map";
+import {
   getDefaultMarkerScaleConfig,
   getMarkerColorStops,
   getMarkerScaleBounds,
@@ -9,12 +13,12 @@ import {
 const DEFAULT_MARKER_SCALE = getDefaultMarkerScaleConfig();
 const DEFAULT_MARKER_BOUNDS = getMarkerScaleBounds(DEFAULT_MARKER_SCALE);
 
-/** Feature property set in `townsToGeoJSON` for the selected timeline year (flat; reliable in symbol layers). */
+/** Feature property set in `townsToGeoJSON` for the selected timeline year (flat; reliable in circle paint). */
 export const POPULATION_FOR_YEAR_PROP = "populationForYear" as const;
 
 /**
  * Population for the active year (see `townsToGeoJSON`). Nested `populationByYear` lookups
- * often fail to evaluate in symbol `text-field` / paint; use this flat property only.
+ * are unreliable in style expressions; use this flat property only.
  */
 export const getPopulationExpression = (): ExpressionSpecification => [
   "get",
@@ -31,13 +35,16 @@ export const getNoDataExpression = (): ExpressionSpecification => [
 ];
 
 /**
- * Sort key for circles/symbols: larger populations first; no-data last.
+ * Sort key for **circle** layers: higher value draws on top (MapLibre ascending sort).
  */
 export const getPopulationSortKey = (): ExpressionSpecification => [
-  "case",
-  getNoDataExpression(),
-  Number.POSITIVE_INFINITY,
-  ["-", 0, getPopulationExpression()],
+  "to-number",
+  [
+    "coalesce",
+    ["get", POPULATION_SORT_KEY_PROP],
+    getPopulationExpression(),
+    POPULATION_SORT_KEY_NO_DATA,
+  ],
 ];
 
 /**

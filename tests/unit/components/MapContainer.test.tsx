@@ -133,7 +133,6 @@ vi.mock("@/hooks/map", () => ({
     populationSortKey: "population",
     circleRadiusExpression: ["get", "radius"],
     circleColorExpression: ["get", "color"],
-    populationExpression: ["get", "population"],
   })),
   useMarkerKeyboardNavigation: vi.fn(() => vi.fn()),
 }));

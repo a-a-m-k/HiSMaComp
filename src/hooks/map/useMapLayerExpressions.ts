@@ -8,7 +8,6 @@ import { getLegendColorsForMapMode } from "@/constants/population";
 import {
   getCircleColorExpression,
   getCircleRadiusExpression,
-  getPopulationExpression,
   getPopulationSortKey,
 } from "@/components/map/MapView/MapLayer/expressions";
 import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
@@ -54,12 +53,9 @@ export const useMapLayerExpressions = ({
     [legendColors]
   );
 
-  const populationExpression = useMemo(() => getPopulationExpression(), []);
-
   return {
     populationSortKey,
     circleRadiusExpression,
     circleColorExpression,
-    populationExpression,
   };
 };

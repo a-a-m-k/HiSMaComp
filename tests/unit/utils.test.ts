@@ -7,6 +7,10 @@ import {
   townsToGeoJSON,
 } from "../../src/utils/utils";
 import { Town } from "../../src/common/types";
+import {
+  POPULATION_SORT_KEY_NO_DATA,
+  POPULATION_SORT_KEY_PROP,
+} from "../../src/constants/map";
 import { mockTowns } from "../helpers/testUtils";
 
 describe("getBounds", () => {
@@ -90,6 +94,30 @@ describe("townsToGeoJSON", () => {
     expect(geoJSON.features[0].geometry.type).toBe("Point");
     expect(geoJSON.features[0].properties).toBeTruthy();
     expect(geoJSON.features[0].properties?.name).toBe("Paris");
+  });
+
+  it("sets populationSortKey from population for the selected year (stable draw order)", () => {
+    const geoJSON = townsToGeoJSON(mockTowns, 1000);
+    const paris = geoJSON.features.find(f => f.properties?.name === "Paris");
+    expect(paris?.properties?.[POPULATION_SORT_KEY_PROP]).toBe(20000);
+    const rome = geoJSON.features.find(f => f.properties?.name === "Rome");
+    expect(rome?.properties?.[POPULATION_SORT_KEY_PROP]).toBe(25000);
+  });
+
+  it("precomputes mapLabelText for stable symbol text-field rendering", () => {
+    const geoJSON = townsToGeoJSON(mockTowns, 1000);
+    const paris = geoJSON.features.find(f => f.properties?.name === "Paris");
+    expect(paris?.properties?.mapLabelText).toBe("Paris\n20,000");
+  });
+
+  it("uses POPULATION_SORT_KEY_NO_DATA when the year has no population", () => {
+    const geoJSON = townsToGeoJSON(mockTowns, 1800);
+    expect(geoJSON.features).toHaveLength(3);
+    for (const f of geoJSON.features) {
+      expect(f.properties?.[POPULATION_SORT_KEY_PROP]).toBe(
+        POPULATION_SORT_KEY_NO_DATA
+      );
+    }
   });
 
   it("should filter out invalid towns", () => {
