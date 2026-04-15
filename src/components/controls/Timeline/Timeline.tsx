@@ -10,6 +10,7 @@ import { alpha, useTheme } from "@mui/material/styles";
 import { useApp } from "@/context/AppContext";
 import { strings } from "@/locales";
 import { TIMELINE_NIGHT_PAPER_SX } from "@/theme/mapTheme";
+import { MAP_OVERLAY_LIGHT_PAPER_ALPHA } from "@/theme/mapTokens";
 
 export interface TimelineProps {
   marks: Array<{ value: number; label: string }>;
@@ -97,7 +98,7 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
                 },
               }
             : {
-                // Background + blur from theme `components.MuiPaper.styleOverrides.root` (sx bgcolor would override).
+                backgroundColor: `${alpha(theme.palette.background.paper, MAP_OVERLAY_LIGHT_PAPER_ALPHA)} !important`,
                 border: 1,
                 borderColor: "divider",
                 borderRadius: 2,

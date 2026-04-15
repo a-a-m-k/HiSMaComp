@@ -9,6 +9,8 @@ export const MAP_NIGHT_TEXT_PRIMARY = "rgb(177, 179, 181)";
 export const MAP_NIGHT_TEXT_SECONDARY = "#94a3b8";
 export const MAP_NIGHT_DIVIDER = "rgba(148, 163, 184, 0.12)";
 export const MAP_NIGHT_TYPOGRAPHY_ROOT = "#cbd5f1";
+/** Shared light-mode opacity for frosted map overlay papers (legend/timeline). */
+export const MAP_OVERLAY_LIGHT_PAPER_ALPHA = 0.84;
 
 export const MAP_GEO_LABEL_TEXT_LIGHT = "#222222";
 export const MAP_GEO_LABEL_HALO_LIGHT = "#ffffff";

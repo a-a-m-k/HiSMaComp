@@ -1,7 +1,8 @@
-import type { SxProps, Theme } from "@mui/material/styles";
+import { alpha, type SxProps, type Theme } from "@mui/material/styles";
 import { LEGEND_WIDTHS, OVERLAY_POSITIONS } from "@/constants";
 import { SIZING_CONSTANTS } from "@/constants/sizing";
 import { LEGEND_NIGHT_SHELL_SX } from "@/theme/mapTheme";
+import { MAP_OVERLAY_LIGHT_PAPER_ALPHA } from "@/theme/mapTokens";
 
 export interface LegendLayoutOptions {
   isMobile: boolean;
@@ -48,7 +49,8 @@ export function getLegendPaperSurface(theme: Theme): SxProps<Theme> {
     };
   }
   return {
-    // Background + blur from theme `components.MuiPaper.styleOverrides.root` (sx bgcolor/backdropFilter would override).
+    // Keep light legend slightly translucent to match dark-mode chrome feel.
+    backgroundColor: `${alpha(theme.palette.background.paper, MAP_OVERLAY_LIGHT_PAPER_ALPHA)} !important`,
     border: borders.paper,
     /** Match `Timeline` root `Paper` (`borderRadius: 2`). */
     borderRadius: 2,

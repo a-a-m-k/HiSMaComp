@@ -6,6 +6,7 @@ import {
   MAP_OVERLAY_FLOATING_TOOL_SIZE_PHONE,
   SCREENSHOT_BUTTON_SIZE,
 } from "@/constants/map";
+import { MAP_OVERLAY_LIGHT_PAPER_ALPHA } from "@/theme/mapTokens";
 import { mapOverlayIconButtonTooltipStyles } from "@/theme/mapOverlayTooltipStyles";
 
 /** Frosted circles + tool stack — matches `darkTheme` `palette.background.paper` (`nightPaper`). */
@@ -13,7 +14,7 @@ export function mapOverlayControlSurfaceBackground(theme: Theme): string {
   if (theme.palette.mode === "dark") {
     return theme.palette.background.paper;
   }
-  return alpha(theme.palette.background.paper, 0.97);
+  return alpha(theme.palette.background.paper, MAP_OVERLAY_LIGHT_PAPER_ALPHA);
 }
 
 /** Optional extras on `.MuiSvgIcon-root` for floating (e.g. reset control alignment). */
