@@ -28,21 +28,8 @@ jobs:
       - name: Setup repo
         uses: ./.github/actions/setup
 
-      - name: Run tests with coverage
-        run: npm run test:coverage
-
-      - name: Lint
-        run: npm run lint:check
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      # Use same build as predeploy: base from package.json homepage, creates 404.html
-      - name: Build
-        run: node scripts/build-gh-pages.cjs
-
-      - name: Check bundle size budget
-        run: node scripts/check-bundle-size.js
+      - name: Verify quality gate
+        run: npm run verify:ci
 
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main'

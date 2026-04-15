@@ -28,6 +28,8 @@ vi.mock("@/components/controls/ScreenshotButton/utils", () => ({
   LEGEND_SCREENSHOT_EXPAND_EVENT: "hismacomp:legend-screenshot-expand",
   LEGEND_SCREENSHOT_RESTORE_EVENT: "hismacomp:legend-screenshot-restore",
   LEGEND_SCREENSHOT_EXPAND_WAIT_MS: 320,
+  dispatchLegendScreenshotExpand: vi.fn(),
+  dispatchLegendScreenshotRestore: vi.fn(),
   hideMapControls: (...args: unknown[]) => mockHideMapControls(...args),
   restoreMapControls: (...args: unknown[]) => mockRestoreMapControls(...args),
 }));

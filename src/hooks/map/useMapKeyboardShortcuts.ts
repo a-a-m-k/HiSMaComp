@@ -1,6 +1,6 @@
 import { useEffect, RefObject } from "react";
 import { MapRef } from "react-map-gl/maplibre";
-import { MAP_RESET_CAMERA_EVENT } from "@/constants/map";
+import { dispatchMapResetCamera } from "@/utils/events/mapEvents";
 import { ZOOM_ANIMATION_DURATION_MS } from "@/constants/keyboard";
 import { logger } from "@/utils/logger";
 import { isInputField } from "@/utils/keyboard";
@@ -55,7 +55,7 @@ export const useMapKeyboardShortcuts = (
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation?.();
-        window.dispatchEvent(new Event(MAP_RESET_CAMERA_EVENT));
+        dispatchMapResetCamera();
         return;
       }
 

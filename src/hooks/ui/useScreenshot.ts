@@ -5,10 +5,11 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   hideMapControls,
   restoreMapControls,
-  LEGEND_SCREENSHOT_EXPAND_EVENT,
-  LEGEND_SCREENSHOT_RESTORE_EVENT,
   LEGEND_SCREENSHOT_EXPAND_WAIT_MS,
+  dispatchLegendScreenshotExpand,
+  dispatchLegendScreenshotRestore,
 } from "@/components/controls/ScreenshotButton/utils";
+import { dispatchMapScreenshotCaptureState } from "@/utils/events/mapEvents";
 import { logger } from "@/utils/logger";
 
 /**
@@ -66,6 +67,7 @@ export const useScreenshot = ({
     }
 
     setIsCapturing(true);
+    dispatchMapScreenshotCaptureState({ isCapturing: true });
 
     const legendToggle = document.querySelector<HTMLElement>(
       '#legend [aria-controls="legend-collapsible"]'
@@ -73,7 +75,7 @@ export const useScreenshot = ({
     const legendAlreadyExpanded =
       !legendToggle || legendToggle.getAttribute("aria-expanded") !== "false";
 
-    window.dispatchEvent(new Event(LEGEND_SCREENSHOT_EXPAND_EVENT));
+    dispatchLegendScreenshotExpand();
 
     if (!legendAlreadyExpanded) {
       const expandWaitMs =
@@ -136,7 +138,8 @@ export const useScreenshot = ({
     } catch (error) {
       logger.error("Screenshot capture failed:", error);
     } finally {
-      window.dispatchEvent(new Event(LEGEND_SCREENSHOT_RESTORE_EVENT));
+      dispatchLegendScreenshotRestore();
+      dispatchMapScreenshotCaptureState({ isCapturing: false });
       if (controls) {
         restoreMapControls(controls, prevDisplay);
       }

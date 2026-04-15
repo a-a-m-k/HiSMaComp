@@ -21,8 +21,8 @@ import { LayerItem } from "@/common/types";
 import { LEGEND_APP_TITLE } from "@/constants";
 import { strings } from "@/locales";
 import {
-  LEGEND_SCREENSHOT_EXPAND_EVENT,
-  LEGEND_SCREENSHOT_RESTORE_EVENT,
+  onLegendScreenshotExpand,
+  onLegendScreenshotRestore,
 } from "@/components/controls/ScreenshotButton/utils";
 import { getLegendYearLabel, LEGEND_CONTENT_SPACING } from "./legendHelpers";
 import { MapResetViewButton } from "@/components/controls/MapResetViewButton/MapResetViewButton";
@@ -84,23 +84,13 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
           expandedBeforeScreenshotRef.current = null;
         }
       };
-      window.addEventListener(
-        LEGEND_SCREENSHOT_EXPAND_EVENT,
-        onExpandForScreenshot
-      );
-      window.addEventListener(
-        LEGEND_SCREENSHOT_RESTORE_EVENT,
+      const cleanupExpand = onLegendScreenshotExpand(onExpandForScreenshot);
+      const cleanupRestore = onLegendScreenshotRestore(
         onRestoreAfterScreenshot
       );
       return () => {
-        window.removeEventListener(
-          LEGEND_SCREENSHOT_EXPAND_EVENT,
-          onExpandForScreenshot
-        );
-        window.removeEventListener(
-          LEGEND_SCREENSHOT_RESTORE_EVENT,
-          onRestoreAfterScreenshot
-        );
+        cleanupExpand();
+        cleanupRestore();
       };
     }, []);
 

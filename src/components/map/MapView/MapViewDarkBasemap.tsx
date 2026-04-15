@@ -17,6 +17,7 @@ export interface MapViewDarkBasemapProps {
   sharedViewProps: MapViewSharedCameraProps;
   onLoad: () => void;
   onIdle?: () => void;
+  preserveDrawingBuffer?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ export const MapViewDarkBasemap: React.FC<MapViewDarkBasemapProps> = ({
   sharedViewProps,
   onLoad,
   onIdle,
+  preserveDrawingBuffer = false,
 }) => (
   <div
     data-map-basemap=""
@@ -54,7 +56,7 @@ export const MapViewDarkBasemap: React.FC<MapViewDarkBasemapProps> = ({
       maxTileCacheSize={SPLIT_BASEMAP_TILE_OPTIONS.maxTileCacheSize}
       onLoad={onLoad}
       onIdle={onIdle}
-      canvasContextAttributes={{ preserveDrawingBuffer: true }}
+      canvasContextAttributes={{ preserveDrawingBuffer }}
     />
   </div>
 );

@@ -30,9 +30,7 @@ window.addEventListener("unhandledrejection", event => {
 const rootElement = document.getElementById("root");
 if (rootElement) {
   const app = <App />;
-  createRoot(rootElement).render(
-    import.meta.env.DEV ? app : <StrictMode>{app}</StrictMode>
-  );
+  createRoot(rootElement).render(<StrictMode>{app}</StrictMode>);
 } else {
   logger.error("Failed to find the root element");
   const fallback = document.createElement("div");

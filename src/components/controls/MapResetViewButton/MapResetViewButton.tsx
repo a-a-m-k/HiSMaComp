@@ -2,9 +2,9 @@ import React from "react";
 import CenterFocusStrong from "@mui/icons-material/CenterFocusStrong";
 
 import {
-  MAP_CAMERA_RESET_STATE_EVENT,
-  MAP_RESET_CAMERA_EVENT,
-} from "@/constants/map";
+  dispatchMapResetCamera,
+  onMapCameraResetState,
+} from "@/utils/events/mapEvents";
 import { strings } from "@/locales";
 import { preventFocusOnMouseDown } from "@/utils/keyboard";
 
@@ -22,18 +22,10 @@ export const MapResetViewButton: React.FC<MapResetViewButtonProps> = ({
   const [isResetDisabled, setIsResetDisabled] = React.useState(false);
 
   React.useEffect(() => {
-    const onCameraResetState = (
-      event: Event & { detail?: { isAtResetCamera?: boolean } }
-    ) => {
+    const cleanup = onMapCameraResetState(event => {
       setIsResetDisabled(Boolean(event.detail?.isAtResetCamera));
-    };
-    window.addEventListener(MAP_CAMERA_RESET_STATE_EVENT, onCameraResetState);
-    return () => {
-      window.removeEventListener(
-        MAP_CAMERA_RESET_STATE_EVENT,
-        onCameraResetState
-      );
-    };
+    });
+    return cleanup;
   }, []);
 
   return (
@@ -48,7 +40,7 @@ export const MapResetViewButton: React.FC<MapResetViewButtonProps> = ({
       disabled={isResetDisabled}
       disableRipple
       onMouseDown={preventFocusOnMouseDown}
-      onClick={() => window.dispatchEvent(new Event(MAP_RESET_CAMERA_EVENT))}
+      onClick={dispatchMapResetCamera}
     >
       <CenterFocusStrong />
     </MapResetViewControl>

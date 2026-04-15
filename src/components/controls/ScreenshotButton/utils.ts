@@ -7,6 +7,26 @@ export const LEGEND_SCREENSHOT_RESTORE_EVENT =
 /** Allow MUI `Collapse` open animation to finish (`timeout` 300ms + buffer). */
 export const LEGEND_SCREENSHOT_EXPAND_WAIT_MS = 320;
 
+export const dispatchLegendScreenshotExpand = () => {
+  window.dispatchEvent(new Event(LEGEND_SCREENSHOT_EXPAND_EVENT));
+};
+
+export const dispatchLegendScreenshotRestore = () => {
+  window.dispatchEvent(new Event(LEGEND_SCREENSHOT_RESTORE_EVENT));
+};
+
+export const onLegendScreenshotExpand = (listener: EventListener) => {
+  window.addEventListener(LEGEND_SCREENSHOT_EXPAND_EVENT, listener);
+  return () =>
+    window.removeEventListener(LEGEND_SCREENSHOT_EXPAND_EVENT, listener);
+};
+
+export const onLegendScreenshotRestore = (listener: EventListener) => {
+  window.addEventListener(LEGEND_SCREENSHOT_RESTORE_EVENT, listener);
+  return () =>
+    window.removeEventListener(LEGEND_SCREENSHOT_RESTORE_EVENT, listener);
+};
+
 export type HideMapControlsOptions = {
   /**
    * When true, the save control stays visible during capture (e.g. narrow screens).

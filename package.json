@@ -19,6 +19,7 @@
     "test:e2e": "playwright test tests/e2e",
     "test:e2e:install": "playwright install chromium",
     "test:unit": "npm run test:base -- run tests/unit",
+    "verify:ci": "npm run test:coverage && npm run lint:check && npm run typecheck && node scripts/build-gh-pages.cjs && node scripts/check-bundle-size.js",
     "zoom:report": "tsx scripts/generateZoomReport.ts",
     "generate:terrain-dark": "node scripts/generate-terrain-dark.mjs",
     "prepare": "husky",
