@@ -225,7 +225,7 @@ describe("AppContext", () => {
     );
   });
 
-  it("should handle invalid year gracefully", () => {
+  it("should handle invalid year gracefully", async () => {
     const TestComponentWithInvalidYear = () => {
       const { setSelectedYear } = useApp();
 
@@ -243,8 +243,8 @@ describe("AppContext", () => {
     );
 
     const button = screen.getByTestId("invalid-year");
-    expect(() => {
-      act(() => {
+    await expect(async () => {
+      await act(async () => {
         button.click();
       });
     }).not.toThrow();

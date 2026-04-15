@@ -4,6 +4,7 @@ import MaplibreGL from "maplibre-gl";
 
 import { MAP_LAYER_ID } from "@/constants";
 import type { Town } from "@/common/types";
+import type { MapViewState } from "@/hooks/map";
 import { handleMapFeatureClick } from "@/utils/map";
 
 import { SPLIT_OVERLAY_TILE_OPTIONS, TILE_LOADING_OPTIONS } from "./constants";
@@ -18,13 +19,13 @@ import { MapOverlays } from "./MapOverlays";
 type MapCanvasStackProps = {
   isSplitBasemap: boolean;
   basemapMapRef: React.RefObject<MapRef | null>;
-  mapRef: React.RefObject<MapRef | null>;
+  mapRef: React.MutableRefObject<MapRef | null>;
   sharedViewProps: MapViewSharedCameraProps;
   onBasemapLoad: () => void;
   onBasemapIdle?: () => void;
   preserveDrawingBuffer: boolean;
   effectiveMinZoom: number;
-  handleMove: (event: Parameters<NonNullable<MapProps["onMove"]>>[0]) => void;
+  handleMove: (nextViewState: MapViewState) => void;
   onOverlayLoad: () => void;
   onOverlayIdle: () => void;
   overlayMapStyle: NonNullable<MapProps["mapStyle"]>;
@@ -78,7 +79,7 @@ export const MapCanvasStack: React.FC<MapCanvasStackProps> = ({
       />
     )}
     <Map
-      ref={mapRef as React.Ref<MapRef>}
+      ref={mapRef}
       {...sharedViewProps}
       // Keep town-label collision within the GeoJSON source so basemap symbols
       // cannot suppress all custom town labels.
@@ -89,12 +90,9 @@ export const MapCanvasStack: React.FC<MapCanvasStackProps> = ({
         const atOrNearMin = z <= effectiveMinZoom + ZOOM_SNAP_EPSILON;
         const effectiveZoom = atOrNearMin ? effectiveMinZoom : z;
         handleMove({
-          ...evt,
-          viewState: {
-            ...evt.viewState,
-            zoom: effectiveZoom,
-          },
-        } as Parameters<NonNullable<MapProps["onMove"]>>[0]);
+          ...evt.viewState,
+          zoom: effectiveZoom,
+        });
       }}
       onLoad={onOverlayLoad}
       onIdle={onOverlayIdle}

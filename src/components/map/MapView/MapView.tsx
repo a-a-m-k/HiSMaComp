@@ -186,7 +186,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
         onBasemapIdle={onBasemapIdle}
         preserveDrawingBuffer={isScreenshotCapturing}
         effectiveMinZoom={effectiveMinZoom}
-        handleMove={handleMove}
+        handleMove={nextViewState => handleMove({ viewState: nextViewState })}
         onOverlayLoad={handleOverlayMapLoad}
         onOverlayIdle={handleMapIdle}
         overlayMapStyle={overlayMapStyle}

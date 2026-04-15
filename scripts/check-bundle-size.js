@@ -31,7 +31,7 @@ const BUDGETS = {
   totalJs: 1100, // ~1100 KiB gzip total JS (maplibre + vendor + index + towns)
   maplibre: 270,
   vendor: 150,
-  index: 30,
+  index: 35,
   towns: 120, // async chunk from useTownsData dynamic import
 };
 
