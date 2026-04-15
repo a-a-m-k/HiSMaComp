@@ -16,6 +16,7 @@ export const en = {
   loading: {
     default: "Processing data...",
     resizingMap: "Resizing map...",
+    switchingMapStyle: "Switching map style...",
     loadingHistoricalData: "Loading historical data...",
   },
   map: {

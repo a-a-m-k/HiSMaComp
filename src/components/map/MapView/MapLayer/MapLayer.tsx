@@ -19,7 +19,7 @@ import {
 } from "@/constants";
 import { GeoJSON } from "geojson";
 import { useMapLayerExpressions } from "@/hooks/map";
-import { POPULATION_FOR_YEAR_PROP } from "./expressions";
+import { POPULATION_FOR_YEAR_PROP } from "@/utils/map";
 import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
 
 interface MapLayerProps extends Omit<

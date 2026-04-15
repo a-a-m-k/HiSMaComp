@@ -358,6 +358,11 @@ vi.mock("@/hooks/map", () => ({
     handleOverlayMapLoad: vi.fn(),
     handleBasemapLoad: vi.fn(),
   })),
+  useMapStyleSwitchLoader: vi.fn(({ onFirstIdle }) => ({
+    isStyleSwitching: false,
+    onOverlayIdle: () => onFirstIdle?.(),
+    onBasemapIdle: vi.fn(),
+  })),
   useTownsGeoJSON: vi.fn(() => ({ type: "FeatureCollection", features: [] })),
   useMapLayerExpressions: vi.fn(() => ({
     populationSortKey: "population",

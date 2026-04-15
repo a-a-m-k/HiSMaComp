@@ -9,7 +9,7 @@ import {
   getCircleColorExpression,
   getCircleRadiusExpression,
   getPopulationSortKey,
-} from "@/components/map/MapView/MapLayer/expressions";
+} from "@/utils/map";
 import type { MapBaseStyleMode } from "@/utils/map/terrainStyle";
 
 interface UseMapLayerExpressionsOptions {

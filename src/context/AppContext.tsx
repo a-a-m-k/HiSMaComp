@@ -88,9 +88,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({
 
       const loadData = async (): Promise<void> => {
         try {
-          const yearData = yearDataService.getYearData(towns, requestYear);
+          const yearFilteredTowns = yearDataService.getFilteredTowns(
+            towns,
+            requestYear
+          );
           if (currentYearRef.current !== requestYear) return;
-          setFilteredTowns(yearData.filteredTowns);
+          setFilteredTowns(yearFilteredTowns);
           setError(null);
         } catch (error) {
           if (currentYearRef.current !== requestYear) return;

@@ -18,6 +18,21 @@ interface YearData {
 /** Caches computed year data (filtered towns, bounds, center, GeoJSON) so switching centuries is cheap. */
 class YearDataService {
   private yearDataCache = new LRUCache<string, YearData>(MAX_CACHE_SIZE);
+  private filteredTownsCache = new LRUCache<string, Town[]>(MAX_CACHE_SIZE);
+
+  /**
+   * Context-facing API: only return year-filtered towns without map-specific derived data.
+   */
+  getFilteredTowns(towns: Town[], year: number): Town[] {
+    const cacheKey = this.createCacheKey(towns, year);
+    const cachedData = this.filteredTownsCache.get(cacheKey);
+    if (cachedData !== undefined) {
+      return cachedData;
+    }
+    const filteredTowns = filterTownsByYear(towns, year);
+    this.filteredTownsCache.set(cacheKey, filteredTowns);
+    return filteredTowns;
+  }
 
   getYearData(towns: Town[], year: number): YearData {
     const cacheKey = this.createCacheKey(towns, year);
@@ -45,12 +60,15 @@ class YearDataService {
 
   clearCache(): void {
     this.yearDataCache.clear();
+    this.filteredTownsCache.clear();
   }
 
   getCacheStats() {
     const stats = this.yearDataCache.getStats();
+    const filteredStats = this.filteredTownsCache.getStats();
     return {
       yearDataCacheSize: stats.size,
+      filteredTownsCacheSize: filteredStats.size,
       maxCacheSize: stats.maxSize,
       utilization: stats.utilization,
     };

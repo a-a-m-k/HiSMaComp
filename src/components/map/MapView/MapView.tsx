@@ -26,6 +26,7 @@ import { getMapStyles } from "@/constants/ui";
 import { strings } from "@/locales";
 import { useViewport, usePrefersReducedMotion } from "@/hooks/ui";
 import type { Town } from "@/common/types";
+import { LoadingSpinner } from "@/components/ui";
 import {
   useMapViewState,
   useAnimateCameraToFit,
@@ -35,6 +36,7 @@ import {
   useTownsGeoJSON,
   useMapContainerResize,
   useMapViewLibreEffects,
+  useMapStyleSwitchLoader,
 } from "@/hooks/map";
 import type { MapViewState } from "@/hooks/map";
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
@@ -180,10 +182,16 @@ const MapView: React.FC<MapViewComponentProps> = ({
     maxBounds,
   });
 
+  const { isStyleSwitching, onOverlayIdle, onBasemapIdle } =
+    useMapStyleSwitchLoader({
+      mapStyleMode,
+      onFirstIdle,
+    });
+
   const handleMapIdle = React.useCallback(() => {
-    onFirstIdle?.();
     setMapReady(true);
-  }, [onFirstIdle]);
+    onOverlayIdle();
+  }, [onOverlayIdle]);
 
   const mapDescription = useMemo(
     () => getMapDescription({ isMobile, isDesktop, mapStyleMode }),
@@ -245,6 +253,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
         id="map-container-area"
         ref={containerRef}
         role="application"
+        aria-busy={isStyleSwitching}
         aria-label={strings.map.ariaLabel}
         aria-describedby="map-description"
         data-map-appearance={mapStyleMode}
@@ -263,6 +272,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
             basemapRef={basemapMapRef}
             sharedViewProps={sharedViewProps}
             onLoad={handleBasemapLoad}
+            onIdle={onBasemapIdle}
           />
         )}
         <Map
@@ -333,6 +343,22 @@ const MapView: React.FC<MapViewComponentProps> = ({
         >
           {interactiveMapChildren}
         </Map>
+        {isStyleSwitching && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 2,
+              pointerEvents: "none",
+            }}
+          >
+            <LoadingSpinner
+              message={strings.loading.switchingMapStyle}
+              overlayOpacity={1}
+              blurPx={0}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
