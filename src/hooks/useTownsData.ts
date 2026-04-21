@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Town } from "@/common/types";
-import { logger } from "@/utils/logger";
-import { getUserFacingMessage } from "@/utils/errorMessage";
+import { announce } from "@/utils/accessibility";
+import { getAppErrorMessage, reportAppError } from "@/utils/errorPolicy";
+import { trackEvent, trackTiming } from "@/utils/observability";
 import { validateTownsData } from "@/utils/validateTowns";
 
 /**
@@ -25,6 +26,7 @@ export const useTownsData = (): {
     let cancelled = false;
 
     const loadTowns = async () => {
+      const start = performance.now();
       try {
         setIsLoading(true);
         setError(null);
@@ -39,12 +41,25 @@ export const useTownsData = (): {
         const raw = townsModule.default ?? townsModule;
         const townsData = validateTownsData(raw);
         setTowns(townsData);
-        logger.info(`Loaded ${townsData.length} towns asynchronously`);
+        trackTiming("towns_data_load_ms", performance.now() - start, {
+          result: "success",
+          count: townsData.length,
+        });
       } catch (err) {
         if (cancelled) return;
-        const errorMessage = `Failed to load towns data: ${getUserFacingMessage(err, "Please refresh the page.")}`;
-        logger.error("Error loading towns data:", err);
+        reportAppError(err, {
+          category: "towns-data-load",
+          operation: "useTownsData.loadTowns",
+        });
+        const errorMessage = getAppErrorMessage(err, {
+          category: "towns-data-load",
+          operation: "useTownsData.loadTowns",
+        });
         setError(errorMessage);
+        announce(errorMessage, "assertive");
+        trackTiming("towns_data_load_ms", performance.now() - start, {
+          result: "error",
+        });
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -56,7 +71,10 @@ export const useTownsData = (): {
     };
   }, [retryCount]);
 
-  const retry = () => setRetryCount(c => c + 1);
+  const retry = () => {
+    trackEvent({ name: "towns_data_retry_clicked" });
+    setRetryCount(c => c + 1);
+  };
 
   return { towns, isLoading, error, retry };
 };

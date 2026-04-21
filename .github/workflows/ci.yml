@@ -21,6 +21,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VITE_STADIA_API_KEY: ${{ secrets.VITE_STADIA_API_KEY || 'test-key-for-ci' }}
+      VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN || '' }}
+      VITE_APP_RELEASE: ${{ secrets.VITE_APP_RELEASE || github.sha }}
+      VITE_SENTRY_TRACES_SAMPLE_RATE: ${{ secrets.VITE_SENTRY_TRACES_SAMPLE_RATE || '0.1' }}
+      VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE: ${{ secrets.VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE || '0.1' }}
+      VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE: ${{ secrets.VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE || '1.0' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

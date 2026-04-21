@@ -1,11 +1,7 @@
 import { Town } from "@/common/types";
 import { MAX_CACHE_SIZE } from "@/constants";
-import {
-  filterTownsByYear,
-  getBounds,
-  calculateAverageCenter,
-  townsToGeoJSON,
-} from "@/utils/utils";
+import { filterTownsByYear, townsToGeoJSON } from "@/utils/geojson";
+import { getBounds, calculateAverageCenter } from "@/utils/geo";
 import { LRUCache } from "@/utils/cache";
 
 interface YearData {
@@ -19,6 +15,11 @@ interface YearData {
 class YearDataService {
   private yearDataCache = new LRUCache<string, YearData>(MAX_CACHE_SIZE);
   private filteredTownsCache = new LRUCache<string, Town[]>(MAX_CACHE_SIZE);
+  /**
+   * Memoizes content fingerprints by array reference so repeated calls for
+   * different years avoid re-sorting/re-serializing the same towns payload.
+   */
+  private townsFingerprintCache = new WeakMap<Town[], string>();
 
   /**
    * Context-facing API: only return year-filtered towns without map-specific derived data.
@@ -61,6 +62,7 @@ class YearDataService {
   clearCache(): void {
     this.yearDataCache.clear();
     this.filteredTownsCache.clear();
+    this.townsFingerprintCache = new WeakMap<Town[], string>();
   }
 
   getCacheStats() {
@@ -83,6 +85,11 @@ class YearDataService {
       return `empty-${year}`;
     }
 
+    const cachedFingerprint = this.townsFingerprintCache.get(towns);
+    if (cachedFingerprint !== undefined) {
+      return `${year}:${cachedFingerprint}`;
+    }
+
     const canonicalTowns = [...towns]
       .sort((a, b) => {
         const nameCmp = a.name.localeCompare(b.name);
@@ -100,7 +107,9 @@ class YearDataService {
           .map(([y, p]) => [y, p] as const),
       }));
 
-    return `${year}:${JSON.stringify(canonicalTowns)}`;
+    const fingerprint = JSON.stringify(canonicalTowns);
+    this.townsFingerprintCache.set(towns, fingerprint);
+    return `${year}:${fingerprint}`;
   }
 }
 

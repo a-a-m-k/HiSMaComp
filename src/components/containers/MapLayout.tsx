@@ -21,7 +21,7 @@ import {
 } from "@/hooks/ui";
 import { strings } from "@/locales";
 import { lightTheme } from "@/theme/theme";
-import { calculateMapArea } from "@/utils/utils";
+import { calculateMapArea } from "@/utils/mapZoom";
 import { getInitialMapProps, useStableMapKey } from "./MapLayoutHelpers";
 
 export interface MapLayoutProps {

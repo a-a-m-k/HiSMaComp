@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Town } from "@/common/types";
-import { townsToGeoJSON } from "@/utils/utils";
+import { townsToGeoJSON } from "@/utils/geojson";
 import { logger } from "@/utils/logger";
 
 /**

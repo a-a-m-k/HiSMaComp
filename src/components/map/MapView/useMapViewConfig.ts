@@ -4,7 +4,7 @@ import type { Theme } from "@mui/material/styles";
 import type { MapViewState } from "@/hooks/map";
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
 import { getZoomToFitBounds } from "@/utils/mapZoom";
-import { calculateMapArea } from "@/utils/utils";
+import { calculateMapArea } from "@/utils/mapZoom";
 
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
 import type { MapViewSharedCameraProps } from "./MapViewDarkBasemap";

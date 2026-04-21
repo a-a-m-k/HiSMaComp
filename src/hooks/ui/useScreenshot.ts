@@ -9,8 +9,10 @@ import {
   dispatchLegendScreenshotExpand,
   dispatchLegendScreenshotRestore,
 } from "@/components/controls/ScreenshotButton/utils";
+import { announce } from "@/utils/accessibility";
 import { dispatchMapScreenshotCaptureState } from "@/utils/events/mapEvents";
-import { reportAppError } from "@/utils/errorPolicy";
+import { getAppErrorMessage, reportAppError } from "@/utils/errorPolicy";
+import { trackEvent, trackTiming } from "@/utils/observability";
 
 /**
  * Options for the useScreenshot hook.
@@ -55,17 +57,28 @@ export const useScreenshot = ({
 
   const captureScreenshot = useCallback(async () => {
     if (isCapturing) return;
+    const start = performance.now();
 
     const mapContainer =
       document.querySelector<HTMLElement>(mapContainerSelector);
     if (!mapContainer) {
-      reportAppError(
-        new Error(`Map container not found: ${mapContainerSelector}`),
-        {
-          category: "screenshot-capture",
-          operation: "querySelector",
-        }
+      const missingContainerError = new Error(
+        `Map container not found: ${mapContainerSelector}`
       );
+      reportAppError(missingContainerError, {
+        category: "screenshot-capture",
+        operation: "querySelector",
+      });
+      const errorMessage = getAppErrorMessage(missingContainerError, {
+        category: "screenshot-capture",
+        operation: "querySelector",
+      });
+      announce(errorMessage, "assertive");
+      trackEvent({
+        name: "screenshot_capture_failed",
+        level: "warn",
+        data: { reason: "container_missing" },
+      });
       return;
     }
 
@@ -132,6 +145,9 @@ export const useScreenshot = ({
       link.style.display = "none";
       document.body.appendChild(link);
       link.click();
+      trackTiming("screenshot_capture_ms", performance.now() - start, {
+        result: "success",
+      });
 
       setTimeout(() => {
         if (link && link.parentNode === document.body) {
@@ -142,6 +158,14 @@ export const useScreenshot = ({
       reportAppError(error, {
         category: "screenshot-capture",
         operation: "html2canvas",
+      });
+      const errorMessage = getAppErrorMessage(error, {
+        category: "screenshot-capture",
+        operation: "html2canvas",
+      });
+      announce(errorMessage, "assertive");
+      trackTiming("screenshot_capture_ms", performance.now() - start, {
+        result: "error",
       });
     } finally {
       dispatchLegendScreenshotRestore();

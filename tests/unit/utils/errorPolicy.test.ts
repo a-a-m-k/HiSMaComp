@@ -38,6 +38,14 @@ describe("errorPolicy", () => {
     expect(msg).toBe("Could not save map image. Please try again.");
   });
 
+  it("uses no-towns-data fallback message", () => {
+    const msg = getAppErrorMessage(null, {
+      category: "no-towns-data",
+      operation: "loadYearData",
+    });
+    expect(msg).toBe("No towns data available.");
+  });
+
   it("reports structured context to logger", () => {
     const spy = vi.spyOn(logger, "error").mockImplementation(() => {});
     reportAppError(new Error("boom"), {

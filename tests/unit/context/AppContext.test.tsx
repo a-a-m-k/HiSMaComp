@@ -1,113 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, act, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { AppProvider, useApp } from "@/context/AppContext";
 import { mockTownsMinimal } from "../../helpers/testUtils";
-
-vi.mock("@/utils/utils", () => ({
-  calculateBoundsCenter: vi.fn(() => ({
-    latitude: 48.8566,
-    longitude: 2.3522,
-  })),
-  calculateResponsiveZoom: vi.fn(() => 4),
-  calculateOptimalPadding: vi.fn(() => 0.2),
-  calculateFitZoom: vi.fn(() => 4),
-  calculateMapArea: vi.fn(() => ({
-    effectiveWidth: 1920,
-    effectiveHeight: 1080,
-  })),
-  getBounds: vi.fn(() => ({
-    minLat: 48.0,
-    maxLat: 52.0,
-    minLng: 2.0,
-    maxLng: 12.0,
-  })),
-  townsToGeoJSON: vi.fn(() => ({
-    type: "FeatureCollection",
-    features: [],
-  })),
-  isValidNumber: (n: unknown) => typeof n === "number" && !isNaN(n),
-  isValidCoordinate: () => true,
-}));
-
-vi.mock("@/services", () => {
-  const mockGetFilteredTowns = vi.fn((towns: any[], year: number) => {
-    const filteredTowns = towns.filter(
-      town => town.populationByYear?.[year.toString()] != null
-    );
-    return filteredTowns;
-  });
-
-  const mockGetYearData = vi.fn((towns: any[], year: number) => {
-    const filteredTowns = mockGetFilteredTowns(towns, year);
-    return {
-      filteredTowns,
-      bounds: { minLat: 48.0, maxLat: 52.0, minLng: 2.0, maxLng: 12.0 },
-      center: { latitude: 50.0, longitude: 2.3522 },
-      geojson: {
-        type: "FeatureCollection",
-        features: filteredTowns.map(town => ({
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [town.longitude, town.latitude],
-          },
-          properties: town,
-        })),
-      },
-    };
-  });
-
-  return {
-    yearDataService: {
-      getFilteredTowns: mockGetFilteredTowns,
-      getYearData: mockGetYearData,
-      clearCache: vi.fn(),
-      getCacheStats: vi.fn(() => ({ yearDataCacheSize: 0, maxCacheSize: 50 })),
-    },
-  };
-});
-
-vi.mock("@/hooks/ui", async () => {
-  const { createResponsiveMock } =
-    await import("../../helpers/mocks/responsive");
-  const viewportShape = () => {
-    const mock = createResponsiveMock();
-    return {
-      ...mock,
-      screenWidth: 1920,
-      screenHeight: 1080,
-      rawScreenWidth: 1920,
-      rawScreenHeight: 1080,
-      isMobileLayout: false,
-      isTabletLayout: false,
-      isDesktopLayout: true,
-      isXLargeLayout: false,
-      isBelowMinViewport: false,
-    };
-  };
-  return {
-    useViewport: vi.fn(viewportShape),
-    useResponsive: vi.fn(() => createResponsiveMock()),
-    useResizeDebounced: vi.fn(() => ({ width: 1920, height: 1080 })),
-    useNarrowLayout: vi.fn(() => false),
-    useOverlayButtonsVisible: vi.fn(() => true),
-    useScreenshot: vi.fn(() => ({
-      captureScreenshot: vi.fn(),
-      isCapturing: false,
-    })),
-  };
-});
-
-vi.mock("@/utils/retry", () => ({
-  retryWithBackoff: vi.fn(fn => {
-    try {
-      fn();
-    } catch (e) {
-      // Ignore errors
-    }
-    return Promise.resolve();
-  }),
-}));
 
 const mockLogger = vi.hoisted(() => ({
   error: vi.fn(),
@@ -118,6 +12,20 @@ const mockLogger = vi.hoisted(() => ({
 
 vi.mock("@/utils/logger", () => ({
   logger: mockLogger,
+}));
+
+const mockUseYearDataController = vi.hoisted(() =>
+  vi.fn(() => ({
+    filteredTowns: [],
+    isLoading: false,
+    error: null,
+    clearError: vi.fn(),
+    retry: vi.fn(),
+  }))
+);
+
+vi.mock("@/context/useYearDataController", () => ({
+  useYearDataController: mockUseYearDataController,
 }));
 
 const TestComponent = () => {
@@ -140,60 +48,36 @@ const TestComponent = () => {
 describe("AppContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseYearDataController.mockReturnValue({
+      filteredTowns: [mockTownsMinimal[0]],
+      isLoading: false,
+      error: null,
+      clearError: vi.fn(),
+      retry: vi.fn(),
+    });
   });
 
-  it("should provide default values and filter towns correctly", async () => {
-    const { container } = render(
+  it("provides default selected year and controller data", () => {
+    render(
       <AppProvider towns={mockTownsMinimal}>
         <TestComponent />
       </AppProvider>
     );
 
-    await waitFor(
-      () => {
-        const yearEl = container.querySelector('[data-testid="selected-year"]');
-        expect(yearEl).toBeInTheDocument();
-        expect(yearEl).toHaveTextContent("800");
-      },
-      { timeout: 100, interval: 5 }
-    );
-
+    expect(screen.getByTestId("selected-year")).toHaveTextContent("800");
     expect(screen.getByTestId("filtered-count")).toHaveTextContent("1");
     expect(screen.getByTestId("town-names")).toHaveTextContent("Paris");
   });
 
-  it("should update selected year and show correct towns", async () => {
-    const { container } = render(
+  it("updates selected year when valid year is chosen", () => {
+    render(
       <AppProvider towns={mockTownsMinimal}>
         <TestComponent />
       </AppProvider>
     );
 
-    await waitFor(
-      () => {
-        expect(
-          container.querySelector('[data-testid="selected-year"]')
-        ).toBeInTheDocument();
-      },
-      { timeout: 100, interval: 5 }
-    );
-
-    const changeButton = screen.getByTestId("change-year");
-
-    act(() => {
-      changeButton.click();
-    });
-
-    await waitFor(
-      () => {
-        const yearEl = container.querySelector('[data-testid="selected-year"]');
-        expect(yearEl).toHaveTextContent("1200");
-      },
-      { timeout: 100, interval: 5 }
-    );
-
-    expect(screen.getByTestId("filtered-count")).toHaveTextContent("2");
-    expect(screen.getByTestId("town-names")).toHaveTextContent("Paris, London");
+    fireEvent.click(screen.getByTestId("change-year"));
+    expect(screen.getByTestId("selected-year")).toHaveTextContent("1200");
   });
 
   it("should throw error when used outside provider", () => {
@@ -206,33 +90,20 @@ describe("AppContext", () => {
     consoleSpy.mockRestore();
   });
 
-  it("should handle empty towns array", async () => {
-    const { container } = render(
-      <AppProvider towns={[]}>
-        <TestComponent />
-      </AppProvider>
-    );
-
-    await waitFor(
-      () => {
-        const countEl = container.querySelector(
-          '[data-testid="filtered-count"]'
-        );
-        expect(countEl).toBeInTheDocument();
-        expect(countEl).toHaveTextContent("0");
-      },
-      { timeout: 100, interval: 5 }
-    );
-  });
-
-  it("should handle invalid year gracefully", async () => {
+  it("ignores invalid year and logs a warning", () => {
     const TestComponentWithInvalidYear = () => {
-      const { setSelectedYear } = useApp();
+      const { selectedYear, setSelectedYear } = useApp();
 
       return (
-        <button data-testid="invalid-year" onClick={() => setSelectedYear(-1)}>
-          Set Invalid Year
-        </button>
+        <>
+          <div data-testid="selected-year">{selectedYear}</div>
+          <button
+            data-testid="invalid-year"
+            onClick={() => setSelectedYear(-1)}
+          >
+            Set Invalid Year
+          </button>
+        </>
       );
     };
 
@@ -242,11 +113,8 @@ describe("AppContext", () => {
       </AppProvider>
     );
 
-    const button = screen.getByTestId("invalid-year");
-    await expect(async () => {
-      await act(async () => {
-        button.click();
-      });
-    }).not.toThrow();
+    fireEvent.click(screen.getByTestId("invalid-year"));
+    expect(screen.getByTestId("selected-year")).toHaveTextContent("800");
+    expect(mockLogger.warn).toHaveBeenCalledTimes(1);
   });
 });

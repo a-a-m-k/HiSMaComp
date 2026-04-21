@@ -114,7 +114,11 @@ describe("useYearDataController", () => {
       result.current.retry();
     });
 
-    expect(result.current.error).toBe("No towns data available");
+    expect(result.current.error).toBe("No towns data available.");
+    expect(mockAnnounce).toHaveBeenCalledWith(
+      "No towns data available.",
+      "assertive"
+    );
   });
 
   it("updates filtered towns when selectedYear changes", async () => {

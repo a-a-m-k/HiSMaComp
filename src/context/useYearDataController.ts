@@ -3,10 +3,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Town } from "@/common/types";
 import { YEARS } from "@/constants";
 import { yearDataService } from "@/services";
-import { calculateBoundsCenter } from "@/utils/utils";
+import { calculateBoundsCenter } from "@/utils/geo";
 import { retryWithBackoff } from "@/utils/retry";
 import { announce } from "@/utils/accessibility";
 import { getAppErrorMessage, reportAppError } from "@/utils/errorPolicy";
+import { trackEvent, trackTiming } from "@/utils/observability";
 
 type UseYearDataControllerArgs = {
   towns: Town[];
@@ -32,7 +33,19 @@ export const useYearDataController = ({
   const loadYearData = useCallback(
     (year: number, useRetry = false): void => {
       if (!towns || towns.length === 0) {
-        setError("No towns data available");
+        const noDataError = new Error("No towns data available");
+        reportAppError(noDataError, {
+          category: "no-towns-data",
+          operation: "loadYearData",
+          year,
+        });
+        const errorMessage = getAppErrorMessage(noDataError, {
+          category: "no-towns-data",
+          operation: "loadYearData",
+          year,
+        });
+        setError(errorMessage);
+        announce(errorMessage, "assertive");
         setFilteredTowns([]);
         return;
       }
@@ -41,6 +54,7 @@ export const useYearDataController = ({
       const requestYear = year;
 
       const loadData = async (): Promise<void> => {
+        const start = performance.now();
         try {
           const yearFilteredTowns = yearDataService.getFilteredTowns(
             towns,
@@ -49,6 +63,11 @@ export const useYearDataController = ({
           if (currentYearRef.current !== requestYear) return;
           setFilteredTowns(yearFilteredTowns);
           setError(null);
+          trackTiming("year_change_compute_ms", performance.now() - start, {
+            year: requestYear,
+            count: yearFilteredTowns.length,
+            result: "success",
+          });
         } catch (caughtError) {
           if (currentYearRef.current !== requestYear) return;
           reportAppError(caughtError, {
@@ -64,6 +83,10 @@ export const useYearDataController = ({
           setError(errorMessage);
           setFilteredTowns([]);
           announce(errorMessage, "assertive");
+          trackTiming("year_change_compute_ms", performance.now() - start, {
+            year: requestYear,
+            result: "error",
+          });
           throw caughtError;
         }
       };
@@ -112,6 +135,10 @@ export const useYearDataController = ({
   );
 
   const retry = useCallback(() => {
+    trackEvent({
+      name: "year_data_retry_clicked",
+      data: { year: selectedYear },
+    });
     setError(null);
     loadYearData(selectedYear, true);
   }, [selectedYear, loadYearData]);

@@ -8,11 +8,17 @@ const {
   mockHideMapControls,
   mockRestoreMapControls,
   mockReportAppError,
+  mockGetAppErrorMessage,
+  mockAnnounce,
 } = vi.hoisted(() => ({
   mockHtml2Canvas: vi.fn(),
   mockHideMapControls: vi.fn(),
   mockRestoreMapControls: vi.fn(),
   mockReportAppError: vi.fn(),
+  mockGetAppErrorMessage: vi.fn(
+    () => "Could not save map image. Please try again."
+  ),
+  mockAnnounce: vi.fn(),
 }));
 
 vi.mock("html2canvas", () => ({
@@ -31,6 +37,11 @@ vi.mock("@/components/controls/ScreenshotButton/utils", () => ({
 
 vi.mock("@/utils/errorPolicy", () => ({
   reportAppError: (...args: unknown[]) => mockReportAppError(...args),
+  getAppErrorMessage: (...args: unknown[]) => mockGetAppErrorMessage(...args),
+}));
+
+vi.mock("@/utils/accessibility", () => ({
+  announce: (...args: unknown[]) => mockAnnounce(...args),
 }));
 
 vi.mock("@mui/material/styles", () => ({
@@ -105,6 +116,10 @@ describe("useScreenshot", () => {
         operation: "html2canvas",
       })
     );
+    expect(mockAnnounce).toHaveBeenCalledWith(
+      "Could not save map image. Please try again.",
+      "assertive"
+    );
     expect(mockRestoreMapControls).toHaveBeenCalledTimes(1);
   });
 
@@ -124,6 +139,10 @@ describe("useScreenshot", () => {
         category: "screenshot-capture",
         operation: "querySelector",
       })
+    );
+    expect(mockAnnounce).toHaveBeenCalledWith(
+      "Could not save map image. Please try again.",
+      "assertive"
     );
     expect(mockHtml2Canvas).not.toHaveBeenCalled();
   });

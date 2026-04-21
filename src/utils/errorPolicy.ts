@@ -1,8 +1,12 @@
 import { getUserFacingMessage } from "./errorMessage";
 import { logger } from "./logger";
+import { trackEvent } from "./observability";
+import { captureSentryError } from "./sentry";
 
 export type AppErrorCategory =
   | "initialization"
+  | "no-towns-data"
+  | "towns-data-load"
   | "year-data-load"
   | "year-data-retry"
   | "validation"
@@ -16,6 +20,9 @@ export type AppErrorContext = {
 
 const CATEGORY_FALLBACK_MESSAGE: Record<AppErrorCategory, string> = {
   initialization:
+    "Failed to load historical data. Please try refreshing the page.",
+  "no-towns-data": "No towns data available.",
+  "towns-data-load":
     "Failed to load historical data. Please try refreshing the page.",
   "year-data-load": "Please try again.",
   "year-data-retry":
@@ -39,10 +46,24 @@ export const reportAppError = (
   error: unknown,
   context: AppErrorContext
 ): void => {
+  trackEvent({
+    name: "app_error_reported",
+    level: "error",
+    data: {
+      category: context.category,
+      operation: context.operation,
+      year: context.year,
+    },
+  });
   logger.error("[app-error]", {
     category: context.category,
     operation: context.operation,
     year: context.year,
     error,
+  });
+  captureSentryError(error, {
+    category: context.category,
+    operation: context.operation,
+    year: context.year,
   });
 };

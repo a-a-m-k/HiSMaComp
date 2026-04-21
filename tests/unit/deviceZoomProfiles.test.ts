@@ -2,6 +2,7 @@ import {
   calculateResponsiveZoom,
   calculateMapArea,
 } from "../../src/utils/utils";
+import type { MapArea } from "../../src/utils/mapZoom";
 import { mockTheme } from "../helpers/testUtils";
 
 // Common device profiles based on real-world devices
@@ -613,7 +614,14 @@ describe("Device-Specific Zoom Calculations", () => {
 
 describe("Visual Regression Test Data", () => {
   it("should generate zoom values for visual comparison", () => {
-    const results: Record<string, any> = {};
+    type ZoomProfileResult = {
+      deviceName: string;
+      category: string;
+      dimensions: { width: number; height: number };
+      calculatedZoom: number;
+      effectiveMapArea: MapArea;
+    };
+    const results: Record<string, ZoomProfileResult> = {};
 
     Object.entries(deviceProfiles).forEach(([key, device]) => {
       const zoom = calculateResponsiveZoom(

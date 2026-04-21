@@ -321,7 +321,7 @@ describe("Zoom Calculations", () => {
   describe("Town Visibility Tests", () => {
     // Helper function to check if towns fit within viewport at given zoom
     const checkTownsVisibility = (
-      towns: any[],
+      towns: Town[],
       width: number,
       height: number,
       zoom: number
@@ -466,8 +466,8 @@ describe("Zoom Calculations", () => {
     describe("Real Dataset Tests (Critical)", () => {
       // Test with the actual full dataset to catch real issues
       // Pre-compute filtered data once to avoid repeated filtering
-      const realTowns = (allTownsData as any[]).filter(
-        (t: any) =>
+      const realTowns = (allTownsData as Town[]).filter(
+        t =>
           t.latitude != null &&
           t.longitude != null &&
           !isNaN(t.latitude) &&
@@ -475,19 +475,19 @@ describe("Zoom Calculations", () => {
       );
 
       // Pre-compute geographic bounds once
-      const lats = realTowns.map((t: any) => t.latitude);
-      const lngs = realTowns.map((t: any) => t.longitude);
+      const lats = realTowns.map(t => t.latitude);
+      const lngs = realTowns.map(t => t.longitude);
       const minLat = Math.min(...lats);
       const maxLat = Math.max(...lats);
       const minLng = Math.min(...lngs);
       const maxLng = Math.max(...lngs);
 
       // Pre-find extreme cities once
-      const northernTown = realTowns.find((t: any) => t.latitude === maxLat);
-      const southernTown = realTowns.find((t: any) => t.latitude === minLat);
-      const easternTown = realTowns.find((t: any) => t.longitude === maxLng);
-      const westernTown = realTowns.find((t: any) => t.longitude === minLng);
-      const sarai = realTowns.find((t: any) => t.name === "Sarai");
+      const northernTown = realTowns.find(t => t.latitude === maxLat);
+      const southernTown = realTowns.find(t => t.latitude === minLat);
+      const easternTown = realTowns.find(t => t.longitude === maxLng);
+      const westernTown = realTowns.find(t => t.longitude === minLng);
+      const sarai = realTowns.find(t => t.name === "Sarai");
 
       it("CRITICAL: should fit ALL towns from real dataset on iPhone SE", () => {
         const zoom = calculateResponsiveZoom(realTowns, 375, 667, mockTheme);
