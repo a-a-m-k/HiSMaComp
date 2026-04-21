@@ -10,6 +10,8 @@ type MapViewShellProps = {
   mapStyleMode: "light" | "dark";
   showOverlayButtons: boolean;
   isStyleSwitching: boolean;
+  /** True after overlay map has fired `idle` at least once (tiles/styles settled). */
+  mapReady: boolean;
   containerRef: React.RefObject<HTMLDivElement | null>;
   children: React.ReactNode;
 };
@@ -21,6 +23,7 @@ export const MapViewShell: React.FC<MapViewShellProps> = ({
   mapStyleMode,
   showOverlayButtons,
   isStyleSwitching,
+  mapReady,
   containerRef,
   children,
 }) => (
@@ -40,6 +43,7 @@ export const MapViewShell: React.FC<MapViewShellProps> = ({
       aria-label={strings.map.ariaLabel}
       aria-describedby="map-description"
       data-map-appearance={mapStyleMode}
+      data-map-ready={mapReady ? "true" : undefined}
       data-overlay-buttons-hidden={showOverlayButtons ? undefined : ""}
       style={{
         position: "absolute",

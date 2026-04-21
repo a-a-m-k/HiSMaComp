@@ -176,6 +176,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
       mapStyleMode={mapStyleMode}
       showOverlayButtons={showOverlayButtons}
       isStyleSwitching={isStyleSwitching}
+      mapReady={mapReady}
       containerRef={containerRef}
     >
       <MapCanvasStack

@@ -17,6 +17,7 @@
     "test:coverage": "npm run test:base -- run --coverage",
     "test:coverage:ci": "npm run test:base -- run --coverage --reporter=dot",
     "test:visual": "playwright test tests/e2e/visual-zoom.spec.ts",
+    "capture:hero": "node scripts/capture-hero.cjs",
     "pretest:e2e": "node scripts/ensure-playwright-chromium.cjs",
     "test:e2e": "playwright test tests/e2e --grep-invert @visual",
     "test:e2e:install": "playwright install chromium",
