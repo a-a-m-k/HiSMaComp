@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { YEARS } from "../../../src/constants/data";
 
@@ -13,10 +13,13 @@ export async function selectYearViaTimelineSlider(
   }
 
   const slider = page.locator("#timeline").getByRole("slider");
-  await slider.waitFor({ state: "visible", timeout: 15000 });
+  await slider.waitFor({ state: "visible", timeout: 15_000 });
   await slider.focus();
   await page.keyboard.press("Home");
   for (let i = 0; i < targetIndex; i++) {
     await page.keyboard.press("ArrowRight");
   }
+  await expect(slider).toHaveAttribute("aria-valuenow", String(targetIndex), {
+    timeout: 10_000,
+  });
 }

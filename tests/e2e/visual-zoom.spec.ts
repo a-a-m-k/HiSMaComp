@@ -16,6 +16,7 @@
 import { test, expect, devices } from "@playwright/test";
 
 import { selectYearViaTimelineSlider } from "./helpers/selectYear";
+import { waitForAppShell } from "./helpers/waitForApp";
 
 // Device configurations to test
 const deviceConfigs = [
@@ -37,9 +38,6 @@ const deviceConfigs = [
   { name: "Ultrawide", viewport: { width: 3440, height: 1440 } },
 ];
 
-// Base URL for your dev server (override with baseURL in playwright.config when running e2e)
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5173";
-
 test.describe("@visual Cross-Device Zoom Behavior", () => {
   deviceConfigs.forEach(deviceConfig => {
     test(`should display correctly on ${deviceConfig.name}`, async ({
@@ -53,14 +51,8 @@ test.describe("@visual Cross-Device Zoom Behavior", () => {
 
       const page = await context.newPage();
 
-      // Navigate to your app
-      await page.goto(BASE_URL);
-
-      // Wait for map to load
-      await page.waitForSelector(".maplibregl-canvas", { timeout: 10000 });
-
-      // Wait for any animations or data loading
-      await page.waitForTimeout(2000);
+      await page.goto("/");
+      await waitForAppShell(page);
 
       // Take screenshot of initial state
       await page.screenshot({
@@ -78,11 +70,7 @@ test.describe("@visual Cross-Device Zoom Behavior", () => {
         expect(canvasVisible).toBe(true);
       }
 
-      // Wait for timeline to be ready
-      await page.waitForTimeout(500);
-
       await selectYearViaTimelineSlider(page, 1300);
-      await page.waitForTimeout(500);
 
       await page.screenshot({
         path: `tests/results/screenshots/${deviceConfig.name.replace(/\s+/g, "-")}-year-1300.png`,
@@ -90,7 +78,6 @@ test.describe("@visual Cross-Device Zoom Behavior", () => {
       });
 
       await selectYearViaTimelineSlider(page, 1500);
-      await page.waitForTimeout(500);
 
       await page.screenshot({
         path: `tests/results/screenshots/${deviceConfig.name.replace(/\s+/g, "-")}-year-1500.png`,
@@ -110,9 +97,8 @@ test.describe("@visual Cross-Device Zoom Behavior", () => {
     });
 
     const pagePortrait = await contextPortrait.newPage();
-    await pagePortrait.goto(BASE_URL);
-    await pagePortrait.waitForSelector(".maplibregl-canvas");
-    await pagePortrait.waitForTimeout(1000);
+    await pagePortrait.goto("/");
+    await waitForAppShell(pagePortrait);
 
     await pagePortrait.screenshot({
       path: "tests/results/screenshots/orientation-portrait.png",
@@ -125,27 +111,24 @@ test.describe("@visual Cross-Device Zoom Behavior", () => {
   test("should handle window resize correctly", async ({ page }) => {
     // Start with desktop size
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto(BASE_URL);
-    await page.waitForSelector(".maplibregl-canvas");
-    await page.waitForTimeout(1000);
+    await page.goto("/");
+    await waitForAppShell(page);
 
     await page.screenshot({
       path: "tests/results/screenshots/resize-desktop.png",
       fullPage: true,
     });
 
-    // Resize to tablet
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.waitForTimeout(1000);
+    await waitForAppShell(page);
 
     await page.screenshot({
       path: "tests/results/screenshots/resize-tablet.png",
       fullPage: true,
     });
 
-    // Resize to mobile
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.waitForTimeout(1000);
+    await waitForAppShell(page);
 
     await page.screenshot({
       path: "tests/results/screenshots/resize-mobile.png",
@@ -167,28 +150,22 @@ test.describe("@visual Map Interaction Tests", () => {
       const context = await browser.newContext({ viewport: device.viewport });
       const page = await context.newPage();
 
-      await page.goto(BASE_URL);
-      await page.waitForSelector(".maplibregl-canvas");
-      await page.waitForTimeout(1000);
+      await page.goto("/");
+      await waitForAppShell(page);
 
-      // Get zoom controls
-      const zoomInButton = await page.$(".maplibregl-ctrl-zoom-in");
-      const zoomOutButton = await page.$(".maplibregl-ctrl-zoom-out");
+      const zoomIn = page.locator(".maplibregl-ctrl-zoom-in").first();
+      const zoomOut = page.locator(".maplibregl-ctrl-zoom-out").first();
+      const zoomInVisible = await zoomIn.isVisible().catch(() => false);
+      const zoomOutVisible = await zoomOut.isVisible().catch(() => false);
 
-      if (zoomInButton && zoomOutButton) {
-        // Click zoom in
-        await zoomInButton.click();
-        await page.waitForTimeout(500);
-
+      if (zoomInVisible && zoomOutVisible) {
+        await zoomIn.click();
         await page.screenshot({
           path: `tests/results/screenshots/${device.name}-zoomed-in.png`,
           fullPage: true,
         });
 
-        // Click zoom out
-        await zoomOutButton.click();
-        await page.waitForTimeout(500);
-
+        await zoomOut.click();
         await page.screenshot({
           path: `tests/results/screenshots/${device.name}-zoomed-out.png`,
           fullPage: true,
@@ -201,17 +178,14 @@ test.describe("@visual Map Interaction Tests", () => {
 
   test("should zoom in/out using keyboard shortcuts", async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto(BASE_URL);
-    await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
-    await page.waitForTimeout(1500);
+    await page.goto("/");
+    await waitForAppShell(page);
 
     const zoomInLocator = page.locator(".maplibregl-ctrl-zoom-in").first();
     const zoomOutLocator = page.locator(".maplibregl-ctrl-zoom-out").first();
 
     await page.keyboard.press("Control+Equal");
-    await page.waitForTimeout(500);
     await page.keyboard.press("Control+Minus");
-    await page.waitForTimeout(500);
 
     const zoomInAttached = await zoomInLocator
       .waitFor({ state: "attached", timeout: 10000 })
@@ -228,9 +202,7 @@ test.describe("@visual Map Interaction Tests", () => {
       expect(zoomInButton).toBeTruthy();
       expect(zoomOutButton).toBeTruthy();
       await zoomInButton!.click();
-      await page.waitForTimeout(300);
       await zoomOutButton!.click();
-      await page.waitForTimeout(300);
       const isZoomInClickable = await zoomInButton!.evaluate(el => {
         const style = window.getComputedStyle(el);
         return style.pointerEvents !== "none" && style.display !== "none";
@@ -252,8 +224,8 @@ test.describe("@visual Map Interaction Tests", () => {
     page,
   }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await page.goto(BASE_URL);
-    await page.waitForSelector(".maplibregl-canvas", { timeout: 20000 });
+    await page.goto("/");
+    await waitForAppShell(page);
 
     const zoomGroup = page.locator(".maplibregl-ctrl-group").first();
     const zoomIn = page.locator(".maplibregl-ctrl-zoom-in").first();

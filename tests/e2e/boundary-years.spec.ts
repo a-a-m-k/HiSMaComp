@@ -8,6 +8,7 @@
 import { test, expect, devices } from "@playwright/test";
 
 import { selectYearViaTimelineSlider } from "./helpers/selectYear";
+import { waitForAppShell } from "./helpers/waitForApp";
 
 // Test on representative devices
 const testDevices = [
@@ -25,7 +26,7 @@ test.describe("Boundary Years Zoom Testing", () => {
       const page = await context.newPage();
 
       await page.goto("/");
-      await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
+      await waitForAppShell(page);
 
       await selectYearViaTimelineSlider(page, 800);
 
@@ -49,7 +50,7 @@ test.describe("Boundary Years Zoom Testing", () => {
       const page = await context.newPage();
 
       await page.goto("/");
-      await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
+      await waitForAppShell(page);
 
       await selectYearViaTimelineSlider(page, 1750);
 
@@ -71,7 +72,7 @@ test.describe("Boundary Years Zoom Testing", () => {
     const page = await context.newPage();
 
     await page.goto("/");
-    await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
+    await waitForAppShell(page);
 
     const years = [800, 1000, 1200, 1400, 1600, 1750] as const;
     for (const year of years) {
@@ -95,7 +96,7 @@ test.describe("Boundary Years Zoom Testing", () => {
     const page = await context.newPage();
 
     await page.goto("/");
-    await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
+    await waitForAppShell(page);
 
     await selectYearViaTimelineSlider(page, 800);
     await page.screenshot({
