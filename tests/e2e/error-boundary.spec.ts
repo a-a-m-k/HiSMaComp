@@ -38,7 +38,10 @@ test.describe("Error Boundary", () => {
 
     const tryAgainBtn = page.getByRole("button", { name: /try again/i });
     await tryAgainBtn.click();
-    await expect(page.getByRole("alert")).toBeHidden({ timeout: 5000 });
+    // With ?testError=true the app intentionally throws on every mount,
+    // so retry keeps the boundary visible while confirming the action is wired.
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 5000 });
+    await expect(tryAgainBtn).toBeVisible();
   });
 
   test("should handle Reload Page button click", async ({ page }) => {

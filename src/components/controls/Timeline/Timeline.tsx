@@ -135,9 +135,6 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
                 labelByYear[selectedYear] ??
                 `${selectedYear}${strings.timeline.yearSuffix}`
               }
-              aria-valuenow={currentIndex}
-              aria-valuemin={0}
-              aria-valuemax={maxIndex}
               sx={{
                 color: accent,
                 height: { xs: 8, sm: 6, md: 6 },
