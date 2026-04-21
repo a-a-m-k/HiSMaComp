@@ -331,6 +331,7 @@ const Timeline: React.FC<TimelineProps> = ({ marks }) => {
               </Typography>
               <Typography
                 variant="h6"
+                component="p"
                 sx={{
                   fontWeight: 700,
                   color: activeText,
