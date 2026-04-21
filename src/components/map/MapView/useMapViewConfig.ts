@@ -1,10 +1,10 @@
 import { useMemo } from "react";
+import type { Theme } from "@mui/material/styles";
 
 import type { MapViewState } from "@/hooks/map";
 import { isValidNumber } from "@/utils/zoom/zoomHelpers";
 import { getZoomToFitBounds } from "@/utils/mapZoom";
 import { calculateMapArea } from "@/utils/utils";
-import { lightTheme } from "@/theme/theme";
 
 import { DEFAULT_MAP_CONTAINER_PROPS } from "./constants";
 import type { MapViewSharedCameraProps } from "./MapViewDarkBasemap";
@@ -20,6 +20,7 @@ type UseMapViewConfigArgs = {
   fallbackMapSize?: { effectiveWidth: number; effectiveHeight: number };
   screenWidth: number;
   screenHeight: number;
+  theme: Theme;
 };
 
 export const useMapViewConfig = ({
@@ -31,6 +32,7 @@ export const useMapViewConfig = ({
   fallbackMapSize: fallbackMapSizeProp,
   screenWidth,
   screenHeight,
+  theme,
 }: UseMapViewConfigArgs) => {
   const safeProps = useMemo(
     () => ({
@@ -43,8 +45,8 @@ export const useMapViewConfig = ({
 
   /** Fallback map size when container not yet measured (prop from parent, or local). */
   const fallbackMapSizeLocal = useMemo(
-    () => calculateMapArea(screenWidth, screenHeight, lightTheme),
-    [screenWidth, screenHeight]
+    () => calculateMapArea(screenWidth, screenHeight, theme),
+    [screenWidth, screenHeight, theme]
   );
   const fallbackMapSize = fallbackMapSizeProp ?? fallbackMapSizeLocal;
 

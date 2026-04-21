@@ -82,6 +82,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
     fallbackMapSize: fallbackMapSizeProp,
     screenWidth: viewport.screenWidth,
     screenHeight: viewport.screenHeight,
+    theme,
   });
 
   const {

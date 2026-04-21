@@ -74,37 +74,33 @@ class YearDataService {
     };
   }
 
-  /** Deterministic key from town content + year; linear hash so we don’t sort. */
+  /**
+   * Robust deterministic fingerprint of town content + year.
+   * Uses canonical ordering to avoid order-dependent cache misses and keeps full precision.
+   */
   private createCacheKey(towns: Town[], year: number): string {
     if (towns.length === 0) {
       return `empty-${year}`;
     }
 
-    let hash = 2166136261;
+    const canonicalTowns = [...towns]
+      .sort((a, b) => {
+        const nameCmp = a.name.localeCompare(b.name);
+        if (nameCmp !== 0) return nameCmp;
+        if (a.latitude !== b.latitude) return a.latitude - b.latitude;
+        return a.longitude - b.longitude;
+      })
+      .map(town => ({
+        name: town.name,
+        latitude: town.latitude,
+        longitude: town.longitude,
+        nameVariants: town.nameVariants ? [...town.nameVariants] : [],
+        populationByYear: Object.entries(town.populationByYear ?? {})
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([y, p]) => [y, p] as const),
+      }));
 
-    for (const town of towns) {
-      hash = this.fnv1aString(hash, town.name);
-      hash = this.fnv1aString(hash, `${town.latitude.toFixed(4)}`);
-      hash = this.fnv1aString(hash, `${town.longitude.toFixed(4)}`);
-
-      if (town.populationByYear) {
-        for (const [k, v] of Object.entries(town.populationByYear)) {
-          hash = this.fnv1aString(hash, k);
-          hash = this.fnv1aString(hash, `${v}`);
-        }
-      }
-    }
-
-    return `${(hash >>> 0).toString(36)}-${towns.length}-${year}`;
-  }
-
-  private fnv1aString(seed: number, input: string): number {
-    let hash = seed;
-    for (let i = 0; i < input.length; i++) {
-      hash ^= input.charCodeAt(i);
-      hash = Math.imul(hash, 16777619);
-    }
-    return hash;
+    return `${year}:${JSON.stringify(canonicalTowns)}`;
   }
 }
 

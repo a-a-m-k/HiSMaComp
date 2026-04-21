@@ -10,6 +10,7 @@ import React, { useMemo } from "react";
 import type { ExpressionSpecification } from "maplibre-gl";
 import { Layer, Source, LayerProps } from "react-map-gl/maplibre";
 import {
+  MAP_LABEL_SORT_RANK_PROP,
   MAP_LABEL_TEXT_PROP,
   POPULATION_THRESHOLDS,
   MIN_MARKER_SIZE,
@@ -88,7 +89,13 @@ const MapLayer = ({
       "text-padding": 2,
       "text-pitch-alignment": "viewport" as const,
       "text-rotation-alignment": "viewport" as const,
-      "symbol-sort-key": populationSortKey,
+      // Symbol collision placement uses lower keys first; rank is precomputed as:
+      // larger population first, then alphabetical for equal population.
+      "symbol-sort-key": [
+        "coalesce",
+        ["get", MAP_LABEL_SORT_RANK_PROP],
+        Number.MAX_SAFE_INTEGER,
+      ] as ExpressionSpecification,
       "symbol-z-order": "source" as const,
       // Priority-by-population placement: keep larger towns, drop smaller overlaps.
       "text-allow-overlap": false,
@@ -115,6 +122,7 @@ const MapLayer = ({
           "all",
           ["has", POPULATION_FOR_YEAR_PROP],
           ["!=", ["get", POPULATION_FOR_YEAR_PROP], ["literal", null]],
+          [">", ["get", POPULATION_FOR_YEAR_PROP], 0],
         ]}
         {...rest}
       />
@@ -127,6 +135,7 @@ const MapLayer = ({
           "all",
           ["has", POPULATION_FOR_YEAR_PROP],
           ["!=", ["get", POPULATION_FOR_YEAR_PROP], ["literal", null]],
+          [">", ["get", POPULATION_FOR_YEAR_PROP], 0],
         ]}
       />
     </Source>

@@ -10,7 +10,7 @@ import {
   dispatchLegendScreenshotRestore,
 } from "@/components/controls/ScreenshotButton/utils";
 import { dispatchMapScreenshotCaptureState } from "@/utils/events/mapEvents";
-import { logger } from "@/utils/logger";
+import { reportAppError } from "@/utils/errorPolicy";
 
 /**
  * Options for the useScreenshot hook.
@@ -59,9 +59,12 @@ export const useScreenshot = ({
     const mapContainer =
       document.querySelector<HTMLElement>(mapContainerSelector);
     if (!mapContainer) {
-      logger.error(
-        "Screenshot failed: Map container not found",
-        mapContainerSelector
+      reportAppError(
+        new Error(`Map container not found: ${mapContainerSelector}`),
+        {
+          category: "screenshot-capture",
+          operation: "querySelector",
+        }
       );
       return;
     }
@@ -136,7 +139,10 @@ export const useScreenshot = ({
         }
       }, 100);
     } catch (error) {
-      logger.error("Screenshot capture failed:", error);
+      reportAppError(error, {
+        category: "screenshot-capture",
+        operation: "html2canvas",
+      });
     } finally {
       dispatchLegendScreenshotRestore();
       dispatchMapScreenshotCaptureState({ isCapturing: false });

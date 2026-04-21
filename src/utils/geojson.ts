@@ -1,5 +1,6 @@
 import { Town } from "@/common/types";
 import {
+  MAP_LABEL_SORT_RANK_PROP,
   MAP_LABEL_TEXT_PROP,
   POPULATION_SORT_KEY_NO_DATA,
   POPULATION_SORT_KEY_PROP,
@@ -38,6 +39,31 @@ export function townsToGeoJSON(
   let invalidCount = 0;
 
   const yearKey = String(selectedYear);
+  const labelPriorityRanks = new Map<string, number>();
+
+  const sortableLocalities = localities
+    .filter(town => town && town.name && isValidTown(town))
+    .map(town => ({
+      id: `${town.name}:${town.latitude}:${town.longitude}`,
+      name: town.name,
+      population: town.populationByYear?.[yearKey] ?? null,
+    }))
+    .sort((a, b) => {
+      const aPop =
+        typeof a.population === "number" && Number.isFinite(a.population)
+          ? a.population
+          : 0;
+      const bPop =
+        typeof b.population === "number" && Number.isFinite(b.population)
+          ? b.population
+          : 0;
+      if (aPop !== bPop) return bPop - aPop;
+      return a.name.localeCompare(b.name);
+    });
+
+  for (let i = 0; i < sortableLocalities.length; i++) {
+    labelPriorityRanks.set(sortableLocalities[i].id, i);
+  }
 
   for (let i = 0; i < localities.length; i++) {
     const town = localities[i];
@@ -57,6 +83,10 @@ export function townsToGeoJSON(
       typeof rawPop === "number" && !Number.isNaN(rawPop)
         ? rawPop
         : POPULATION_SORT_KEY_NO_DATA;
+    const labelSortRank =
+      labelPriorityRanks.get(
+        `${town.name}:${town.latitude}:${town.longitude}`
+      ) ?? Number.MAX_SAFE_INTEGER;
 
     features.push({
       // Keep feature ids unique across same-name towns; duplicate ids can cause unstable
@@ -71,6 +101,7 @@ export function townsToGeoJSON(
         name: town.name,
         populationForYear,
         [POPULATION_SORT_KEY_PROP]: populationSortKey,
+        [MAP_LABEL_SORT_RANK_PROP]: labelSortRank,
         [MAP_LABEL_TEXT_PROP]: `${town.name}\n${labelPopulation}`,
       },
     });

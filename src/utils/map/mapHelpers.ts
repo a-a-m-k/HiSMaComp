@@ -24,3 +24,18 @@ export const handleMapFeatureClick = (
     logger.error("Error focusing marker on map click:", error);
   }
 };
+
+type MapFeatureNameProps = {
+  name?: unknown;
+};
+
+/**
+ * Safe extractor for MapLibre feature-name property used by click handlers.
+ */
+export const getMapFeatureName = (properties: unknown): string | undefined => {
+  if (!properties || typeof properties !== "object") return undefined;
+  const maybeName = (properties as MapFeatureNameProps).name;
+  return typeof maybeName === "string" && maybeName.trim().length > 0
+    ? maybeName
+    : undefined;
+};

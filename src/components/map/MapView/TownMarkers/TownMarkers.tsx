@@ -22,14 +22,22 @@ export const TownMarkers: React.FC<TownMarkersProps> = ({
   selectedYear,
 }) => {
   const [focusedMarkerId, setFocusedMarkerId] = useState<string | null>(null);
-  const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
 
   const sortedTowns = useMemo(() => {
-    return [...towns].sort((a, b) => {
-      const aPop = a.populationByYear?.[selectedYear] || 0;
-      const bPop = b.populationByYear?.[selectedYear] || 0;
-      return bPop - aPop;
-    });
+    return towns
+      .filter(town => {
+        const population = town.populationByYear?.[selectedYear];
+        return (
+          typeof population === "number" &&
+          Number.isFinite(population) &&
+          population > 0
+        );
+      })
+      .sort((a, b) => {
+        const aPop = a.populationByYear?.[selectedYear] || 0;
+        const bPop = b.populationByYear?.[selectedYear] || 0;
+        return bPop - aPop;
+      });
   }, [towns, selectedYear]);
 
   const handleFocus = useCallback((markerId: string) => {
@@ -46,19 +54,6 @@ export const TownMarkers: React.FC<TownMarkersProps> = ({
     }
   }, []);
 
-  const handleMouseEnter = useCallback(
-    (markerId: string) => {
-      if (focusedMarkerId !== markerId) {
-        setHoveredMarkerId(markerId);
-      }
-    },
-    [focusedMarkerId]
-  );
-
-  const handleMouseLeave = useCallback(() => {
-    setHoveredMarkerId(null);
-  }, []);
-
   if (sortedTowns.length === 0) return null;
 
   return (
@@ -66,7 +61,6 @@ export const TownMarkers: React.FC<TownMarkersProps> = ({
       {sortedTowns.map(town => {
         const markerId = `marker-${getStableTownMarkerId(town)}`;
         const isFocused = focusedMarkerId === markerId;
-        const isHovered = hoveredMarkerId === markerId && !isFocused;
 
         return (
           <React.Fragment key={markerId}>
@@ -74,11 +68,8 @@ export const TownMarkers: React.FC<TownMarkersProps> = ({
               town={town}
               markerId={markerId}
               isFocused={isFocused}
-              isHovered={isHovered}
               onFocus={handleFocus}
               onBlur={handleBlur}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
               onKeyDown={handleMarkerKeyDown}
               selectedYear={selectedYear}
             />

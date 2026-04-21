@@ -7,17 +7,12 @@ const {
   mockHtml2Canvas,
   mockHideMapControls,
   mockRestoreMapControls,
-  mockLogger,
+  mockReportAppError,
 } = vi.hoisted(() => ({
   mockHtml2Canvas: vi.fn(),
   mockHideMapControls: vi.fn(),
   mockRestoreMapControls: vi.fn(),
-  mockLogger: {
-    error: vi.fn(),
-    warn: vi.fn(),
-    info: vi.fn(),
-    debug: vi.fn(),
-  },
+  mockReportAppError: vi.fn(),
 }));
 
 vi.mock("html2canvas", () => ({
@@ -34,8 +29,8 @@ vi.mock("@/components/controls/ScreenshotButton/utils", () => ({
   restoreMapControls: (...args: unknown[]) => mockRestoreMapControls(...args),
 }));
 
-vi.mock("@/utils/logger", () => ({
-  logger: mockLogger,
+vi.mock("@/utils/errorPolicy", () => ({
+  reportAppError: (...args: unknown[]) => mockReportAppError(...args),
 }));
 
 vi.mock("@mui/material/styles", () => ({
@@ -94,7 +89,7 @@ describe("useScreenshot", () => {
     expect(mockRestoreMapControls).toHaveBeenCalledTimes(1);
   });
 
-  it("logs capture failure and resets isCapturing when html2canvas throws", async () => {
+  it("reports capture failure and resets isCapturing when html2canvas throws", async () => {
     mockHtml2Canvas.mockRejectedValueOnce(new Error("capture failed"));
     const { result } = renderHook(() => useScreenshot());
 
@@ -103,10 +98,33 @@ describe("useScreenshot", () => {
     });
 
     expect(result.current.isCapturing).toBe(false);
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      "Screenshot capture failed:",
-      expect.any(Error)
+    expect(mockReportAppError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        category: "screenshot-capture",
+        operation: "html2canvas",
+      })
     );
     expect(mockRestoreMapControls).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports error when map container is missing", async () => {
+    document.body.innerHTML = "";
+    const { result } = renderHook(() =>
+      useScreenshot({ mapContainerSelector: "#missing" })
+    );
+
+    await act(async () => {
+      await result.current.captureScreenshot();
+    });
+
+    expect(mockReportAppError).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining("#missing") }),
+      expect.objectContaining({
+        category: "screenshot-capture",
+        operation: "querySelector",
+      })
+    );
+    expect(mockHtml2Canvas).not.toHaveBeenCalled();
   });
 });

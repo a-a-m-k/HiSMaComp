@@ -19,11 +19,8 @@ export interface TownMarkerItemProps {
   town: Town;
   markerId: string;
   isFocused: boolean;
-  isHovered: boolean;
   onFocus: (markerId: string) => void;
   onBlur: (e: React.FocusEvent) => void;
-  onMouseEnter: (markerId: string) => void;
-  onMouseLeave: () => void;
   onKeyDown: (e: React.KeyboardEvent, markerId: string) => void;
   selectedYear: number;
 }
@@ -33,18 +30,7 @@ export interface TownMarkerItemProps {
  * Memoized for performance optimization with large marker sets.
  */
 export const TownMarkerItem = React.memo<TownMarkerItemProps>(
-  ({
-    town,
-    markerId,
-    isFocused,
-    isHovered,
-    onFocus,
-    onBlur,
-    onMouseEnter,
-    onMouseLeave,
-    onKeyDown,
-    selectedYear,
-  }) => {
+  ({ town, markerId, isFocused, onFocus, onBlur, onKeyDown, selectedYear }) => {
     const { mode: mapStyleMode } = useMapStyleMode();
     const theme = useTheme();
     const yearKey = String(selectedYear);
@@ -66,14 +52,13 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
           markerSize: markerProps.size,
           markerColor: markerProps.color,
           isFocused,
-          isHovered,
+          isHovered: false,
           buttonOutlineColor: theme.custom.colors.buttonBackground,
         }),
       [
         markerProps.size,
         markerProps.color,
         isFocused,
-        isHovered,
         theme.custom.colors.buttonBackground,
       ]
     );
@@ -101,8 +86,6 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
               enableTownMarkerFocus(e.currentTarget as HTMLElement);
             }}
             onBlur={onBlur}
-            onMouseEnter={() => onMouseEnter(markerId)}
-            onMouseLeave={onMouseLeave}
             onKeyDown={e => onKeyDown(e, markerId)}
             onClick={e => {
               e.preventDefault();
@@ -111,7 +94,7 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
               target.focus();
             }}
           />
-          {(isFocused || isHovered) && (
+          {isFocused && (
             <TownMarkerLabel
               townName={town.name}
               population={population}

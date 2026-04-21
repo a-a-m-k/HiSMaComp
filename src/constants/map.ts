@@ -18,6 +18,11 @@ export const MAP_LAYER_ID = "towns-population-layer";
  * within stable float range in MapLibre.
  */
 export const POPULATION_SORT_KEY_PROP = "populationSortKey" as const;
+/**
+ * Precomputed label-priority rank for symbol collision placement.
+ * Lower ranks are placed first: larger population first, then alphabetical by name.
+ */
+export const MAP_LABEL_SORT_RANK_PROP = "mapLabelSortRank" as const;
 /** Precomputed text for the MapLibre symbol `text-field` (name + population / N/A). */
 export const MAP_LABEL_TEXT_PROP = "mapLabelText" as const;
 

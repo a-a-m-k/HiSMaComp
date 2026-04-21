@@ -5,7 +5,7 @@ import MaplibreGL from "maplibre-gl";
 import { MAP_LAYER_ID } from "@/constants";
 import type { Town } from "@/common/types";
 import type { MapViewState } from "@/hooks/map";
-import { handleMapFeatureClick } from "@/utils/map";
+import { getMapFeatureName, handleMapFeatureClick } from "@/utils/map";
 
 import { SPLIT_OVERLAY_TILE_OPTIONS, TILE_LOADING_OPTIONS } from "./constants";
 import {
@@ -102,7 +102,7 @@ export const MapCanvasStack: React.FC<MapCanvasStackProps> = ({
       onClick={e => {
         if (e.features && e.features.length > 0) {
           const feature = e.features[0];
-          handleMapFeatureClick(feature.properties?.name);
+          handleMapFeatureClick(getMapFeatureName(feature.properties));
         }
       }}
       interactiveLayerIds={[`${MAP_LAYER_ID}-circle`]}

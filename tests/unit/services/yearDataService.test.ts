@@ -51,6 +51,32 @@ describe("YearDataService", () => {
     expect(yearDataService.getCacheStats().yearDataCacheSize).toBe(2);
   });
 
+  it("uses same cache entry for equivalent towns in different order", () => {
+    const paris: Town = {
+      name: "Paris",
+      latitude: 48.856613,
+      longitude: 2.352222,
+      nameVariants: ["Parisius"],
+      populationByYear: { "1000": 1000, "1200": 2000 },
+    };
+    const london: Town = {
+      name: "London",
+      latitude: 51.507351,
+      longitude: -0.127758,
+      nameVariants: ["Londinium"],
+      populationByYear: { "1000": 900, "1200": 1800 },
+    };
+
+    const townsAB = [paris, london];
+    const townsBA = [london, paris];
+
+    const first = yearDataService.getYearData(townsAB, 1000);
+    const second = yearDataService.getYearData(townsBA, 1000);
+
+    expect(second).toBe(first);
+    expect(yearDataService.getCacheStats().yearDataCacheSize).toBe(1);
+  });
+
   it("getCacheStats reflects size and utilization", () => {
     const towns = makeTowns(800, 1);
     yearDataService.getYearData(towns, 800);

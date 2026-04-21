@@ -1,0 +1,48 @@
+import { getUserFacingMessage } from "./errorMessage";
+import { logger } from "./logger";
+
+export type AppErrorCategory =
+  | "initialization"
+  | "year-data-load"
+  | "year-data-retry"
+  | "validation"
+  | "screenshot-capture";
+
+export type AppErrorContext = {
+  category: AppErrorCategory;
+  operation: string;
+  year?: number;
+};
+
+const CATEGORY_FALLBACK_MESSAGE: Record<AppErrorCategory, string> = {
+  initialization:
+    "Failed to load historical data. Please try refreshing the page.",
+  "year-data-load": "Please try again.",
+  "year-data-retry":
+    "Failed to load data after multiple attempts. Please refresh the page.",
+  validation: "Something went wrong. Please try again.",
+  "screenshot-capture": "Could not save map image. Please try again.",
+};
+
+export const getAppErrorMessage = (
+  error: unknown,
+  context: AppErrorContext
+): string => {
+  const fallback = CATEGORY_FALLBACK_MESSAGE[context.category];
+  if (context.year != null && context.category === "year-data-load") {
+    return `Failed to load data for year ${context.year}: ${getUserFacingMessage(error, fallback)}`;
+  }
+  return getUserFacingMessage(error, fallback);
+};
+
+export const reportAppError = (
+  error: unknown,
+  context: AppErrorContext
+): void => {
+  logger.error("[app-error]", {
+    category: context.category,
+    operation: context.operation,
+    year: context.year,
+    error,
+  });
+};
