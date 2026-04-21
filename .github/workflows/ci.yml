@@ -33,8 +33,25 @@ jobs:
       - name: Setup repo
         uses: ./.github/actions/setup
 
-      - name: Verify quality gate
-        run: npm run verify:ci
+      - name: Lint
+        run: npm run lint:check
+        timeout-minutes: 6
+
+      - name: Typecheck
+        run: npm run typecheck
+        timeout-minutes: 6
+
+      - name: Unit tests with coverage
+        run: npm run test:coverage:ci
+        timeout-minutes: 12
+
+      - name: Build GitHub Pages bundle
+        run: node scripts/build-gh-pages.cjs
+        timeout-minutes: 8
+
+      - name: Check bundle size budget
+        run: node scripts/check-bundle-size.js
+        timeout-minutes: 3
 
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main'

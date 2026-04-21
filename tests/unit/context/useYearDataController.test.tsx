@@ -9,6 +9,7 @@ const {
   mockCalculateBoundsCenter,
   mockAnnounce,
   mockRetryWithBackoff,
+  mockLogger,
 } = vi.hoisted(() => ({
   mockGetFilteredTowns: vi.fn(),
   mockCalculateBoundsCenter: vi.fn(() => ({
@@ -19,6 +20,16 @@ const {
   mockRetryWithBackoff: vi.fn(
     async (fn: () => Promise<unknown>) => fn() as Promise<void>
   ),
+  mockLogger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
+vi.mock("@/utils/logger", () => ({
+  logger: mockLogger,
 }));
 
 vi.mock("@/utils/retry", () => ({

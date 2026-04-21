@@ -10,12 +10,16 @@ export default defineConfig({
     globals: true,
     exclude: ["**/node_modules/**", "**/dist/**", "**/tests/e2e/**"],
     testTimeout: 10000, // Increased from 5000ms to handle slow calculations
-    pool: "threads", // Use threads instead of forks for better performance
+    // Threads are faster locally; forks are more stable in CI for jsdom-heavy suites.
+    pool: process.env.CI ? "forks" : "threads",
     poolOptions: {
       threads: {
         singleThread: false,
         maxThreads: 4, // Limit to avoid overwhelming the system
         minThreads: 1,
+      },
+      forks: {
+        singleFork: true,
       },
     },
     // Keep isolation enabled for test safety, but use threads for better performance
@@ -25,7 +29,7 @@ export default defineConfig({
     },
     coverage: {
       provider: "v8",
-      reporter: ["text", "html"],
+      reporter: process.env.CI ? ["text"] : ["text", "html"],
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "src/**/*.d.ts",

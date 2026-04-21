@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   getBounds,
   calculateAverageCenter,
@@ -12,6 +12,15 @@ import {
   POPULATION_SORT_KEY_PROP,
 } from "../../src/constants/map";
 import { mockTowns } from "../helpers/testUtils";
+
+vi.mock("../../src/utils/logger", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 describe("getBounds", () => {
   it("should calculate correct bounds for valid towns", () => {

@@ -101,7 +101,7 @@ const MapLayer = ({
       "text-allow-overlap": false,
       "text-ignore-placement": false,
     }),
-    [populationSortKey]
+    []
   );
 
   return (

@@ -44,6 +44,15 @@ vi.mock("@/utils/accessibility", () => ({
   announce: mockAnnounce,
 }));
 
+vi.mock("@/utils/logger", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 vi.mock("@mui/material/styles", () => ({
   useTheme: () => ({
     palette: {

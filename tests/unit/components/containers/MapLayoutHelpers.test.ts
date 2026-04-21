@@ -2,7 +2,7 @@
  * Tests for MapLayoutHelpers: getInitialMapProps, getMapDeviceKey, useStableMapKey, formatCenturyLabel.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import {
   getInitialMapProps,
@@ -12,6 +12,15 @@ import {
   TIMELINE_MARKS,
 } from "@/components/containers/MapLayoutHelpers";
 import { DEFAULT_CENTER, DEFAULT_ZOOM, MAX_ZOOM_LEVEL } from "@/constants";
+
+vi.mock("@/utils/logger", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 describe("formatCenturyLabel", () => {
   it("returns century label for known year", () => {
