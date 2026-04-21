@@ -1,6 +1,6 @@
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const CACHE_NAME = `hismacomp-app-${CACHE_VERSION}`;
-/** Enough for hashed JS/CSS chunks, icons, and HTML (efficient cache lifetimes for ~395 KiB savings on repeat visits). */
+/** Enough for hashed JS/CSS chunks, icons, and HTML. GitHub Pages sends short browser TTL; we rewrite Cache-Control for hashed /assets when caching. */
 const MAX_CACHE_SIZE = 200;
 const INDEX_PATH = (() => {
   try {
@@ -57,6 +57,32 @@ function isHashedImmutableAsset(pathname) {
   return /\/assets\/[^/]+\.(js|css|mjs)$/i.test(path);
 }
 
+/**
+ * GitHub Pages serves hashed chunks with a short max-age. Lighthouse flags that.
+ * Store a clone with a long immutable policy so cache hits (repeat visits) report efficient TTLs.
+ */
+function storageResponseForCache(request, response) {
+  if (response?.status !== 200 || response.type !== "basic") {
+    return response.clone();
+  }
+  let pathname;
+  try {
+    pathname = new URL(request.url).pathname;
+  } catch {
+    return response.clone();
+  }
+  if (!isHashedImmutableAsset(pathname)) {
+    return response.clone();
+  }
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", "public, max-age=31536000, immutable");
+  return new Response(response.clone().body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
     return;
@@ -88,10 +114,13 @@ self.addEventListener("fetch", (event) => {
         return cache.match(event.request).then((cachedResponse) => {
           const fetchPromise = fetch(event.request).then((response) => {
             if (response?.status === 200 && response.type === "basic") {
-              const responseClone = response.clone();
-              cache.put(event.request, responseClone).then(() => {
+              const toStore = storageResponseForCache(event.request, response);
+              cache.put(event.request, toStore.clone()).then(() => {
                 enforceCacheSizeLimit(cache);
               });
+              if (useCacheFirst) {
+                return toStore.clone();
+              }
             }
             return response;
           });
