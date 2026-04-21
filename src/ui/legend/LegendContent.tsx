@@ -2,6 +2,7 @@ import React, {
   Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -48,6 +49,15 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
     /** Divider above “No data” only on large screens; md and below keep one list. */
     const splitNoDataBand = useMediaQuery(theme.breakpoints.up("lg"));
     const [isExpanded, setIsExpanded] = useState(true);
+    /** LCP injects h2#legend-heading in index.html; adopt that id only after removing the splash (single id in document). */
+    const [legendHeadingId, setLegendHeadingId] = useState<string | undefined>(
+      undefined
+    );
+
+    useLayoutEffect(() => {
+      document.getElementById("legend-heading-placeholder")?.remove();
+      setLegendHeadingId("legend-heading");
+    }, []);
     const { isTablet } = useViewport();
     const { isTabletLayout, isMobileLayout, isDesktopLayout, isXLargeLayout } =
       useResponsive();
@@ -266,7 +276,7 @@ export const LegendContent: React.FC<LegendProps> = React.memo(
                 : LEGEND_CONTENT_SPACING.mainPaddingBottomSolo,
             }}
           >
-            <Typography component="h2" id="legend-heading" sx={titleStyle}>
+            <Typography component="h2" id={legendHeadingId} sx={titleStyle}>
               {label}
             </Typography>
             {isMapIdle &&
