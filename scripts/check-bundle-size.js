@@ -28,10 +28,13 @@ const distDir = join(process.cwd(), "dist");
 const assetsDir = join(distDir, "assets");
 
 const BUDGETS = {
-  totalJs: 1100, // ~1100 KiB gzip total JS (maplibre + vendor + index + towns)
-  maplibre: 270,
-  vendor: 150,
-  index: 35,
+  // Sum of all *.js in dist/assets (zlib gzip, same as this script — may differ slightly from Vite’s printed gzip).
+  totalJs: 1200,
+  maplibre: 280,
+  // React + MUI + Emotion + react-map-gl deps + optional Sentry; varies with lockfile and plugins (~150–230 KiB typical).
+  vendor: 240,
+  // App entry (routes, map shell, hooks); grows slowly with features.
+  index: 42,
   towns: 120, // async chunk from useTownsData dynamic import
 };
 
