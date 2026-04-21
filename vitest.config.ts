@@ -16,7 +16,8 @@ export default defineConfig({
     poolOptions: {
       threads: {
         singleThread: false,
-        maxThreads: 4,
+        // Lower parallelism to reduce jsdom memory pressure on local machines.
+        maxThreads: 2,
         minThreads: 1,
       },
     },

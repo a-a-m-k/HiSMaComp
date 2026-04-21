@@ -15,6 +15,8 @@
 
 import { test, expect, devices } from "@playwright/test";
 
+import { selectYearViaTimelineSlider } from "./helpers/selectYear";
+
 // Device configurations to test
 const deviceConfigs = [
   // Mobile devices
@@ -79,38 +81,21 @@ test.describe("@visual Cross-Device Zoom Behavior", () => {
       // Wait for timeline to be ready
       await page.waitForTimeout(500);
 
-      // Find and use the timeline slider
-      const slider = await page.locator('input[type="range"]');
-      const sliderExists = (await slider.count()) > 0;
+      await selectYearViaTimelineSlider(page, 1300);
+      await page.waitForTimeout(500);
 
-      if (sliderExists) {
-        // Navigate to year 1300 using keyboard (800->1000->1200->1300)
-        await slider.focus();
-        await page.keyboard.press("ArrowRight"); // 800 -> 1000
-        await page.waitForTimeout(500);
-        await page.keyboard.press("ArrowRight"); // 1000 -> 1200
-        await page.waitForTimeout(500);
-        await page.keyboard.press("ArrowRight"); // 1200 -> 1300
-        await page.waitForTimeout(1500);
+      await page.screenshot({
+        path: `tests/results/screenshots/${deviceConfig.name.replace(/\s+/g, "-")}-year-1300.png`,
+        fullPage: true,
+      });
 
-        // Take screenshot at year 1300
-        await page.screenshot({
-          path: `tests/results/screenshots/${deviceConfig.name.replace(/\s+/g, "-")}-year-1300.png`,
-          fullPage: true,
-        });
+      await selectYearViaTimelineSlider(page, 1500);
+      await page.waitForTimeout(500);
 
-        // Navigate to year 1500 (1300->1400->1500)
-        await page.keyboard.press("ArrowRight"); // 1300 -> 1400
-        await page.waitForTimeout(500);
-        await page.keyboard.press("ArrowRight"); // 1400 -> 1500
-        await page.waitForTimeout(1500);
-
-        // Take screenshot after year change
-        await page.screenshot({
-          path: `tests/results/screenshots/${deviceConfig.name.replace(/\s+/g, "-")}-year-1500.png`,
-          fullPage: true,
-        });
-      }
+      await page.screenshot({
+        path: `tests/results/screenshots/${deviceConfig.name.replace(/\s+/g, "-")}-year-1500.png`,
+        fullPage: true,
+      });
 
       await context.close();
     });

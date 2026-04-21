@@ -7,6 +7,8 @@
 
 import { test, expect, devices } from "@playwright/test";
 
+import { selectYearViaTimelineSlider } from "./helpers/selectYear";
+
 // Test on representative devices
 const testDevices = [
   { name: "iPhone 12", ...devices["iPhone 12"] },
@@ -25,10 +27,7 @@ test.describe("Boundary Years Zoom Testing", () => {
       await page.goto("/");
       await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
 
-      const slider = page.locator('input[type="range"]').first();
-      await expect(slider).toBeVisible({ timeout: 5000 });
-      await slider.fill("800");
-      await expect(slider).toHaveValue("800");
+      await selectYearViaTimelineSlider(page, 800);
 
       await page.screenshot({
         path: `tests/results/screenshots/boundary-years/${deviceConfig.name.replace(/\s+/g, "-")}-year-800.png`,
@@ -52,10 +51,7 @@ test.describe("Boundary Years Zoom Testing", () => {
       await page.goto("/");
       await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
 
-      const slider = page.locator('input[type="range"]').first();
-      await expect(slider).toBeVisible({ timeout: 5000 });
-      await slider.fill("1750");
-      await expect(slider).toHaveValue("1750");
+      await selectYearViaTimelineSlider(page, 1750);
 
       await page.screenshot({
         path: `tests/results/screenshots/boundary-years/${deviceConfig.name.replace(/\s+/g, "-")}-year-1750.png`,
@@ -77,12 +73,9 @@ test.describe("Boundary Years Zoom Testing", () => {
     await page.goto("/");
     await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
 
-    const slider = page.locator('input[type="range"]').first();
-    await expect(slider).toBeVisible({ timeout: 5000 });
-    const years = ["800", "1000", "1200", "1400", "1600", "1750"];
+    const years = [800, 1000, 1200, 1400, 1600, 1750] as const;
     for (const year of years) {
-      await slider.fill(year);
-      await expect(slider).toHaveValue(year);
+      await selectYearViaTimelineSlider(page, year);
       const mapCanvas = page.locator(".maplibregl-canvas").first();
       await expect(mapCanvas).toBeVisible();
     }
@@ -104,22 +97,17 @@ test.describe("Boundary Years Zoom Testing", () => {
     await page.goto("/");
     await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
 
-    const slider = page.locator('input[type="range"]').first();
-    await expect(slider).toBeVisible({ timeout: 5000 });
-    await slider.fill("800");
-    await expect(slider).toHaveValue("800");
+    await selectYearViaTimelineSlider(page, 800);
     await page.screenshot({
       path: "tests/results/screenshots/boundary-years/consistency-year-800.png",
       fullPage: false,
     });
-    await slider.fill("1750");
-    await expect(slider).toHaveValue("1750");
+    await selectYearViaTimelineSlider(page, 1750);
     await page.screenshot({
       path: "tests/results/screenshots/boundary-years/consistency-year-1750.png",
       fullPage: false,
     });
-    await slider.fill("1200");
-    await expect(slider).toHaveValue("1200");
+    await selectYearViaTimelineSlider(page, 1200);
     await page.screenshot({
       path: "tests/results/screenshots/boundary-years/consistency-year-1200.png",
       fullPage: false,

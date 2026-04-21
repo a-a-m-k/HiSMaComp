@@ -120,11 +120,8 @@ test.describe("Accessibility Tests", () => {
     await page.goto("/");
     await page.waitForSelector("#timeline", { timeout: 10000 });
 
-    // Check timeline slider has proper ARIA attributes
-    const timeline = page.locator("#timeline");
-    const slider = timeline.locator('input[type="range"]').first();
-
-    // Slider should be accessible
+    // Timeline uses MUI Slider (role="slider"), not a raw year-valued <input type="range">.
+    const slider = page.locator("#timeline").getByRole("slider");
     await expect(slider).toHaveAttribute("aria-label");
   });
 
@@ -132,7 +129,9 @@ test.describe("Accessibility Tests", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/");
     await page.waitForSelector("#map-container-area", { timeout: 20000 });
-    await page.locator("#timeline").waitFor({ state: "visible", timeout: 10000 });
+    await page
+      .locator("#timeline")
+      .waitFor({ state: "visible", timeout: 10000 });
 
     const maxTabs = 60;
     let timelineReached = false;

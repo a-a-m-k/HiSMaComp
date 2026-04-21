@@ -1,12 +1,10 @@
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:5173";
-
 test.describe("Error Boundary", () => {
   test("should display error UI when component throws an error", async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}?testError=true`);
+    await page.goto("/?testError=true");
 
     const errorHeading = page.getByText("Something went wrong");
     await expect(errorHeading).toBeVisible({ timeout: 10000 });
@@ -21,7 +19,7 @@ test.describe("Error Boundary", () => {
   test("should show Try Again and Reload Page buttons when error occurs", async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}?testError=true`);
+    await page.goto("/?testError=true");
 
     const tryAgainBtn = page.getByRole("button", { name: /try again/i });
     const reloadBtn = page.getByRole("button", { name: /reload page/i });
@@ -33,7 +31,7 @@ test.describe("Error Boundary", () => {
   test("should handle Try Again button click to reset error state", async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}?testError=true`);
+    await page.goto("/?testError=true");
 
     const errorHeading = page.getByText("Something went wrong");
     await expect(errorHeading).toBeVisible({ timeout: 5000 });
@@ -44,7 +42,7 @@ test.describe("Error Boundary", () => {
   });
 
   test("should handle Reload Page button click", async ({ page }) => {
-    await page.goto(`${BASE_URL}?testError=true`);
+    await page.goto("/?testError=true");
 
     const errorHeading = page.getByText("Something went wrong");
     await expect(errorHeading).toBeVisible({ timeout: 5000 });
@@ -69,7 +67,7 @@ test.describe("Error Boundary", () => {
       consoleMessages.push(text);
     });
 
-    await page.goto(`${BASE_URL}?testError=true`);
+    await page.goto("/?testError=true");
     await expect(page.getByRole("alert")).toBeVisible({ timeout: 5000 });
     expect(consoleMessages.length).toBeGreaterThan(0);
     expect(
@@ -84,7 +82,7 @@ test.describe("Error Boundary", () => {
   test("should display error details in development mode when error occurs", async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}?testError=true`);
+    await page.goto("/?testError=true");
     await expect(page.getByText("Something went wrong")).toBeVisible({
       timeout: 5000,
     });
@@ -104,7 +102,7 @@ test.describe("Error Boundary", () => {
   test("should show development mode console hint when error occurs", async ({
     page,
   }) => {
-    await page.goto(`${BASE_URL}?testError=true`);
+    await page.goto("/?testError=true");
     await expect(page.getByText("Something went wrong")).toBeVisible({
       timeout: 5000,
     });
@@ -114,7 +112,7 @@ test.describe("Error Boundary", () => {
   });
 
   test("should render app normally when no error occurs", async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto("/");
     await page.waitForSelector(".maplibregl-canvas", { timeout: 10000 });
     await expect(page.locator(".maplibregl-canvas").first()).toBeVisible();
 

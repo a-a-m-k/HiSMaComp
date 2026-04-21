@@ -9,7 +9,10 @@ const {
   mockCalculateBoundsCenter,
   mockAnnounce,
   mockRetryWithBackoff,
-  mockLogger,
+  mockReportAppError,
+  mockGetAppErrorMessage,
+  mockTrackEvent,
+  mockTrackTiming,
 } = vi.hoisted(() => ({
   mockGetFilteredTowns: vi.fn(),
   mockCalculateBoundsCenter: vi.fn(() => ({
@@ -20,16 +23,20 @@ const {
   mockRetryWithBackoff: vi.fn(
     async (fn: () => Promise<unknown>) => fn() as Promise<void>
   ),
-  mockLogger: {
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
-}));
-
-vi.mock("@/utils/logger", () => ({
-  logger: mockLogger,
+  mockReportAppError: vi.fn(),
+  mockGetAppErrorMessage: vi.fn(
+    (error: unknown, context?: { category?: string }) => {
+      const category = context?.category;
+      if (category === "no-towns-data") return "No towns data available.";
+      if (category === "year-data-retry") {
+        return "Failed to load data after multiple attempts. Please refresh the page.";
+      }
+      if (error instanceof Error) return error.message;
+      return "Unexpected error";
+    }
+  ),
+  mockTrackEvent: vi.fn(),
+  mockTrackTiming: vi.fn(),
 }));
 
 vi.mock("@/utils/retry", () => ({
@@ -50,7 +57,19 @@ vi.mock("@/utils/accessibility", () => ({
   announce: mockAnnounce,
 }));
 
+vi.mock("@/utils/errorPolicy", () => ({
+  reportAppError: mockReportAppError,
+  getAppErrorMessage: mockGetAppErrorMessage,
+}));
+
+vi.mock("@/utils/observability", () => ({
+  trackEvent: mockTrackEvent,
+  trackTiming: mockTrackTiming,
+}));
+
 describe("useYearDataController", () => {
+  const emptyTowns: typeof mockTownsMinimal = [];
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockRetryWithBackoff.mockImplementation(
@@ -113,7 +132,7 @@ describe("useYearDataController", () => {
 
   it("retry with empty towns sets a clear error", async () => {
     const { result } = renderHook(() =>
-      useYearDataController({ towns: [], selectedYear: 800 })
+      useYearDataController({ towns: emptyTowns, selectedYear: 800 })
     );
 
     await waitFor(() => {
