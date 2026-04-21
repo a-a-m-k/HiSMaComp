@@ -2,11 +2,11 @@
 
 [![CI and Deploy](https://github.com/a-a-m-k/HiSMaComp/actions/workflows/ci.yml/badge.svg)](https://github.com/a-a-m-k/HiSMaComp/actions/workflows/ci.yml)
 
-**Hi**storical **S**ettlement **Ma**p **Comp**arison — an interactive map of European town populations from 800 to 1750. Pick a century on the timeline; markers are sized by population and the map zooms to keep the data in view.
+**Hi**storical **S**ettlement **Ma**p **Comp**arison — an interactive map of European town populations from 800 to 1750. Pick a century on the timeline; markers are sized by European population and the map zooms to keep the data in view.
 
 **Live:** https://a-a-m-k.github.io/HiSMaComp/
 
-![Map of European settlements with population-scaled markers and the century timeline](docs/hero.png)
+![Map of European settlements; marker size reflects European population by band, with the century timeline](docs/hero.png)
 
 ## What’s in it
 

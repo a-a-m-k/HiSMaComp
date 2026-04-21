@@ -69,7 +69,7 @@ export const en = {
     opensInNewTab: "Opens in new tab",
     collapseLegend: "Collapse legend",
     expandLegend: "Expand legend",
-    scaleDetailsAria: "Population scale details",
+    scaleDetailsAria: "European population band details",
   },
   screenshot: {
     ariaLabel: "Save map as image file. Press Ctrl+S or Cmd+S to save.",
