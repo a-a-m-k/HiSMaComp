@@ -10,16 +10,14 @@ export default defineConfig({
     globals: true,
     exclude: ["**/node_modules/**", "**/dist/**", "**/tests/e2e/**"],
     testTimeout: 10000, // Increased from 5000ms to handle slow calculations
-    // Threads are faster locally; forks are more stable in CI for jsdom-heavy suites.
-    pool: process.env.CI ? "forks" : "threads",
+    // Use threads everywhere (including CI). CI env + `forks` + singleFork leaked one jsdom
+    // across files and caused mass failures; fork workers without tuning are also slower.
+    pool: "threads",
     poolOptions: {
       threads: {
         singleThread: false,
-        maxThreads: 4, // Limit to avoid overwhelming the system
+        maxThreads: 4,
         minThreads: 1,
-      },
-      forks: {
-        singleFork: true,
       },
     },
     // Keep isolation enabled for test safety, but use threads for better performance
