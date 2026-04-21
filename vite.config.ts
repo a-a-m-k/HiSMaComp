@@ -116,6 +116,10 @@ export default defineConfig(({ command }) => ({
             if (id.includes("react-map-gl")) {
               return "react-map";
             }
+            // Optional observability: own chunk for caching and bundle analysis (still loaded with bootstrap).
+            if (id.includes("@sentry")) {
+              return "sentry";
+            }
             return "vendor";
           }
         },

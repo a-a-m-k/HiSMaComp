@@ -53,7 +53,8 @@ export function vitePluginResourceHints(): Plugin {
             s =>
               !s.src.includes("maplibre") &&
               !s.src.includes("vendor") &&
-              !s.src.includes("react-map")
+              !s.src.includes("react-map") &&
+              !s.src.includes("sentry")
           ) || scripts[0];
 
         // Find MapLibre GL bundle (critical for LCP, largest chunk)
@@ -71,6 +72,7 @@ export function vitePluginResourceHints(): Plugin {
         const assetsDir = join(outputDir, "assets");
         let maplibreAsset: string | null = null;
         let vendorAsset: string | null = null;
+        let sentryAsset: string | null = null;
 
         try {
           const assets = readdirSync(assetsDir);
@@ -91,6 +93,14 @@ export function vitePluginResourceHints(): Plugin {
           );
           if (vendorFile) {
             vendorAsset = `${baseUrl}assets/${vendorFile}`;
+          }
+
+          const sentryFile = assets.find(
+            file =>
+              file.toLowerCase().includes("sentry") && file.endsWith(".js")
+          );
+          if (sentryFile) {
+            sentryAsset = `${baseUrl}assets/${sentryFile}`;
           }
         } catch (error) {
           // Assets directory might not exist or be readable
@@ -129,6 +139,12 @@ export function vitePluginResourceHints(): Plugin {
           );
         }
 
+        if (sentryAsset) {
+          preloadLinks.push(
+            `    <link rel="modulepreload" href="${sentryAsset}" />`
+          );
+        }
+
         if (preloadLinks.length > 0) {
           // Insert preload hints right before the first script tag
           const firstScript = scripts[0];
@@ -143,6 +159,7 @@ export function vitePluginResourceHints(): Plugin {
           if (mainScript) preloadedChunks.push("main bundle");
           if (maplibreSrc) preloadedChunks.push("MapLibre GL");
           if (vendorSrc) preloadedChunks.push("vendor bundle");
+          if (sentryAsset) preloadedChunks.push("Sentry bundle");
 
           console.log(
             `[vite-plugin-resource-hints] ✓ Added modulepreload hints for: ${preloadedChunks.join(", ")}`

@@ -11,6 +11,7 @@
  *
  * Chunk classification (by substring in filename, from vite.config.ts manualChunks):
  *   - maplibre  → maplibre-gl
+ *   - sentry    → @sentry/* (separate vendor slice)
  *   - vendor    → other node_modules (MUI, React, etc.)
  *   - index-    → main app entry
  *   - towns     → async chunk from useTownsData dynamic import (towns.json)
@@ -31,8 +32,10 @@ const BUDGETS = {
   // Sum of all *.js in dist/assets (zlib gzip, same as this script — may differ slightly from Vite’s printed gzip).
   totalJs: 1200,
   maplibre: 280,
-  // React + MUI + Emotion + react-map-gl deps + optional Sentry; varies with lockfile and plugins (~150–230 KiB typical).
+  // React + MUI + Emotion + react-map-gl deps (Sentry is split to sentry-* chunk).
   vendor: 240,
+  // @sentry/react + tracing/replay (gzip varies with SDK version).
+  sentry: 130,
   // App entry (routes, map shell, hooks); grows slowly with features.
   index: 42,
   towns: 120, // async chunk from useTownsData dynamic import
@@ -69,6 +72,7 @@ function main() {
 
     totalJs += sizeKiB;
     if (file.includes("maplibre")) byName.maplibre = (byName.maplibre || 0) + sizeKiB;
+    else if (file.includes("sentry")) byName.sentry = (byName.sentry || 0) + sizeKiB;
     else if (file.includes("vendor")) byName.vendor = (byName.vendor || 0) + sizeKiB;
     else if (file.includes("index-")) byName.index = (byName.index || 0) + sizeKiB;
     else if (file.includes("towns")) byName.towns = (byName.towns || 0) + sizeKiB;
@@ -89,6 +93,12 @@ function main() {
   if ((byName.vendor || 0) > BUDGETS.vendor) {
     console.error(
       `[check-bundle-size] vendor chunk ${(byName.vendor || 0).toFixed(0)} KiB exceeds budget ${BUDGETS.vendor} KiB`
+    );
+    failed = true;
+  }
+  if ((byName.sentry || 0) > BUDGETS.sentry) {
+    console.error(
+      `[check-bundle-size] sentry chunk ${(byName.sentry || 0).toFixed(0)} KiB exceeds budget ${BUDGETS.sentry} KiB`
     );
     failed = true;
   }
