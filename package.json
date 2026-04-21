@@ -16,7 +16,7 @@
     "test:run": "npm run test:base -- run",
     "test:coverage": "npm run test:base -- run --coverage",
     "test:visual": "playwright test tests/e2e/visual-zoom.spec.ts",
-    "test:e2e": "playwright test tests/e2e",
+    "test:e2e": "playwright test tests/e2e --grep-invert @visual",
     "test:e2e:install": "playwright install chromium",
     "test:unit": "npm run test:base -- run tests/unit",
     "verify:ci": "npm run test:coverage && npm run lint:check && npm run typecheck && node scripts/build-gh-pages.cjs && node scripts/check-bundle-size.js",

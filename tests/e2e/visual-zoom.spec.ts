@@ -38,7 +38,7 @@ const deviceConfigs = [
 // Base URL for your dev server (override with baseURL in playwright.config when running e2e)
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5173";
 
-test.describe("Cross-Device Zoom Behavior", () => {
+test.describe("@visual Cross-Device Zoom Behavior", () => {
   deviceConfigs.forEach(deviceConfig => {
     test(`should display correctly on ${deviceConfig.name}`, async ({
       browser,
@@ -169,7 +169,7 @@ test.describe("Cross-Device Zoom Behavior", () => {
   });
 });
 
-test.describe("Map Interaction Tests", () => {
+test.describe("@visual Map Interaction Tests", () => {
   test("should allow zooming in/out on different devices", async ({
     browser,
   }) => {
@@ -304,7 +304,10 @@ test.describe("Map Interaction Tests", () => {
     });
 
     expect(zoomInZIndex !== null || zoomGroupZIndex !== null).toBe(true);
-    if (typeof zoomInZIndex === "number" && typeof zoomGroupZIndex === "number") {
+    if (
+      typeof zoomInZIndex === "number" &&
+      typeof zoomGroupZIndex === "number"
+    ) {
       expect(zoomInZIndex).toBeGreaterThanOrEqual(0);
       expect(zoomGroupZIndex).toBeGreaterThanOrEqual(0);
     }

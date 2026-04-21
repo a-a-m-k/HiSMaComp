@@ -88,6 +88,18 @@ Open http://localhost:5173
   - Lines: `>=50%`
 - Goal: keep a realistic floor for a small portfolio app while prioritizing behavior-driven tests in high-impact flows (map interactions, year filtering, and error handling).
 
+### Critical flows protected
+
+| Flow                                          | Unit tests                                                                                     | E2E tests                                                                       |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Timeline year change updates filtered data    | `tests/unit/context/useYearDataController.test.tsx`, `tests/unit/components/Timeline.test.tsx` | `tests/e2e/boundary-years.spec.ts`                                              |
+| Map marker interaction (focus/click/keyboard) | `tests/unit/components/TownMarkerItem.test.tsx`, `tests/unit/components/TownMarkers.test.tsx`  | `tests/e2e/resize-map.spec.ts` (map remains interactive through layout changes) |
+| Error fallback and recovery UI                | `tests/unit/components/ErrorBoundary.test.tsx`, `tests/unit/utils/errorPolicy.test.ts`         | `tests/e2e/error-boundary.spec.ts`                                              |
+| Screenshot capture + failure handling         | `tests/unit/hooks/useScreenshot.test.ts`                                                       | Covered by interaction smoke checks in deploy checklist                         |
+| Accessibility baseline                        | Component-level assertions in unit tests                                                       | `tests/e2e/accessibility.spec.ts` (`axe-core`)                                  |
+
+**E2E lanes:** `npm run test:e2e` runs gating behavior suites; `npm run test:visual` runs non-gating visual capture specs (`@visual` tagged).
+
 ## Deploy (GitHub Pages)
 
 **Enable deployment:** In the repo go to **Settings → Pages**. Under **Build and deployment**, set **Source** to **GitHub Actions**. Until this is set, the workflow’s deploy job will not publish the site.
