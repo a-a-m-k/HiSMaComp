@@ -18,16 +18,15 @@ describe("useMapContainerResize", () => {
   beforeEach(() => {
     observe = vi.fn();
     disconnect = vi.fn();
-    vi.mocked(global.ResizeObserver).mockImplementation(
-      (
-        cb: (
-          entries: { contentRect: { width: number; height: number } }[]
-        ) => void
-      ) => {
-        resizeCallback = cb;
-        return { observe, unobserve: vi.fn(), disconnect };
-      }
-    );
+    vi.mocked(global.ResizeObserver).mockImplementation(cb => {
+      resizeCallback = entries =>
+        cb(entries as ResizeObserverEntry[], {} as ResizeObserver);
+      return {
+        observe,
+        unobserve: vi.fn(),
+        disconnect,
+      } as unknown as ResizeObserver;
+    });
   });
 
   afterEach(() => {

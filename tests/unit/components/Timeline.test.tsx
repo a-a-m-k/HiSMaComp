@@ -34,12 +34,7 @@ describe("Timeline", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseMediaQuery.mockImplementation((query: unknown) => {
-      const q = String(query);
-      if (q.includes("900px")) return true;
-      if (q.includes("600px")) return true;
-      return false;
-    });
+    mockUseMediaQuery.mockReturnValue(true);
   });
 
   it("calls setSelectedYear when a desktop century button is clicked", async () => {

@@ -174,6 +174,7 @@ describe("MapContainer", () => {
       towns: defaultTowns,
       isLoading: false,
       error: null,
+      retry: vi.fn(),
     };
     state.appData = {
       towns: defaultTowns,

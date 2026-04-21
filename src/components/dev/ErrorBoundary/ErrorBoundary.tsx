@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { logger } from "@/utils/logger";
+import { reportAppError } from "@/utils/errorPolicy";
 import { ErrorFallback } from "./ErrorFallback";
 
 /**
@@ -30,6 +31,10 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    reportAppError(error, {
+      category: "validation",
+      operation: "ErrorBoundary.componentDidCatch",
+    });
     logger.error("Error Boundary caught an error:", error, errorInfo);
 
     if (import.meta.env.DEV) {

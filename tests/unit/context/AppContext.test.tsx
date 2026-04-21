@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import type { Town } from "@/common/types";
 import { AppProvider, useApp } from "@/context/AppContext";
 import { mockTownsMinimal } from "../../helpers/testUtils";
 
@@ -16,7 +17,7 @@ vi.mock("@/utils/logger", () => ({
 
 const mockUseYearDataController = vi.hoisted(() =>
   vi.fn(() => ({
-    filteredTowns: [],
+    filteredTowns: [] as Town[],
     isLoading: false,
     error: null,
     clearError: vi.fn(),

@@ -19,7 +19,6 @@ test.describe("Map resize behaviour", () => {
     await page.setViewportSize({ width: 1000, height: 700 });
     await page.goto("/");
     await page.waitForSelector("#map-container-area", { timeout: 20000 });
-    await page.waitForTimeout(500);
 
     await page.setViewportSize({ width: 950, height: 600 });
 
@@ -39,9 +38,7 @@ test.describe("Map resize behaviour", () => {
     await page.setViewportSize({ width: BELOW_MIN_WIDTH, height: 400 });
 
     const spinner = page.getByText("Resizing map...");
-    // Spinner may flash; give a short window then assert it is not present
-    await page.waitForTimeout(100);
-    await expect(spinner).not.toBeVisible();
+    await expect(spinner).not.toBeVisible({ timeout: 3000 });
   });
 
   test("narrow layout applies at small width (data-narrow-layout on body)", async ({
@@ -51,14 +48,12 @@ test.describe("Map resize behaviour", () => {
     await page.waitForSelector("#map-container-area", { timeout: 10000 });
 
     await page.setViewportSize({ width: BELOW_MIN_WIDTH, height: 400 });
-    await page.waitForTimeout(200);
     await expect(page.locator("body")).toHaveAttribute(
       "data-narrow-layout",
       "true"
     );
 
     await page.setViewportSize({ width: 320, height: 400 });
-    await page.waitForTimeout(200);
     await expect(page.locator("body")).not.toHaveAttribute(
       "data-narrow-layout",
       "true"

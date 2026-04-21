@@ -22,7 +22,7 @@ const {
 }));
 
 vi.mock("html2canvas", () => ({
-  default: (...args: unknown[]) => mockHtml2Canvas(...args),
+  default: mockHtml2Canvas,
 }));
 
 vi.mock("@/components/controls/ScreenshotButton/utils", () => ({
@@ -31,17 +31,17 @@ vi.mock("@/components/controls/ScreenshotButton/utils", () => ({
   LEGEND_SCREENSHOT_EXPAND_WAIT_MS: 320,
   dispatchLegendScreenshotExpand: vi.fn(),
   dispatchLegendScreenshotRestore: vi.fn(),
-  hideMapControls: (...args: unknown[]) => mockHideMapControls(...args),
-  restoreMapControls: (...args: unknown[]) => mockRestoreMapControls(...args),
+  hideMapControls: mockHideMapControls,
+  restoreMapControls: mockRestoreMapControls,
 }));
 
 vi.mock("@/utils/errorPolicy", () => ({
-  reportAppError: (...args: unknown[]) => mockReportAppError(...args),
-  getAppErrorMessage: (...args: unknown[]) => mockGetAppErrorMessage(...args),
+  reportAppError: mockReportAppError,
+  getAppErrorMessage: mockGetAppErrorMessage,
 }));
 
 vi.mock("@/utils/accessibility", () => ({
-  announce: (...args: unknown[]) => mockAnnounce(...args),
+  announce: mockAnnounce,
 }));
 
 vi.mock("@mui/material/styles", () => ({

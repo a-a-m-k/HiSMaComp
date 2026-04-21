@@ -8,7 +8,7 @@ const mockCreateRoot = vi.fn(() => ({
 const mockLogger = createLoggerMock();
 
 vi.mock("react-dom/client", () => ({
-  createRoot: (...args: unknown[]) => mockCreateRoot(...args),
+  createRoot: mockCreateRoot,
 }));
 
 vi.mock("@/App", () => ({

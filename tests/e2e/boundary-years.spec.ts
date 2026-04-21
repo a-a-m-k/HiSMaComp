@@ -24,15 +24,11 @@ test.describe("Boundary Years Zoom Testing", () => {
 
       await page.goto("/");
       await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
-      await page.waitForTimeout(2000);
 
       const slider = page.locator('input[type="range"]').first();
-      await slider.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
-      const count = await slider.count();
-      if (count > 0) {
-        await slider.fill("800");
-        await page.waitForTimeout(1000);
-      }
+      await expect(slider).toBeVisible({ timeout: 5000 });
+      await slider.fill("800");
+      await expect(slider).toHaveValue("800");
 
       await page.screenshot({
         path: `tests/results/screenshots/boundary-years/${deviceConfig.name.replace(/\s+/g, "-")}-year-800.png`,
@@ -55,15 +51,11 @@ test.describe("Boundary Years Zoom Testing", () => {
 
       await page.goto("/");
       await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
-      await page.waitForTimeout(2000);
 
       const slider = page.locator('input[type="range"]').first();
-      await slider.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
-      const count = await slider.count();
-      if (count > 0) {
-        await slider.fill("1750");
-        await page.waitForTimeout(1000);
-      }
+      await expect(slider).toBeVisible({ timeout: 5000 });
+      await slider.fill("1750");
+      await expect(slider).toHaveValue("1750");
 
       await page.screenshot({
         path: `tests/results/screenshots/boundary-years/${deviceConfig.name.replace(/\s+/g, "-")}-year-1750.png`,
@@ -84,24 +76,20 @@ test.describe("Boundary Years Zoom Testing", () => {
 
     await page.goto("/");
     await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
-    await page.waitForTimeout(2000);
 
     const slider = page.locator('input[type="range"]').first();
-    await slider.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
-    const count = await slider.count();
-    if (count > 0) {
-      const years = ["800", "1000", "1200", "1400", "1600", "1750"];
-      for (const year of years) {
-        await slider.fill(year);
-        await page.waitForTimeout(500);
-        const mapCanvas = page.locator(".maplibregl-canvas").first();
-        await expect(mapCanvas).toBeVisible();
-      }
-      await page.screenshot({
-        path: "tests/results/screenshots/boundary-years/transition-complete.png",
-        fullPage: true,
-      });
+    await expect(slider).toBeVisible({ timeout: 5000 });
+    const years = ["800", "1000", "1200", "1400", "1600", "1750"];
+    for (const year of years) {
+      await slider.fill(year);
+      await expect(slider).toHaveValue(year);
+      const mapCanvas = page.locator(".maplibregl-canvas").first();
+      await expect(mapCanvas).toBeVisible();
     }
+    await page.screenshot({
+      path: "tests/results/screenshots/boundary-years/transition-complete.png",
+      fullPage: true,
+    });
 
     await context.close();
   });
@@ -115,31 +103,27 @@ test.describe("Boundary Years Zoom Testing", () => {
 
     await page.goto("/");
     await page.waitForSelector(".maplibregl-canvas", { timeout: 15000 });
-    await page.waitForTimeout(2000);
 
     const slider = page.locator('input[type="range"]').first();
-    await slider.waitFor({ state: "visible", timeout: 5000 }).catch(() => {});
-    const count = await slider.count();
-    if (count > 0) {
-      await slider.fill("800");
-      await page.waitForTimeout(500);
-      await page.screenshot({
-        path: "tests/results/screenshots/boundary-years/consistency-year-800.png",
-        fullPage: false,
-      });
-      await slider.fill("1750");
-      await page.waitForTimeout(500);
-      await page.screenshot({
-        path: "tests/results/screenshots/boundary-years/consistency-year-1750.png",
-        fullPage: false,
-      });
-      await slider.fill("1200");
-      await page.waitForTimeout(500);
-      await page.screenshot({
-        path: "tests/results/screenshots/boundary-years/consistency-year-1200.png",
-        fullPage: false,
-      });
-    }
+    await expect(slider).toBeVisible({ timeout: 5000 });
+    await slider.fill("800");
+    await expect(slider).toHaveValue("800");
+    await page.screenshot({
+      path: "tests/results/screenshots/boundary-years/consistency-year-800.png",
+      fullPage: false,
+    });
+    await slider.fill("1750");
+    await expect(slider).toHaveValue("1750");
+    await page.screenshot({
+      path: "tests/results/screenshots/boundary-years/consistency-year-1750.png",
+      fullPage: false,
+    });
+    await slider.fill("1200");
+    await expect(slider).toHaveValue("1200");
+    await page.screenshot({
+      path: "tests/results/screenshots/boundary-years/consistency-year-1200.png",
+      fullPage: false,
+    });
 
     await context.close();
   });

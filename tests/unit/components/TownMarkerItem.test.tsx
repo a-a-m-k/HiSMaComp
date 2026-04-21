@@ -50,11 +50,8 @@ describe("TownMarkerItem", () => {
     town,
     markerId: "marker-Paris-0",
     isFocused: false,
-    isHovered: false,
     onFocus: vi.fn(),
     onBlur: vi.fn(),
-    onMouseEnter: vi.fn(),
-    onMouseLeave: vi.fn(),
     onKeyDown: vi.fn(),
     selectedYear: 1000,
   };
@@ -97,14 +94,11 @@ describe("TownMarkerItem", () => {
     expect(screen.getByText("35,000")).toBeInTheDocument();
   });
 
-  it("focuses marker on click and triggers hover handlers", () => {
+  it("focuses marker on click", () => {
     render(<TownMarkerItem {...baseProps} />);
     const markerButton = screen.getByRole("button", {
       name: "Marker ARIA Label",
     }) as HTMLElement;
-
-    fireEvent.mouseEnter(markerButton);
-    expect(baseProps.onMouseEnter).toHaveBeenCalledWith("marker-Paris-0");
 
     fireEvent.click(markerButton);
     expect(enableTownMarkerFocusSpy).toHaveBeenCalledWith(markerButton);

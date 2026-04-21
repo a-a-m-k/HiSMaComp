@@ -27,6 +27,14 @@ src/
 └── theme/        # MUI theme
 ```
 
+## Architecture notes
+
+- **Data flow:** raw towns are loaded in `useTownsData`, year-scoped results are derived in `useYearDataController`, and shared through `AppContext` (`selectedYear`, `filteredTowns`, loading/error state).
+- **Map rendering split:** `MapView` coordinates camera/state, `MapCanvasStack` owns MapLibre canvases/layers, and marker/label behavior lives under `MapView/TownMarkers`.
+- **Derived-data caching:** `YearDataService` uses LRU caches and stable cache keys so timeline scrubbing avoids repeated heavy computations.
+- **Error handling policy:** user-facing messages and error reporting are centralized in `src/utils/errorPolicy.ts`, with accessibility announcements for actionable failures.
+- **Observability:** optional Sentry bootstrap lives in `src/instrument.ts`; lightweight telemetry timings/events are emitted from key flows (data load, year switch, screenshot).
+
 ## Quick start
 
 **Prereqs:** Node 20+, npm, and a [Stadia Maps API key](https://client.stadiamaps.com/). For E2E tests, run `npm run test:e2e:install` once to install Playwright browsers.
@@ -71,19 +79,43 @@ Open http://localhost:5173
 | `npm run lint`             | Lint                                                           |
 | `npm run deploy`           | Deploy to GitHub Pages                                         |
 
+## Quality targets
+
+- Coverage gates are enforced in `vitest.config.ts` to maintain a baseline signal:
+  - Statements: `>=50%`
+  - Branches: `>=45%`
+  - Functions: `>=50%`
+  - Lines: `>=50%`
+- Goal: keep a realistic floor for a small portfolio app while prioritizing behavior-driven tests in high-impact flows (map interactions, year filtering, and error handling).
+
 ## Deploy (GitHub Pages)
 
 **Enable deployment:** In the repo go to **Settings → Pages**. Under **Build and deployment**, set **Source** to **GitHub Actions**. Until this is set, the workflow’s deploy job will not publish the site.
 
 Set `VITE_STADIA_API_KEY` as a repo secret; push to `main` runs the workflow and deploys. Restrict the key by domain in the Stadia dashboard (e.g. to your GitHub Pages origin) so it is not usable from other sites.
 
+Required secret:
+
 ```bash
 gh secret set VITE_STADIA_API_KEY --repo a-a-m-k/HiSMaComp
+```
+
+Optional Sentry secrets (only if you want observability in Sentry):
+
+```bash
 gh secret set VITE_SENTRY_DSN --repo a-a-m-k/HiSMaComp
 gh secret set VITE_APP_RELEASE --repo a-a-m-k/HiSMaComp
 gh secret set VITE_SENTRY_TRACES_SAMPLE_RATE --repo a-a-m-k/HiSMaComp
 gh secret set VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE --repo a-a-m-k/HiSMaComp
 gh secret set VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE --repo a-a-m-k/HiSMaComp
+```
+
+Optional source-map upload secrets (for readable production stack traces):
+
+```bash
+gh secret set SENTRY_AUTH_TOKEN --repo a-a-m-k/HiSMaComp
+gh secret set SENTRY_ORG --repo a-a-m-k/HiSMaComp
+gh secret set SENTRY_PROJECT --repo a-a-m-k/HiSMaComp
 ```
 
 ### Production observability
@@ -121,6 +153,12 @@ Optional tuning secrets (defaults are already in workflow):
 - `VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE` (default `0.1`)
 - `VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE` (default `1.0`)
 - `VITE_APP_RELEASE` (default `github.sha`)
+
+Recommended pet-project defaults:
+
+- `VITE_SENTRY_TRACES_SAMPLE_RATE=0.1`
+- `VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE=0.05` (or `0.1`)
+- `VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE=1.0`
 
 ### Post-deploy observability checklist
 

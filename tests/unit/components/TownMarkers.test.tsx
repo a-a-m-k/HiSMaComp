@@ -25,32 +25,23 @@ vi.mock("@/components/map/MapView/TownMarkers/TownMarkerItem", () => ({
     town,
     markerId,
     isFocused,
-    isHovered,
     onFocus,
     onBlur,
-    onMouseEnter,
-    onMouseLeave,
     onKeyDown,
   }: {
     town: Town;
     markerId: string;
     isFocused: boolean;
-    isHovered: boolean;
     onFocus: (id: string) => void;
     onBlur: (e: React.FocusEvent) => void;
-    onMouseEnter: (id: string) => void;
-    onMouseLeave: () => void;
     onKeyDown: (e: React.KeyboardEvent, id: string) => void;
   }) => (
     <button
       data-testid={`marker-${town.name}`}
       data-marker-id={markerId}
       data-focused={isFocused ? "true" : "false"}
-      data-hovered={isHovered ? "true" : "false"}
       onFocus={() => onFocus(markerId)}
       onBlur={e => onBlur(e)}
-      onMouseEnter={() => onMouseEnter(markerId)}
-      onMouseLeave={onMouseLeave}
       onKeyDown={e => onKeyDown(e, markerId)}
     >
       {town.name}
@@ -101,19 +92,14 @@ describe("TownMarkers interactions", () => {
     expect(names).toEqual(["BigTown", "MidTown", "SmallTown"]);
   });
 
-  it("tracks focus, hover, blur, and keyboard interactions", () => {
+  it("tracks focus, blur, and keyboard interactions", () => {
     render(<TownMarkers towns={towns} selectedYear={selectedYear} />);
 
     const bigTownMarker = screen.getByTestId("marker-BigTown");
-    const midTownMarker = screen.getByTestId("marker-MidTown");
-
     fireEvent.focus(bigTownMarker);
     expect(bigTownMarker).toHaveAttribute("data-focused", "true");
 
-    fireEvent.mouseEnter(midTownMarker);
-    expect(midTownMarker).toHaveAttribute("data-hovered", "true");
-
-    fireEvent.keyDown(midTownMarker, { key: "ArrowRight" });
+    fireEvent.keyDown(bigTownMarker, { key: "ArrowRight" });
     expect(keyDownSpy).toHaveBeenCalled();
 
     fireEvent.blur(bigTownMarker);

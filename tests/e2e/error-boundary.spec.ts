@@ -7,7 +7,6 @@ test.describe("Error Boundary", () => {
     page,
   }) => {
     await page.goto(`${BASE_URL}?testError=true`);
-    await page.waitForTimeout(2000);
 
     const errorHeading = page.getByText("Something went wrong");
     await expect(errorHeading).toBeVisible({ timeout: 10000 });
@@ -23,7 +22,6 @@ test.describe("Error Boundary", () => {
     page,
   }) => {
     await page.goto(`${BASE_URL}?testError=true`);
-    await page.waitForTimeout(1500);
 
     const tryAgainBtn = page.getByRole("button", { name: /try again/i });
     const reloadBtn = page.getByRole("button", { name: /reload page/i });
@@ -36,21 +34,17 @@ test.describe("Error Boundary", () => {
     page,
   }) => {
     await page.goto(`${BASE_URL}?testError=true`);
-    await page.waitForTimeout(1500);
 
     const errorHeading = page.getByText("Something went wrong");
     await expect(errorHeading).toBeVisible({ timeout: 5000 });
 
     const tryAgainBtn = page.getByRole("button", { name: /try again/i });
     await tryAgainBtn.click();
-    await page.waitForTimeout(1000);
-
-    expect(tryAgainBtn).toBeTruthy();
+    await expect(page.getByRole("alert")).toBeHidden({ timeout: 5000 });
   });
 
   test("should handle Reload Page button click", async ({ page }) => {
     await page.goto(`${BASE_URL}?testError=true`);
-    await page.waitForTimeout(1500);
 
     const errorHeading = page.getByText("Something went wrong");
     await expect(errorHeading).toBeVisible({ timeout: 5000 });
@@ -58,8 +52,7 @@ test.describe("Error Boundary", () => {
     const reloadBtn = page.getByRole("button", { name: /reload page/i });
     await expect(reloadBtn).toBeVisible();
     await reloadBtn.click();
-
-    expect(reloadBtn).toBeTruthy();
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 5000 });
   });
 
   test("should log errors to console when error boundary catches error", async ({
@@ -77,24 +70,22 @@ test.describe("Error Boundary", () => {
     });
 
     await page.goto(`${BASE_URL}?testError=true`);
-    await page.waitForTimeout(2000);
-
-    const hasErrorLog = consoleErrors.some(
-      msg =>
-        msg.includes("Error Boundary caught an error") ||
-        msg.includes("Test error for ErrorBoundary")
-    );
-
-    expect(consoleMessages.length >= 0).toBeTruthy();
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 5000 });
+    expect(consoleMessages.length).toBeGreaterThan(0);
+    expect(
+      consoleErrors.some(
+        msg =>
+          msg.includes("Error Boundary caught an error") ||
+          msg.includes("Test error for ErrorBoundary")
+      )
+    ).toBe(true);
   });
 
   test("should display error details in development mode when error occurs", async ({
     page,
   }) => {
     await page.goto(`${BASE_URL}?testError=true`);
-    await page.waitForTimeout(1500);
-
-    await page.waitForSelector('text="Something went wrong"', {
+    await expect(page.getByText("Something went wrong")).toBeVisible({
       timeout: 5000,
     });
 
@@ -103,7 +94,7 @@ test.describe("Error Boundary", () => {
 
     if (preCount > 0) {
       const preVisible = await errorPre.first().isVisible();
-      expect(preVisible).toBeTruthy();
+      expect(preVisible).toBe(true);
 
       const errorText = await errorPre.first().textContent();
       expect(errorText).toContain("Test error for ErrorBoundary");
@@ -114,25 +105,18 @@ test.describe("Error Boundary", () => {
     page,
   }) => {
     await page.goto(`${BASE_URL}?testError=true`);
-    await page.waitForTimeout(1500);
-
-    await page.waitForSelector('text="Something went wrong"', {
+    await expect(page.getByText("Something went wrong")).toBeVisible({
       timeout: 5000,
     });
 
     const consoleHint = page.getByText(/Check the console|F12/i);
-    const hintVisible = await consoleHint.isVisible().catch(() => false);
-
-    expect(hintVisible).toBeTruthy();
+    await expect(consoleHint).toBeVisible({ timeout: 5000 });
   });
 
   test("should render app normally when no error occurs", async ({ page }) => {
     await page.goto(BASE_URL);
     await page.waitForSelector(".maplibregl-canvas", { timeout: 10000 });
-    await page.waitForTimeout(1000);
-
-    const mapCanvas = await page.$(".maplibregl-canvas");
-    expect(mapCanvas).toBeTruthy();
+    await expect(page.locator(".maplibregl-canvas").first()).toBeVisible();
 
     const errorHeading = page.getByText("Something went wrong");
     const errorVisible = await errorHeading.isVisible().catch(() => false);

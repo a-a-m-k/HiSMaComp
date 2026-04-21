@@ -4,6 +4,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { visualizer } from "rollup-plugin-visualizer";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { vitePluginCritical } from "./vite-plugin-critical";
 import { vitePluginResourceHints } from "./vite-plugin-resource-hints";
 import { vitePluginLcpLegend } from "./vite-plugin-lcp-legend";
@@ -11,6 +12,12 @@ import { vitePluginFixPaths } from "./vite-plugin-fix-paths";
 
 /** Base path for production (e.g. GitHub Pages subpath). Single source for build output. */
 const BUILD_BASE = (process.env.VITE_BASE_PATH as string | undefined) ?? "/";
+const SENTRY_ORG = process.env.SENTRY_ORG;
+const SENTRY_PROJECT = process.env.SENTRY_PROJECT;
+const SENTRY_AUTH_TOKEN = process.env.SENTRY_AUTH_TOKEN;
+const sentryPluginEnabled = Boolean(
+  SENTRY_ORG && SENTRY_PROJECT && SENTRY_AUTH_TOKEN
+);
 
 const manifestPlugin = (base: string) => ({
   name: "manifest-transform",
@@ -42,6 +49,15 @@ export default defineConfig(({ command }) => ({
           }),
           manifestPlugin(BUILD_BASE),
           vitePluginResourceHints(),
+          ...(sentryPluginEnabled
+            ? [
+                sentryVitePlugin({
+                  org: SENTRY_ORG!,
+                  project: SENTRY_PROJECT!,
+                  authToken: SENTRY_AUTH_TOKEN!,
+                }),
+              ]
+            : []),
           vitePluginCritical({
             base: process.cwd(),
             src: "index.html",

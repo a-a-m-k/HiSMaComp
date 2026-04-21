@@ -22,22 +22,21 @@ const {
 }));
 
 vi.mock("@/utils/retry", () => ({
-  retryWithBackoff: (...args: unknown[]) => mockRetryWithBackoff(...args),
+  retryWithBackoff: mockRetryWithBackoff,
 }));
 
 vi.mock("@/services", () => ({
   yearDataService: {
-    getFilteredTowns: (...args: unknown[]) => mockGetFilteredTowns(...args),
+    getFilteredTowns: mockGetFilteredTowns,
   },
 }));
 
-vi.mock("@/utils/utils", () => ({
-  calculateBoundsCenter: (...args: unknown[]) =>
-    mockCalculateBoundsCenter(...args),
+vi.mock("@/utils/geo", () => ({
+  calculateBoundsCenter: mockCalculateBoundsCenter,
 }));
 
 vi.mock("@/utils/accessibility", () => ({
-  announce: (...args: unknown[]) => mockAnnounce(...args),
+  announce: mockAnnounce,
 }));
 
 describe("useYearDataController", () => {
