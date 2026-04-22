@@ -144,6 +144,13 @@ gh secret set SENTRY_PROJECT --repo a-a-m-k/HiSMaComp
 
 Note: production source maps are emitted only when Sentry upload credentials (`SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`) are present.
 
+### CSP trade-offs (static hosting)
+
+- Production CSP uses `script-src 'self'` (no `unsafe-eval`) and blocks inline script execution vectors.
+- `style-src 'unsafe-inline'` is intentionally retained for the current stack (MUI/Emotion runtime style injection plus a few dynamic style paths).
+- On GitHub Pages, CSP is applied via `<meta http-equiv>` (no response-header CSP control), so browser issue panels may still show hardening suggestions even when policy is intentional.
+- For this project, the chosen trade-off prioritizes app stability and bundle efficiency over a large style-system refactor.
+
 ### Production observability
 
 - Sentry bootstrap lives in `src/instrument.ts` and is loaded dynamically in production after first user interaction (with a delayed fallback), so it stays off the initial render critical path. It is only enabled when `VITE_SENTRY_DSN` is present.

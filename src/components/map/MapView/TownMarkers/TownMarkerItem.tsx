@@ -9,10 +9,6 @@ import {
   enableTownMarkerFocus,
 } from "@/utils/markers";
 import { useMapStyleMode } from "@/context/MapStyleContext";
-import {
-  getTownMarkerContainerStyles,
-  getTownMarkerStyles,
-} from "./TownMarker.styles";
 import { TownMarkerLabel } from "./TownMarkerLabel";
 
 export interface TownMarkerItemProps {
@@ -45,27 +41,18 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
       }),
       [town, rawPopulation, selectedYear, mapStyleMode]
     );
-
-    const markerStyles = useMemo(
+    const markerCssVars = useMemo(
       () =>
-        getTownMarkerStyles({
-          markerSize: markerProps.size,
-          markerColor: markerProps.color,
-          isFocused,
-          isHovered: false,
-          buttonOutlineColor: theme.custom.colors.buttonBackground,
-        }),
+        ({
+          "--town-marker-size": `${markerProps.size}px`,
+          "--town-marker-color": markerProps.color,
+          "--town-marker-outline": theme.custom.colors.buttonBackground,
+        }) as React.CSSProperties,
       [
         markerProps.size,
         markerProps.color,
-        isFocused,
         theme.custom.colors.buttonBackground,
       ]
-    );
-
-    const containerStyles = useMemo(
-      () => getTownMarkerContainerStyles({ isFocused }),
-      [isFocused]
     );
 
     return (
@@ -74,12 +61,23 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
         latitude={town.latitude}
         anchor="center"
       >
-        <div style={containerStyles}>
+        <div
+          className={
+            isFocused
+              ? "town-marker-container town-marker-container--focused"
+              : "town-marker-container"
+          }
+        >
           <div
             tabIndex={-1}
             role="button"
             data-marker-id={markerId}
-            style={markerStyles}
+            className={
+              isFocused
+                ? "town-marker-hit-target town-marker-hit-target--focused"
+                : "town-marker-hit-target"
+            }
+            style={markerCssVars}
             aria-label={markerProps.ariaLabel}
             onFocus={e => {
               onFocus(markerId);
@@ -93,7 +91,9 @@ export const TownMarkerItem = React.memo<TownMarkerItemProps>(
               enableTownMarkerFocus(target);
               target.focus();
             }}
-          />
+          >
+            <span className="town-marker-dot" />
+          </div>
           {isFocused && (
             <TownMarkerLabel
               townName={town.name}

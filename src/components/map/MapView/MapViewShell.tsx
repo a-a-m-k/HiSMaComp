@@ -27,16 +27,14 @@ export const MapViewShell: React.FC<MapViewShellProps> = ({
   containerRef,
   children,
 }) => (
-  <div
-    data-zoom-at-min={atMinZoom ? "" : undefined}
-    style={{ position: "relative", width: "100%", height: "100%" }}
-  >
+  <div data-zoom-at-min={atMinZoom ? "" : undefined} className="map-view-shell">
     <style>{mapStyles}</style>
     <div id="map-description" className="sr-only">
       {mapDescription}
     </div>
     <div
       id="map-container-area"
+      className="map-container-area"
       ref={containerRef as React.Ref<HTMLDivElement>}
       role="application"
       aria-busy={isStyleSwitching}
@@ -45,25 +43,11 @@ export const MapViewShell: React.FC<MapViewShellProps> = ({
       data-map-appearance={mapStyleMode}
       data-map-ready={mapReady ? "true" : undefined}
       data-overlay-buttons-hidden={showOverlayButtons ? undefined : ""}
-      style={{
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        outline: "none",
-      }}
       tabIndex={0}
     >
       {children}
       {isStyleSwitching && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 2,
-            pointerEvents: "none",
-          }}
-        >
+        <div className="map-style-switch-overlay">
           <LoadingSpinner
             message={strings.loading.switchingMapStyle}
             overlayOpacity={1}

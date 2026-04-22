@@ -31,17 +31,7 @@ export const MapViewDarkBasemap: React.FC<MapViewDarkBasemapProps> = ({
   onIdle,
   preserveDrawingBuffer = false,
 }) => (
-  <div
-    data-map-basemap=""
-    style={{
-      position: "absolute",
-      inset: 0,
-      zIndex: 0,
-      // Keep the wrapper simple so html2canvas reliably captures the underlay
-      // canvas during dark-mode screenshot export.
-      pointerEvents: "auto",
-    }}
-  >
+  <div data-map-basemap="" className="map-dark-basemap-wrapper">
     <Map
       ref={basemapRef as React.Ref<MapRef>}
       {...sharedViewProps}

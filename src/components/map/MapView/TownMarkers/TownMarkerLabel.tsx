@@ -1,10 +1,6 @@
 import React from "react";
 import { useMapStyleMode } from "@/context/MapStyleContext";
-import {
-  getTownMarkerLabelContainerStyles,
-  getTownMarkerLabelContentStyles,
-  getTownMarkerLabelPopulationStyles,
-} from "./TownMarker.styles";
+import { MARKER_STYLES } from "@/constants/keyboard";
 
 export interface TownMarkerLabelProps {
   townName: string;
@@ -22,12 +18,21 @@ export const TownMarkerLabel: React.FC<TownMarkerLabelProps> = ({
   markerSize,
 }) => {
   const { mode: mapStyleMode } = useMapStyleMode();
+  const labelCssVars = {
+    "--town-marker-label-top": `${markerSize / 2 + MARKER_STYLES.LABEL_OFFSET}px`,
+  } as React.CSSProperties;
 
   return (
-    <div style={getTownMarkerLabelContainerStyles(markerSize)}>
-      <div style={getTownMarkerLabelContentStyles(mapStyleMode)}>
+    <div className="town-marker-label-container" style={labelCssVars}>
+      <div
+        className={
+          mapStyleMode === "dark"
+            ? "town-marker-label-content town-marker-label-content--dark"
+            : "town-marker-label-content"
+        }
+      >
         <div>{townName}</div>
-        <div style={getTownMarkerLabelPopulationStyles()}>
+        <div className="town-marker-label-population">
           {population > 0 ? population.toLocaleString() : "N/A"}
         </div>
       </div>

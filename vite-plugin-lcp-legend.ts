@@ -32,10 +32,7 @@ export function vitePluginLcpLegend(): Plugin {
           heading = LEGEND_LABEL_FALLBACK;
         }
 
-        const snippet = [
-          `<style id="lcp-legend-placeholder-styles">#legend-heading-placeholder{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:1000;max-width:520px;padding:6px 10px;background:rgba(255,255,255,.9);border:1px solid rgba(0,0,0,.08);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.08);backdrop-filter:blur(4px);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;pointer-events:none;user-select:none}#legend-heading-placeholder .lcp-legend-heading-splash{margin:0;font-size:.88rem;font-weight:500;line-height:1.25;color:#2f2f2f;letter-spacing:.01em;white-space:normal;overflow:visible;text-overflow:clip}@media (max-width:640px){#legend-heading-placeholder{top:8px;max-width:300px;padding:4px 8px}#legend-heading-placeholder .lcp-legend-heading-splash{font-size:.78rem}}</style>`,
-          `<div id="legend-heading-placeholder" aria-hidden="true"><h2 id="legend-heading" class="lcp-legend-heading-splash">${escapeHtml(heading)}</h2></div>`,
-        ].join("\n");
+        const snippet = `<div id="legend-heading-placeholder" aria-hidden="true"><h2 id="legend-heading" class="lcp-legend-heading-splash">${escapeHtml(heading)}</h2></div>`;
 
         return html.replace(LCP_PLACEHOLDER_COMMENT, snippet);
       },
