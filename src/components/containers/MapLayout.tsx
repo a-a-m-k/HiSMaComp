@@ -186,6 +186,7 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
         </ErrorBoundary>
         {!error && !isMapIdle && (
           <Box
+            id="map-lcp-shell"
             aria-hidden="true"
             sx={{
               position: "absolute",

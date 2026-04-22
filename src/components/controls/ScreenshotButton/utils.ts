@@ -46,6 +46,7 @@ export function hideMapControls(
     "#map-style-toggle",
     "#legend-collapse-button",
     "#info-button",
+    "#map-lcp-shell",
     "#timeline",
   ];
   if (!options?.keepScreenshotButtonVisibleDuringCapture) {
