@@ -46,15 +46,13 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#1976d2" />
 
-    <!-- Content Security Policy -->
-    <!-- 
-      CSP allows:
-      - Self-hosted scripts/styles (unsafe-inline for MUI dynamic styles)
-      - unsafe-eval: required by MapLibre GL for WebGL shader compilation / runtime
-      - Stadia Maps for map tiles, sprites, and glyphs
-      - Sentry ingest (envelopes, replay) when VITE_SENTRY_DSN is set
-      - Blob/data URIs for images (html2canvas screenshots)
-      - Service workers from self and blob
+    <!-- Content Security Policy (meta: GitHub Pages cannot send CSP headers; use a CDN in front if you need header-based CSP) -->
+    <!--
+      Dev: script-src includes 'unsafe-inline' so Vite HMR / dev overlay work.
+      Production build: vite-plugin-production-html-csp-cleanup strips async-CSS
+      onload handlers and removes script 'unsafe-inline' (not needed for module scripts only).
+      style-src 'unsafe-inline' remains for MUI Emotion + inlined critical CSS.
+      script-src 'unsafe-eval' remains for MapLibre GL.
     -->
     <meta
       http-equiv="Content-Security-Policy"

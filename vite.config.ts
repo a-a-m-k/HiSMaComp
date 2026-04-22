@@ -9,6 +9,7 @@ import { vitePluginCritical } from "./vite-plugin-critical";
 import { vitePluginResourceHints } from "./vite-plugin-resource-hints";
 import { vitePluginLcpLegend } from "./vite-plugin-lcp-legend";
 import { vitePluginFixPaths } from "./vite-plugin-fix-paths";
+import { vitePluginProductionHtmlCspCleanup } from "./vite-plugin-production-html-csp-cleanup";
 
 /** Base path for production (e.g. GitHub Pages subpath). Single source for build output. */
 const BUILD_BASE = (process.env.VITE_BASE_PATH as string | undefined) ?? "/";
@@ -40,6 +41,9 @@ export default defineConfig(({ command }) => ({
     vitePluginLcpLegend(), // dev + build: inject LCP legend placeholder from legendLcp.ts
     ...(command === "build"
       ? [
+          // Registered first so `closeBundle` runs last (Rollup reverses plugin order):
+          // critical CSS injects link onload=…; this plugin must post-process dist/index.html after that.
+          vitePluginProductionHtmlCspCleanup(),
           visualizer({
             filename: "dist/bundle-analysis.html",
             open: false,
@@ -70,7 +74,7 @@ export default defineConfig(({ command }) => ({
             minify: true,
             baseUrl: command === "build" ? BUILD_BASE : "/",
           }),
-          vitePluginFixPaths(), // Run last to fix all paths after other plugins modify HTML
+          vitePluginFixPaths(), // Fix paths after other plugins modify HTML
         ]
       : []),
   ],
