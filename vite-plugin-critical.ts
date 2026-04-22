@@ -70,6 +70,40 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
   let outputDir = "";
   let viteBaseUrl = "/";
 
+  const isRecoverableCriticalError = (value: unknown): boolean => {
+    if (!(value instanceof Error)) {
+      return false;
+    }
+    const message = value.message;
+    return (
+      message.includes("Failed to launch the browser") ||
+      message.includes("browser process") ||
+      message.includes("TROUBLESHOOTING") ||
+      message.includes("Timed out after")
+    );
+  };
+
+  const runWithUnhandledRejectionGuard = async <T>(
+    task: () => Promise<T>
+  ): Promise<T> => {
+    const onUnhandledRejection = (reason: unknown) => {
+      if (isRecoverableCriticalError(reason)) {
+        console.warn(
+          "[vite-plugin-critical] ⚠ Browser unavailable/timeout during critical CSS extraction. Skipping optimization."
+        );
+        return;
+      }
+      throw reason;
+    };
+
+    process.on("unhandledRejection", onUnhandledRejection);
+    try {
+      return await task();
+    } finally {
+      process.off("unhandledRejection", onUnhandledRejection);
+    }
+  };
+
   return {
     name: "vite-plugin-critical",
     enforce: "post",
@@ -121,7 +155,9 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
             height: dimensions[0]?.height || 900,
           };
 
-          const result = await criticalGenerate(criticalOptions);
+          const result = await runWithUnhandledRejectionGuard(() =>
+            criticalGenerate(criticalOptions)
+          );
 
           if (result && result.html) {
             // Restore base paths in the result
@@ -184,7 +220,9 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
           height: dimensions[0]?.height || 900,
         };
 
-        const result = await criticalGenerate(criticalOptions);
+        const result = await runWithUnhandledRejectionGuard(() =>
+          criticalGenerate(criticalOptions)
+        );
 
         if (result && result.html) {
           writeFileSync(htmlPath, result.html, "utf-8");
