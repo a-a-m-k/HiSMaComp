@@ -84,6 +84,11 @@ export const useScreenshot = ({
 
     setIsCapturing(true);
     dispatchMapScreenshotCaptureState({ isCapturing: true });
+    // Let React propagate `isScreenshotCapturing` into Map components so MapLibre
+    // canvases can flip `preserveDrawingBuffer=true` before html2canvas snapshots.
+    // Microtask yielding keeps tests deterministic (no fake-timer/frame coupling).
+    await Promise.resolve();
+    await Promise.resolve();
 
     const legendToggle = document.querySelector<HTMLElement>(
       '#legend [aria-controls="legend-collapsible"]'

@@ -120,7 +120,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   useMapKeyboardPanning(mapRef, containerRef, enableZoomControls);
   useNavigationControlAccessibility(showZoomButtons, containerRef);
 
-  const { isScreenshotCapturing } = useMapCameraLifecycle({
+  useMapCameraLifecycle({
     safeProps,
     effectiveMinZoom,
     requestCameraFitTo,
@@ -186,7 +186,9 @@ const MapView: React.FC<MapViewComponentProps> = ({
         sharedViewProps={sharedViewProps}
         onBasemapLoad={handleBasemapLoad}
         onBasemapIdle={onBasemapIdle}
-        preserveDrawingBuffer={isScreenshotCapturing}
+        // WebGL needs this at context creation time; toggling later may not
+        // affect screenshot output in all browsers.
+        preserveDrawingBuffer={true}
         effectiveMinZoom={effectiveMinZoom}
         handleMove={nextViewState => handleMove({ viewState: nextViewState })}
         onOverlayLoad={handleOverlayMapLoad}
