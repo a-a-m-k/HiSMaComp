@@ -18,6 +18,7 @@ const SENTRY_AUTH_TOKEN = process.env.SENTRY_AUTH_TOKEN;
 const sentryPluginEnabled = Boolean(
   SENTRY_ORG && SENTRY_PROJECT && SENTRY_AUTH_TOKEN
 );
+const enableProductionSourceMaps = sentryPluginEnabled;
 
 const manifestPlugin = (base: string) => ({
   name: "manifest-transform",
@@ -101,8 +102,8 @@ export default defineConfig(({ command }) => ({
   build: {
     // Preserve class fields (no __publicField) so MapLibre worker works in production.
     target: "esnext",
-    // Emit source maps so large chunks (e.g. maplibre) don’t trigger "missing source map" warnings
-    sourcemap: true,
+    // Keep source maps for Sentry upload builds; disable them otherwise to reduce artifact weight.
+    sourcemap: enableProductionSourceMaps,
     // Enable CSS code splitting for better caching
     // CSS will be split by component/route, reducing initial bundle size
     cssCodeSplit: true,

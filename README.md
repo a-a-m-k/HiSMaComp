@@ -116,6 +116,8 @@ Open http://localhost:5173
 
 Set `VITE_STADIA_API_KEY` as a repo secret; push to `main` runs the workflow and deploys. Restrict the key by domain in the Stadia dashboard (e.g. to your GitHub Pages origin) so it is not usable from other sites.
 
+Primary path: GitHub Actions deploys on `main` automatically. `npm run deploy` is kept as a manual fallback for local, operator-driven publishing.
+
 Required secret:
 
 ```bash
@@ -140,9 +142,11 @@ gh secret set SENTRY_ORG --repo a-a-m-k/HiSMaComp
 gh secret set SENTRY_PROJECT --repo a-a-m-k/HiSMaComp
 ```
 
+Note: production source maps are emitted only when Sentry upload credentials (`SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`) are present.
+
 ### Production observability
 
-- Sentry is initialized in `src/instrument.ts` (imported first in `main.tsx`) and only enabled when `VITE_SENTRY_DSN` is present (safe for GitHub Pages static hosting).
+- Sentry bootstrap lives in `src/instrument.ts` and is loaded dynamically in production after first user interaction (with a delayed fallback), so it stays off the initial render critical path. It is only enabled when `VITE_SENTRY_DSN` is present.
 - App errors from `errorPolicy` are reported to Sentry with structured context (`category`, `operation`, `year`).
 - Core Sentry features enabled: Error Monitoring, Browser Tracing, and Session Replay.
 - Lightweight telemetry events/timings are emitted for:

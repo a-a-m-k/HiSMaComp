@@ -36,10 +36,6 @@ export default [
       "**/package-lock.json",
       "**/package.json",
       "**/tsconfig.json",
-      "**/vite.config.ts",
-      "**/vitest.config.ts",
-      "**/eslint.config.ts",
-      "**/playwright.config.ts",
       "**/*service-worker.js",
       "tests/results/**",
       ".github/**",
@@ -47,7 +43,12 @@ export default [
     ],
   },
   {
-    files: ["*.config.{js,ts}", "vite.config.ts", "eslint.config.ts"],
+    files: [
+      "vite.config.ts",
+      "vitest.config.ts",
+      "playwright.config.ts",
+      "eslint.config.ts",
+    ],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
@@ -68,7 +69,6 @@ export default [
       "@typescript-eslint/no-require-imports": "off",
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
-      "react/display-name": "off",
     },
   },
   {
