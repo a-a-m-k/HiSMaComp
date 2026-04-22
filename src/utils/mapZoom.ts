@@ -18,7 +18,7 @@ import {
   type DeviceType,
 } from "./zoom/zoomHelpers";
 import { logger } from "./logger";
-import { getBounds, type Bounds } from "./geo";
+import { getBounds, type Bounds } from "./geoBounds";
 
 /**
  * Effective map area dimensions after accounting for UI elements.

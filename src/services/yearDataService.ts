@@ -1,7 +1,7 @@
 import { Town } from "@/common/types";
 import { MAX_CACHE_SIZE } from "@/constants";
 import { filterTownsByYear, townsToGeoJSON } from "@/utils/geojson";
-import { getBounds, calculateAverageCenter } from "@/utils/geo";
+import { getBounds, calculateAverageCenter } from "@/utils/geoBounds";
 import { LRUCache } from "@/utils/cache";
 
 interface YearData {

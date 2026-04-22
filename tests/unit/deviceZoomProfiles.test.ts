@@ -1,7 +1,7 @@
 import {
   calculateResponsiveZoom,
   calculateMapArea,
-} from "../../src/utils/utils";
+} from "../../src/utils/mapUtilities";
 import type { MapArea } from "../../src/utils/mapZoom";
 import { mockTheme } from "../helpers/testUtils";
 

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Town } from "@/common/types";
 import { YEARS } from "@/constants";
 import { yearDataService } from "@/services";
-import { calculateBoundsCenter } from "@/utils/geo";
+import { calculateBoundsCenter } from "@/utils/geoBounds";
 import { retryWithBackoff } from "@/utils/retry";
 import { announce } from "@/utils/accessibility";
 import { getAppErrorMessage, reportAppError } from "@/utils/errorPolicy";

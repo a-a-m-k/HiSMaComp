@@ -49,7 +49,7 @@ vi.mock("@/services", () => ({
   },
 }));
 
-vi.mock("@/utils/geo", () => ({
+vi.mock("@/utils/geoBounds", () => ({
   calculateBoundsCenter: mockCalculateBoundsCenter,
 }));
 

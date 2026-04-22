@@ -5,7 +5,7 @@ import {
   calculateOptimalPadding,
   calculateMapArea,
 } from "@/utils/mapZoom";
-import type { Bounds } from "@/utils/geo";
+import type { Bounds } from "@/utils/geoBounds";
 import { mockTowns, mockTheme } from "../../helpers/testUtils";
 
 describe("getZoomToFitBounds", () => {

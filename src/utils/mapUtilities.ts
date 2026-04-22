@@ -1,13 +1,13 @@
 /**
  * Barrel re-exports for backward compatibility.
- * Implementation lives in geo, mapZoom, and geojson modules.
+ * Implementation lives in geoBounds, mapZoom, and geojson modules.
  */
-export type { Bounds, Center } from "./geo";
+export type { Bounds, Center } from "./geoBounds";
 export {
   getBounds,
   calculateAverageCenter,
   calculateBoundsCenter,
-} from "./geo";
+} from "./geoBounds";
 
 export type { MapArea } from "./mapZoom";
 export {

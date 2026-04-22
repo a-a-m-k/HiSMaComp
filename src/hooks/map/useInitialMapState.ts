@@ -8,13 +8,13 @@ import {
 } from "@/constants";
 import { useViewport } from "@/hooks/ui";
 import { lightTheme } from "@/theme/theme";
-import { calculateBoundsCenter } from "@/utils/geo";
+import { calculateBoundsCenter } from "@/utils/geoBounds";
 import {
   calculateResponsiveZoom,
   calculateMapArea,
   getGeographicalBoxFromViewport,
 } from "@/utils/mapZoom";
-import type { Bounds } from "@/utils/geo";
+import type { Bounds } from "@/utils/geoBounds";
 import type { MapArea } from "@/utils/mapZoom";
 import { isValidPositiveNumber } from "@/utils/zoom/zoomHelpers";
 import { logger } from "@/utils/logger";

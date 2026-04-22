@@ -5,7 +5,7 @@ import {
   calculateFitZoom,
   filterTownsByYear,
   townsToGeoJSON,
-} from "../../src/utils/utils";
+} from "../../src/utils/mapUtilities";
 import { Town } from "../../src/common/types";
 import {
   POPULATION_SORT_KEY_NO_DATA,

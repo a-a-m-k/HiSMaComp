@@ -2,7 +2,7 @@ import {
   calculateFitZoom,
   calculateResponsiveZoom,
   calculateMapArea,
-} from "../../src/utils/utils";
+} from "../../src/utils/mapUtilities";
 import { Town } from "../../src/common/types";
 import { mockTheme, filterDefined } from "../helpers/testUtils";
 import allTownsData from "../../src/assets/history-data/towns.json";
