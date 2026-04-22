@@ -6,20 +6,30 @@ import App from "./App";
 import { logger } from "@/utils/logger";
 
 const deferSentryInit = () => {
+  let sentryInitRequested = false;
   const loadSentry = () => {
+    if (sentryInitRequested) return;
+    sentryInitRequested = true;
     import("./instrument").catch(error => {
       logger.warn("Deferred Sentry init failed:", error);
     });
   };
 
   if (typeof window === "undefined") return;
+  const onFirstInteraction = () => loadSentry();
 
-  if ("requestIdleCallback" in window) {
-    window.requestIdleCallback(() => loadSentry(), { timeout: 4000 });
-    return;
-  }
+  window.addEventListener("pointerdown", onFirstInteraction, {
+    once: true,
+    passive: true,
+    capture: true,
+  });
+  window.addEventListener("keydown", onFirstInteraction, {
+    once: true,
+    capture: true,
+  });
 
-  globalThis.setTimeout(loadSentry, 1200);
+  // Keep Sentry off the startup critical path; initialize much later as a safety net.
+  globalThis.setTimeout(loadSentry, 60_000);
 };
 
 if ("serviceWorker" in navigator && !import.meta.env.DEV) {

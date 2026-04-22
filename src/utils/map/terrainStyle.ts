@@ -212,7 +212,7 @@ export function getPopulationOverlayStyle(): StyleSpecification {
             ["get", "name_int"],
             ["get", "name"],
           ],
-          "text-font": ["Noto Sans Italic"],
+          "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
           "text-size": [
             "interpolate",
             ["exponential", 1.3],

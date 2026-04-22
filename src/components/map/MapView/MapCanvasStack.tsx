@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import Map, { type MapProps, type MapRef } from "react-map-gl/maplibre";
 import MaplibreGL from "maplibre-gl";
 
@@ -13,8 +13,13 @@ import {
   type MapViewSharedCameraProps,
 } from "./MapViewDarkBasemap";
 import MapLayer from "./MapLayer/MapLayer";
-import { TownMarkers } from "./TownMarkers";
-import { MapOverlays } from "./MapOverlays";
+
+const TownMarkers = React.lazy(() =>
+  import("./TownMarkers").then(module => ({ default: module.TownMarkers }))
+);
+const MapOverlays = React.lazy(() =>
+  import("./MapOverlays").then(module => ({ default: module.MapOverlays }))
+);
 
 type MapCanvasStackProps = {
   isSplitBasemap: boolean;
@@ -147,13 +152,19 @@ export const MapCanvasStack: React.FC<MapCanvasStackProps> = ({
         data={townsGeojson}
         mapStyleMode={mapStyleMode}
       />
-      {mapReady && <TownMarkers towns={towns} selectedYear={selectedYear} />}
-      <MapOverlays
-        showOverlayButtons={showOverlayButtons}
-        showZoomButtons={showZoomButtons}
-        isTablet={isTablet}
-        isMobile={isMobile}
-      />
+      {mapReady && (
+        <Suspense fallback={null}>
+          <TownMarkers towns={towns} selectedYear={selectedYear} />
+        </Suspense>
+      )}
+      <Suspense fallback={null}>
+        <MapOverlays
+          showOverlayButtons={showOverlayButtons}
+          showZoomButtons={showZoomButtons}
+          isTablet={isTablet}
+          isMobile={isMobile}
+        />
+      </Suspense>
     </Map>
   </>
 );
