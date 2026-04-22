@@ -26,6 +26,35 @@ import { getInitialMapProps, useStableMapKey } from "./MapLayoutHelpers";
 const LazyMapView = React.lazy(
   () => import("@/components/map/MapView/MapView")
 );
+const IS_TEST_ENV = import.meta.env.MODE === "test";
+const MAP_ACTIVATION_MARK = "map-activation-start";
+const MAP_FIRST_IDLE_MARK = "map-first-idle";
+const MAP_ACTIVATION_TO_IDLE_MEASURE = "map-activation-to-first-idle";
+const MAP_AUTO_ACTIVATE_DELAY_MS = 1_500;
+const MAP_ACTIVATION_INTERACTION_EVENTS: Array<keyof WindowEventMap> = [
+  "pointerdown",
+  "keydown",
+  "touchstart",
+  "wheel",
+];
+
+function markPerformance(name: string): void {
+  if (typeof performance === "undefined") return;
+  performance.mark(name);
+}
+
+function measurePerformance(
+  measureName: string,
+  startMark: string,
+  endMark: string
+): void {
+  if (typeof performance === "undefined") return;
+  try {
+    performance.measure(measureName, startMark, endMark);
+  } catch {
+    // Ignore missing/unsupported marks.
+  }
+}
 
 export interface MapLayoutProps {
   legendLayers: LayerItem[];
@@ -34,9 +63,96 @@ export interface MapLayoutProps {
   townsLoading?: boolean;
 }
 
+function useMapActivationGate(): {
+  isMapActivated: boolean;
+  mapMountGateRef: React.RefObject<HTMLDivElement | null>;
+} {
+  const [isMapActivated, setIsMapActivated] = useState(IS_TEST_ENV);
+  const mapMountGateRef = useRef<HTMLDivElement>(null);
+
+  const activateMap = React.useCallback(() => {
+    markPerformance(MAP_ACTIVATION_MARK);
+    setIsMapActivated(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMapActivated) return;
+
+    for (const eventName of MAP_ACTIVATION_INTERACTION_EVENTS) {
+      window.addEventListener(eventName, activateMap, { once: true });
+    }
+
+    return () => {
+      for (const eventName of MAP_ACTIVATION_INTERACTION_EVENTS) {
+        window.removeEventListener(eventName, activateMap);
+      }
+    };
+  }, [activateMap, isMapActivated]);
+
+  useEffect(() => {
+    if (isMapActivated) return;
+    if (typeof IntersectionObserver === "undefined") {
+      activateMap();
+      return;
+    }
+
+    const target = mapMountGateRef.current;
+    if (!target) return;
+
+    let idleCallbackId: number | null = null;
+    let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+    let activated = false;
+
+    const activateWhenIdle = () => {
+      if (activated) return;
+      activated = true;
+      activateMap();
+    };
+
+    const scheduleDeferredActivation = () => {
+      if ("requestIdleCallback" in window) {
+        idleCallbackId = window.requestIdleCallback(() => activateWhenIdle(), {
+          timeout: MAP_AUTO_ACTIVATE_DELAY_MS,
+        });
+      } else {
+        timeoutId = globalThis.setTimeout(
+          () => activateWhenIdle(),
+          MAP_AUTO_ACTIVATE_DELAY_MS
+        );
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      entries => {
+        const isVisible = entries.some(
+          entry => entry.isIntersecting || entry.intersectionRatio > 0
+        );
+        if (isVisible) {
+          scheduleDeferredActivation();
+          observer.disconnect();
+        }
+      },
+      { root: null, rootMargin: "200px", threshold: 0.01 }
+    );
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+      if (idleCallbackId !== null && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleCallbackId);
+      }
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [activateMap, isMapActivated]);
+
+  return { isMapActivated, mapMountGateRef };
+}
+
 /**
- * Map screen layout: legend, timeline, and map area.
- * Handles resize/remount overlays and initial map position from useInitialMapState.
+ * Map screen layout with legend, timeline, and map canvas.
+ * Also manages responsive remount overlays and initial map positioning.
  */
 export const MapLayout: React.FC<MapLayoutProps> = ({
   legendLayers,
@@ -51,6 +167,7 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
   const [isMapIdle, setIsMapIdle] = React.useState(false);
   const { showOverlayButtons, isResizing } =
     useOverlayButtonsVisible(isMapIdle);
+  const { isMapActivated, mapMountGateRef } = useMapActivationGate();
 
   const deviceKey = useStableMapKey(viewport);
   const prevDeviceKeyRef = useRef(deviceKey);
@@ -68,25 +185,36 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
   }, [deviceKey]);
 
   const handleFirstIdle = React.useCallback(() => {
+    markPerformance(MAP_FIRST_IDLE_MARK);
+    measurePerformance(
+      MAP_ACTIVATION_TO_IDLE_MEASURE,
+      MAP_ACTIVATION_MARK,
+      MAP_FIRST_IDLE_MARK
+    );
     setIsMapIdle(true);
     setIsRemounting(false);
   }, []);
 
-  /** `lightTheme` only: spacing/breakpoints match `darkTheme`; avoids refitting when toggling basemap mode. */
+  /**
+   * Use `lightTheme` for layout math only; spacing/breakpoints match `darkTheme`,
+   * so toggling basemap mode does not trigger a refit.
+   */
   const mapArea = React.useMemo(
     () =>
       calculateMapArea(viewport.screenWidth, viewport.screenHeight, lightTheme),
     [viewport.screenWidth, viewport.screenHeight]
   );
   const initialMapState = useInitialMapState(towns, mapArea);
-  const useDefaultView =
+  const shouldUseDefaultView =
     (showDefaultMap ?? false) ||
     (isLoading && filteredTowns.length === 0) ||
     !initialMapState.center;
   const { initialPosition, initialZoom } = getInitialMapProps(
-    useDefaultView,
+    shouldUseDefaultView,
     initialMapState
   );
+  const showHistoricalLoadingOverlay =
+    townsLoading || (isLoading && filteredTowns.length === 0);
 
   const maxBounds = React.useMemo(() => {
     const b = initialMapState.bounds;
@@ -165,6 +293,7 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
         />
       )}
       <Box
+        ref={mapMountGateRef}
         sx={{
           position: "absolute",
           inset: 0,
@@ -177,18 +306,20 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
           <Suspense
             fallback={<LoadingSpinner message={strings.loading.default} />}
           >
-            <LazyMapView
-              key={deviceKey}
-              towns={towns}
-              selectedYear={selectedYear}
-              initialPosition={initialPosition}
-              initialZoom={initialZoom}
-              maxBounds={maxBounds}
-              fallbackMapSize={mapArea}
-              onFirstIdle={handleFirstIdle}
-              showOverlayButtons={showOverlayButtons}
-              isResizing={isResizing}
-            />
+            {isMapActivated ? (
+              <LazyMapView
+                key={deviceKey}
+                towns={towns}
+                selectedYear={selectedYear}
+                initialPosition={initialPosition}
+                initialZoom={initialZoom}
+                maxBounds={maxBounds}
+                fallbackMapSize={mapArea}
+                onFirstIdle={handleFirstIdle}
+                showOverlayButtons={showOverlayButtons}
+                isResizing={isResizing}
+              />
+            ) : null}
           </Suspense>
         </ErrorBoundary>
         {!error && !isMapIdle && (
@@ -246,8 +377,8 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
           </Box>
         )}
       </Box>
-      {/* Only show full-screen "loading historical data" when we have no data yet (initial load or first year). */}
-      {(townsLoading || (isLoading && filteredTowns.length === 0)) && (
+      {/* Show full-screen data loading only when no towns are currently renderable. */}
+      {showHistoricalLoadingOverlay && (
         <LoadingSpinner message={strings.loading.loadingHistoricalData} />
       )}
     </Box>

@@ -18,7 +18,7 @@ export function vitePluginFixPaths(): Plugin {
       outputDir = join(process.cwd(), config.build.outDir || "dist");
       baseUrl = config.base || "/";
     },
-    async closeBundle() {
+    closeBundle() {
       try {
         const htmlPath = join(outputDir, "index.html");
         let htmlContent = readFileSync(htmlPath, "utf-8");

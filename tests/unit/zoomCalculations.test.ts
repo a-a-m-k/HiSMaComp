@@ -7,6 +7,8 @@ import { Town } from "../../src/common/types";
 import { mockTheme, filterDefined } from "../helpers/testUtils";
 import allTownsData from "../../src/assets/history-data/towns.json";
 
+const isVerbose = Boolean(process.env.VITEST_VERBOSE);
+
 // Mock towns data for testing - includes actual geographic extremes
 const mockTowns = [
   {
@@ -551,7 +553,7 @@ describe("Zoom Calculations", () => {
         const townSpanLat = maxLat - minLat;
 
         // Only log in verbose mode to reduce overhead
-        if (process.env.VITEST_VERBOSE) {
+        if (isVerbose) {
           console.log("\n=== iPhone SE Visibility Check ===");
           console.log("Zoom level:", zoom);
           console.log(
@@ -609,7 +611,7 @@ describe("Zoom Calculations", () => {
         }
 
         // Only log in verbose mode to reduce overhead
-        if (process.env.VITEST_VERBOSE) {
+        if (isVerbose) {
           console.log("\n=== Sarai Visibility Test ===");
           console.log("Sarai coordinates:", sarai.latitude, sarai.longitude);
         }
@@ -635,7 +637,7 @@ describe("Zoom Calculations", () => {
         const leftEdge = centerLng - halfViewport;
         const rightEdge = centerLng + halfViewport;
 
-        if (process.env.VITEST_VERBOSE) {
+        if (isVerbose) {
           console.log("Map center longitude:", centerLng.toFixed(2), "°");
           console.log(
             "Viewport shows from",
@@ -670,7 +672,7 @@ describe("Zoom Calculations", () => {
         const safeViewportWidth = effectiveRightMargin * degreesPerPixel;
         const safeRightEdge = centerLng + safeViewportWidth / 2;
 
-        if (process.env.VITEST_VERBOSE) {
+        if (isVerbose) {
           console.log("\n=== With Legend Overlap Check ===");
           console.log(
             "If legend overlaps (70px):",
@@ -693,7 +695,7 @@ describe("Zoom Calculations", () => {
 
         // This check will likely FAIL if legend overlaps
         // If this fails, it means the zoom calculation doesn't account for overlapping UI
-        if (sarai.longitude > safeRightEdge && process.env.VITEST_VERBOSE) {
+        if (sarai.longitude > safeRightEdge && isVerbose) {
           console.error("WARNING: Sarai is hidden by the legend!");
           console.error(
             "The viewport calculation assumes UI reduces viewport, but legend overlaps!"

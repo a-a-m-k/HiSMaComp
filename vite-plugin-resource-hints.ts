@@ -10,7 +10,6 @@ import { join } from "path";
  * - Main entry script (modulepreload)
  */
 export function vitePluginResourceHints(): Plugin {
-  let distDir = "";
   let outputDir = "";
 
   return {
@@ -18,8 +17,7 @@ export function vitePluginResourceHints(): Plugin {
     enforce: "post",
     apply: "build",
     configResolved(config) {
-      distDir = config.build.outDir || "dist";
-      outputDir = join(process.cwd(), distDir);
+      outputDir = join(process.cwd(), config.build.outDir || "dist");
     },
     async closeBundle() {
       try {
@@ -64,12 +62,10 @@ export function vitePluginResourceHints(): Plugin {
           );
 
         // Preload main entry script
-        if (mainScript) {
-          if (!hasPreloadFor(mainScript.src)) {
-            preloadLinks.push(
-              `    <link rel="modulepreload" href="${mainScript.src}" />`
-            );
-          }
+        if (mainScript && !hasPreloadFor(mainScript.src)) {
+          preloadLinks.push(
+            `    <link rel="modulepreload" href="${mainScript.src}" />`
+          );
         }
 
         if (preloadLinks.length > 0) {
@@ -82,10 +78,8 @@ export function vitePluginResourceHints(): Plugin {
 
           writeFileSync(htmlPath, updatedHtml, "utf-8");
 
-          const preloadedChunks = [];
-          if (mainScript) preloadedChunks.push("main bundle");
           console.log(
-            `[vite-plugin-resource-hints] ✓ Added modulepreload hints for: ${preloadedChunks.join(", ")}`
+            `[vite-plugin-resource-hints] ✓ Added modulepreload hints for: main bundle`
           );
         }
       } catch (error) {

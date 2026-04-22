@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { MapRef } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "@mui/material/styles";
@@ -7,6 +13,7 @@ import {
   getTerrainStyle,
   getMapDescription,
   getPopulationOverlayStyle,
+  warmupStadiaStyleMetadata,
 } from "@/utils/map";
 import { ZOOM_ANIMATION_DURATION_MS } from "@/constants/keyboard";
 import { getMapStyles } from "@/constants/ui";
@@ -66,8 +73,6 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapReady, setMapReady] = useState(false);
-  const [splitOverlayEnhancementsReady, setSplitOverlayEnhancementsReady] =
-    useState(false);
   const isSplitBasemap = mapStyleMode === "dark";
   const containerSize = useMapContainerResize(
     containerRef,
@@ -142,19 +147,10 @@ const MapView: React.FC<MapViewComponentProps> = ({
     maxBounds,
   });
 
-  const handleMapLoad = React.useCallback(() => {
+  const handleMapLoad = useCallback(() => {
     setMapLoaded(true);
     handleOverlayMapLoad();
   }, [handleOverlayMapLoad]);
-
-  useEffect(() => {
-    if (!isSplitBasemap) {
-      setSplitOverlayEnhancementsReady(true);
-      return;
-    }
-
-    setSplitOverlayEnhancementsReady(false);
-  }, [isSplitBasemap]);
 
   const { isStyleSwitching, onOverlayIdle, onBasemapIdle } =
     useMapStyleSwitchLoader({
@@ -162,25 +158,14 @@ const MapView: React.FC<MapViewComponentProps> = ({
       onFirstIdle,
     });
 
-  const handleMapIdle = React.useCallback(() => {
+  useEffect(() => {
+    warmupStadiaStyleMetadata();
+  }, []);
+
+  const handleMapIdle = useCallback(() => {
     setMapReady(true);
-    if (isSplitBasemap && !splitOverlayEnhancementsReady) {
-      if ("requestIdleCallback" in window) {
-        window.requestIdleCallback(
-          () => setSplitOverlayEnhancementsReady(true),
-          {
-            timeout: 1500,
-          }
-        );
-      } else {
-        globalThis.setTimeout(
-          () => setSplitOverlayEnhancementsReady(true),
-          200
-        );
-      }
-    }
     onOverlayIdle();
-  }, [isSplitBasemap, onOverlayIdle, splitOverlayEnhancementsReady]);
+  }, [onOverlayIdle]);
 
   const mapDescription = useMemo(
     () => getMapDescription({ isMobile, isDesktop, mapStyleMode }),
@@ -191,10 +176,11 @@ const MapView: React.FC<MapViewComponentProps> = ({
     () =>
       isSplitBasemap
         ? getPopulationOverlayStyle({
-            includeWaterNameLayer: splitOverlayEnhancementsReady,
+            // Keep only built-in sea labels from the dark basemap.
+            includeWaterNameLayer: false,
           })
         : getTerrainStyle(),
-    [isSplitBasemap, splitOverlayEnhancementsReady]
+    [isSplitBasemap]
   );
   const sharedViewProps = useSharedViewProps(
     viewState,

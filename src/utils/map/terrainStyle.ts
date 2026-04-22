@@ -56,6 +56,46 @@ function replaceApiKeyPlaceholder(obj: unknown, apiKey: string): unknown {
 let cachedTerrainStyle: StyleSpecification | null = null;
 
 let cachedTerrainDarkStyle: StyleSpecification | null = null;
+let hasWarmedStadiaStyleMetadata = false;
+
+function getStadiaStyleWarmupUrls(apiKey: string): string[] {
+  return [
+    `https://tiles.stadiamaps.com/data/stamen-omt.json?api_key=${apiKey}`,
+    `https://tiles.stadiamaps.com/data/stamen_null.json?api_key=${apiKey}`,
+    "https://tiles.stadiamaps.com/data/terrarium.json",
+    `https://tiles.stadiamaps.com/styles/stamen-terrain/sprite@2x.json?api_key=${apiKey}`,
+    `https://tiles.stadiamaps.com/fonts/Open%20Sans%20Regular,Arial%20Unicode%20MS%20Regular/0-255.pbf?api_key=${apiKey}`,
+  ];
+}
+
+/**
+ * Warm up key Stadia style metadata requests so MapLibre can reuse
+ * connections/cached responses during initial style bootstrap.
+ */
+export function warmupStadiaStyleMetadata(): void {
+  if (hasWarmedStadiaStyleMetadata) return;
+  if (typeof window === "undefined" || typeof fetch !== "function") return;
+
+  let apiKey: string;
+  try {
+    apiKey = getStadiaApiKey();
+  } catch {
+    return;
+  }
+
+  hasWarmedStadiaStyleMetadata = true;
+  for (const url of getStadiaStyleWarmupUrls(apiKey)) {
+    fetch(url, {
+      method: "GET",
+      mode: "no-cors",
+      cache: "force-cache",
+      credentials: "omit",
+      keepalive: true,
+    }).catch(() => {
+      // Best-effort warmup only.
+    });
+  }
+}
 
 /** Terrain style with API key injected; memoized. */
 export function getTerrainStyle(): StyleSpecification {
@@ -90,12 +130,6 @@ export function getTerrainDarkStyle(): StyleSpecification {
   return cachedTerrainDarkStyle;
 }
 
-/**
- * Bump when editing `getPopulationOverlayStyle` so `MapView`’s `useMemo` recomputes `mapStyle`
- * (otherwise the overlay map can keep the first loaded style until night mode is toggled).
- */
-export const POPULATION_OVERLAY_STYLE_REVISION = 2;
-
 interface PopulationOverlayStyleOptions {
   includeWaterNameLayer?: boolean;
 }
@@ -108,12 +142,10 @@ const DISPUTED_BOUNDARY_IDS = [
 ] as const;
 
 /**
- * Top map in split “dark” mode: transparent canvas + country borders only.
+ * Overlay style used in split dark mode: transparent canvas + country borders.
  *
- * We intentionally do **not** add a second `hillshade` here: the basemap map already renders
- * full terrain + hillshade from `terrain-dark.json` (dark fork of `terrain.json`).
- *
- * Bump `POPULATION_OVERLAY_STYLE_REVISION` in MapView when changing this style’s layers.
+ * Intentionally no extra `hillshade`; the dark basemap already renders
+ * full terrain + hillshade from `terrain-dark.json`.
  */
 export function getPopulationOverlayStyle(
   options: PopulationOverlayStyleOptions = {}
@@ -124,53 +156,6 @@ export function getPopulationOverlayStyle(
   if (!stamenOmt || stamenOmt.type !== "vector") {
     throw new Error("terrain style missing stamen-omt vector source");
   }
-
-  const waterNameLayer: StyleSpecification["layers"][number] = {
-    id: "overlay-water-name",
-    type: "symbol",
-    source: "stamen-omt",
-    "source-layer": "water_name",
-    minzoom: 2,
-    filter: [
-      "match",
-      ["get", "class"],
-      ["ocean", "sea", "bay", "lake"],
-      true,
-      false,
-    ],
-    layout: {
-      "symbol-placement": "point",
-      "text-field": [
-        "coalesce",
-        ["get", "name:en"],
-        ["get", "name_int"],
-        ["get", "name"],
-      ],
-      "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
-      "text-size": [
-        "interpolate",
-        ["exponential", 1.3],
-        ["zoom"],
-        2,
-        11,
-        6,
-        13,
-        10,
-        16,
-      ],
-      "text-letter-spacing": 0.08,
-      "text-max-width": 8,
-      // Keep major water names visible in split-dark mode even when many
-      // town labels are present.
-      "text-allow-overlap": true,
-      "text-ignore-placement": true,
-    },
-    paint: {
-      "text-color": "rgba(128, 136, 148, 0.86)",
-      "text-halo-color": "rgba(14,18,25,0.82)",
-      "text-halo-width": 1.1,
-    },
-  };
 
   const layers: StyleSpecification["layers"] = [
     {
@@ -242,7 +227,52 @@ export function getPopulationOverlayStyle(
   ];
 
   if (includeWaterNameLayer) {
-    layers.push(waterNameLayer);
+    layers.push({
+      id: "overlay-water-name",
+      type: "symbol",
+      source: "stamen-omt",
+      "source-layer": "water_name",
+      minzoom: 2,
+      filter: [
+        "match",
+        ["get", "class"],
+        ["ocean", "sea", "bay", "lake"],
+        true,
+        false,
+      ],
+      layout: {
+        "symbol-placement": "point",
+        "text-field": [
+          "coalesce",
+          ["get", "name:en"],
+          ["get", "name_int"],
+          ["get", "name"],
+        ],
+        "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+        "text-size": [
+          "interpolate",
+          ["exponential", 1.3],
+          ["zoom"],
+          2,
+          11,
+          6,
+          13,
+          10,
+          16,
+        ],
+        "text-letter-spacing": 0.08,
+        "text-max-width": 8,
+        // Keep major water names visible in split-dark mode even when many
+        // town labels are present.
+        "text-allow-overlap": true,
+        "text-ignore-placement": true,
+      },
+      paint: {
+        "text-color": "rgba(128, 136, 148, 0.86)",
+        "text-halo-color": "rgba(14,18,25,0.82)",
+        "text-halo-width": 1.1,
+      },
+    });
   }
 
   return {

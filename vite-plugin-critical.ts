@@ -51,8 +51,7 @@ interface ViteCriticalOptions {
 }
 
 /**
- * Vite plugin for extracting and inlining critical CSS
- * Uses the 'critical' package to extract above-the-fold CSS
+ * Vite plugin that extracts and inlines critical CSS using the `critical` package.
  */
 export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
   const {
@@ -112,10 +111,10 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
       try {
         const htmlPath = join(outputDir, dest);
 
-        // Wait a bit to ensure files are written
+        // Brief delay to ensure emitted files are flushed.
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // Check if HTML file exists
+        // Skip gracefully if HTML output is missing.
         if (!existsSync(htmlPath)) {
           console.warn(
             `[vite-plugin-critical] ⚠ HTML file not found at ${htmlPath}. Skipping critical CSS extraction.`
@@ -123,18 +122,17 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
           return;
         }
 
-        // Dynamically import critical to avoid requiring it at build time
+        // Load `critical` lazily so normal builds don't require eager resolution.
         const critical = await import("critical");
         const criticalGenerate = critical.generate || critical.default;
 
         let htmlContent = readFileSync(htmlPath, "utf-8");
         const actualBaseUrl = baseUrl !== "/" ? baseUrl : viteBaseUrl;
 
-        // Save original HTML BEFORE any modifications
+        // Keep original HTML so we can re-inject CSS when only CSS output is returned.
         const originalHtml = htmlContent;
 
-        // Temporarily rewrite absolute paths with base to relative paths for critical package
-        // Critical package has trouble resolving paths with base URLs
+        // Temporarily strip base prefix because `critical` resolves relative paths better.
         if (actualBaseUrl !== "/") {
           const basePath = actualBaseUrl.replace(/\/$/, "").replace(/^\//, "");
           // Replace /HiSMaComp/path with /path (remove base prefix)
@@ -146,7 +144,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
           const tempHtmlPath = join(outputDir, "index.temp.html");
           writeFileSync(tempHtmlPath, htmlContent, "utf-8");
 
-          // Use temp file for processing
+          // Use temporary HTML during extraction.
           const criticalOptions: Record<string, unknown> = {
             base: outputDir,
             src: tempHtmlPath,
@@ -160,7 +158,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
           );
 
           if (result && result.html) {
-            // Restore base paths in the result
+            // Restore base-prefixed asset paths after extraction.
             let processedHtml = result.html;
             const basePathNoSlash = basePath.replace(/^\//, ""); // Remove leading slash for comparison
             // Restore base paths: href="/assets/..." -> href="/HiSMaComp/assets/..."
@@ -199,7 +197,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
             );
           }
 
-          // Clean up temp file
+          // Best-effort temp file cleanup.
           try {
             const { unlinkSync } = await import("fs");
             unlinkSync(tempHtmlPath);
@@ -210,8 +208,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
           return;
         }
 
-        // Generate critical CSS (for root base path)
-        // Note: critical package uses a headless browser
+        // Generate critical CSS for root-base builds.
         const criticalOptions: Record<string, unknown> = {
           base: outputDir,
           src: htmlPath,
@@ -230,7 +227,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
             `[vite-plugin-critical] ✓ Critical CSS extracted and inlined successfully`
           );
         } else if (result && result.css) {
-          // If HTML wasn't returned, manually inject the CSS
+          // Fallback: manually inject returned CSS into the head.
           const criticalCss = result.css;
           const styleTag = `<style id="critical-css">${criticalCss}</style>`;
           // Insert before closing </head> tag
@@ -271,7 +268,7 @@ export function vitePluginCritical(options: ViteCriticalOptions = {}): Plugin {
               "[vite-plugin-critical] ✗ Error extracting critical CSS:",
               error
             );
-            // Don't fail the build if critical CSS extraction fails
+            // Keep build non-fatal when critical CSS extraction fails.
             console.warn(
               "[vite-plugin-critical] Build will continue without critical CSS optimization"
             );
