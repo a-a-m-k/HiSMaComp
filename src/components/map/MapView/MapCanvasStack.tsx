@@ -1,6 +1,5 @@
 import React, { Suspense } from "react";
 import Map, { type MapProps, type MapRef } from "react-map-gl/maplibre";
-import MaplibreGL from "maplibre-gl";
 
 import { MAP_LAYER_ID } from "@/constants";
 import type { Town } from "@/common/types";
@@ -20,6 +19,7 @@ const TownMarkers = React.lazy(() =>
 const MapOverlays = React.lazy(() =>
   import("./MapOverlays").then(module => ({ default: module.MapOverlays }))
 );
+const maplibreGl = import("maplibre-gl");
 
 type MapCanvasStackProps = {
   isSplitBasemap: boolean;
@@ -72,99 +72,105 @@ export const MapCanvasStack: React.FC<MapCanvasStackProps> = ({
   showZoomButtons,
   isTablet,
   isMobile,
-}) => (
-  <>
-    {isSplitBasemap && (
-      <MapViewDarkBasemap
-        basemapRef={basemapMapRef}
-        sharedViewProps={sharedViewProps}
-        onLoad={onBasemapLoad}
-        onIdle={onBasemapIdle}
-        preserveDrawingBuffer={preserveDrawingBuffer}
-      />
-    )}
-    <Map
-      ref={mapRef}
-      {...sharedViewProps}
-      // Keep town-label collision within the GeoJSON source so basemap symbols
-      // cannot suppress all custom town labels.
-      crossSourceCollisions={false}
-      onMove={evt => {
-        const z = evt.viewState.zoom;
-        const ZOOM_SNAP_EPSILON = 1e-6;
-        const atOrNearMin = z <= effectiveMinZoom + ZOOM_SNAP_EPSILON;
-        const effectiveZoom = atOrNearMin ? effectiveMinZoom : z;
-        handleMove({
-          ...evt.viewState,
-          zoom: effectiveZoom,
-        });
-      }}
-      onLoad={onOverlayLoad}
-      onIdle={onOverlayIdle}
-      // Disable symbol/tile fade transitions so timeline `setData` updates do not
-      // visually drop and re-fade labels on each year change.
-      fadeDuration={0}
-      onClick={e => {
-        if (e.features && e.features.length > 0) {
-          const feature = e.features[0];
-          handleMapFeatureClick(getMapFeatureName(feature.properties));
-        }
-      }}
-      interactiveLayerIds={[`${MAP_LAYER_ID}-circle`]}
-      canvasContextAttributes={
-        isSplitBasemap
-          ? { alpha: true, preserveDrawingBuffer }
-          : { preserveDrawingBuffer }
-      }
-      style={
-        isSplitBasemap
-          ? {
-              position: "absolute",
-              inset: 0,
-              zIndex: 1,
-              width: "100%",
-              height: "100%",
-            }
-          : { width: "100%", height: "100%" }
-      }
-      mapStyle={overlayMapStyle}
-      mapLib={MaplibreGL}
-      attributionControl={false}
-      cursor="pointer"
-      keyboard={enableZoomControls}
-      scrollZoom={enableZoomControls}
-      touchZoomRotate={true}
-      dragPan={true}
-      cancelPendingTileRequestsWhileZooming={true}
-      maxTileCacheZoomLevels={
-        isSplitBasemap
-          ? SPLIT_OVERLAY_TILE_OPTIONS.maxTileCacheZoomLevels
-          : TILE_LOADING_OPTIONS.maxTileCacheZoomLevels
-      }
-      maxTileCacheSize={
-        isSplitBasemap
-          ? SPLIT_OVERLAY_TILE_OPTIONS.maxTileCacheSize
-          : TILE_LOADING_OPTIONS.maxTileCacheSize
-      }
-    >
-      <MapLayer
-        layerId={MAP_LAYER_ID}
-        data={townsGeojson}
-        mapStyleMode={mapStyleMode}
-      />
-      {mapReady && (
-        <Suspense fallback={null}>
-          <TownMarkers towns={towns} selectedYear={selectedYear} />
-        </Suspense>
-      )}
-      <Suspense fallback={null}>
-        <MapOverlays
-          showOverlayButtons={showOverlayButtons}
-          showZoomButtons={showZoomButtons}
-          isTablet={isTablet}
-          isMobile={isMobile}
+}) => {
+  // Delay dark underlay mount until overlay map reaches first idle.
+  // This keeps marker-bearing overlay initialization as the first priority path.
+  const shouldRenderDarkBasemap = isSplitBasemap && mapReady;
+
+  return (
+    <>
+      {shouldRenderDarkBasemap && (
+        <MapViewDarkBasemap
+          basemapRef={basemapMapRef}
+          sharedViewProps={sharedViewProps}
+          onLoad={onBasemapLoad}
+          onIdle={onBasemapIdle}
+          preserveDrawingBuffer={preserveDrawingBuffer}
         />
-      </Suspense>
-    </Map>
-  </>
-);
+      )}
+      <Map
+        ref={mapRef}
+        {...sharedViewProps}
+        // Keep town-label collision within the GeoJSON source so basemap symbols
+        // cannot suppress all custom town labels.
+        crossSourceCollisions={false}
+        onMove={evt => {
+          const z = evt.viewState.zoom;
+          const ZOOM_SNAP_EPSILON = 1e-6;
+          const atOrNearMin = z <= effectiveMinZoom + ZOOM_SNAP_EPSILON;
+          const effectiveZoom = atOrNearMin ? effectiveMinZoom : z;
+          handleMove({
+            ...evt.viewState,
+            zoom: effectiveZoom,
+          });
+        }}
+        onLoad={onOverlayLoad}
+        onIdle={onOverlayIdle}
+        // Disable symbol/tile fade transitions so timeline `setData` updates do not
+        // visually drop and re-fade labels on each year change.
+        fadeDuration={0}
+        onClick={e => {
+          if (e.features && e.features.length > 0) {
+            const feature = e.features[0];
+            handleMapFeatureClick(getMapFeatureName(feature.properties));
+          }
+        }}
+        interactiveLayerIds={[`${MAP_LAYER_ID}-circle`]}
+        canvasContextAttributes={
+          isSplitBasemap
+            ? { alpha: true, preserveDrawingBuffer }
+            : { preserveDrawingBuffer }
+        }
+        style={
+          isSplitBasemap
+            ? {
+                position: "absolute",
+                inset: 0,
+                zIndex: 1,
+                width: "100%",
+                height: "100%",
+              }
+            : { width: "100%", height: "100%" }
+        }
+        mapStyle={overlayMapStyle}
+        mapLib={maplibreGl}
+        attributionControl={false}
+        cursor="pointer"
+        keyboard={enableZoomControls}
+        scrollZoom={enableZoomControls}
+        touchZoomRotate={true}
+        dragPan={true}
+        cancelPendingTileRequestsWhileZooming={true}
+        maxTileCacheZoomLevels={
+          isSplitBasemap
+            ? SPLIT_OVERLAY_TILE_OPTIONS.maxTileCacheZoomLevels
+            : TILE_LOADING_OPTIONS.maxTileCacheZoomLevels
+        }
+        maxTileCacheSize={
+          isSplitBasemap
+            ? SPLIT_OVERLAY_TILE_OPTIONS.maxTileCacheSize
+            : TILE_LOADING_OPTIONS.maxTileCacheSize
+        }
+      >
+        <MapLayer
+          layerId={MAP_LAYER_ID}
+          data={townsGeojson}
+          mapStyleMode={mapStyleMode}
+        />
+        {mapReady && (
+          <Suspense fallback={null}>
+            <TownMarkers towns={towns} selectedYear={selectedYear} />
+          </Suspense>
+        )}
+        <Suspense fallback={null}>
+          <MapOverlays
+            showOverlayButtons={showOverlayButtons}
+            showZoomButtons={showZoomButtons}
+            isTablet={isTablet}
+            isMobile={isMobile}
+          />
+        </Suspense>
+      </Map>
+    </>
+  );
+};
