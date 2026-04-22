@@ -191,6 +191,52 @@ export function getPopulationOverlayStyle(): StyleSpecification {
           "line-width": 2.5,
         },
       },
+      {
+        id: "overlay-water-name",
+        type: "symbol",
+        source: "stamen-omt",
+        "source-layer": "water_name",
+        minzoom: 2,
+        filter: [
+          "match",
+          ["get", "class"],
+          ["ocean", "sea", "bay", "lake"],
+          true,
+          false,
+        ],
+        layout: {
+          "symbol-placement": "point",
+          "text-field": [
+            "coalesce",
+            ["get", "name:en"],
+            ["get", "name_int"],
+            ["get", "name"],
+          ],
+          "text-font": ["Noto Sans Italic"],
+          "text-size": [
+            "interpolate",
+            ["exponential", 1.3],
+            ["zoom"],
+            2,
+            11,
+            6,
+            13,
+            10,
+            16,
+          ],
+          "text-letter-spacing": 0.08,
+          "text-max-width": 8,
+          // Keep major water names visible in split-dark mode even when many
+          // town labels are present.
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+        },
+        paint: {
+          "text-color": "rgba(128, 136, 148, 0.86)",
+          "text-halo-color": "rgba(14,18,25,0.82)",
+          "text-halo-width": 1.1,
+        },
+      },
     ],
     glyphs: base.glyphs,
   };

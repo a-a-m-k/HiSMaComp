@@ -6,8 +6,7 @@ import {
   type RefObject,
 } from "react";
 import type { MapRef } from "react-map-gl/maplibre";
-
-import { hideBasemapWaterLabelsForSplitOverlay } from "@/utils/map/mapLabelCollision";
+import { muteBasemapWaterLabelsForSplitOverlay } from "@/utils/map/mapLabelCollision";
 import type { MapViewState } from "./useMapViewState";
 
 type MapInstance = NonNullable<ReturnType<MapRef["getMap"]>>;
@@ -102,7 +101,7 @@ export function useMapViewLibreEffects({
     applyMapLoad(basemap);
     const vs = viewStateRef.current;
     basemap.jumpTo({ center: [vs.longitude, vs.latitude], zoom: vs.zoom });
-    hideBasemapWaterLabelsForSplitOverlay(basemap);
+    muteBasemapWaterLabelsForSplitOverlay(basemap);
   }, [applyMapLoad, basemapMapRef]);
 
   return {

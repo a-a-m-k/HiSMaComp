@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { Suspense, useState, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 
 import { ErrorBoundary } from "@/components/dev";
 import { Legend, Timeline } from "@/components/controls";
-import { MapView } from "@/components/map";
 import { LoadingSpinner, ErrorOverlay } from "@/components/ui";
 import {
   LEGEND_HEADING_LABEL,
@@ -23,6 +22,10 @@ import { strings } from "@/locales";
 import { lightTheme } from "@/theme/theme";
 import { calculateMapArea } from "@/utils/mapZoom";
 import { getInitialMapProps, useStableMapKey } from "./MapLayoutHelpers";
+
+const LazyMapView = React.lazy(
+  () => import("@/components/map/MapView/MapView")
+);
 
 export interface MapLayoutProps {
   legendLayers: LayerItem[];
@@ -171,18 +174,22 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
         }}
       >
         <ErrorBoundary>
-          <MapView
-            key={deviceKey}
-            towns={towns}
-            selectedYear={selectedYear}
-            initialPosition={initialPosition}
-            initialZoom={initialZoom}
-            maxBounds={maxBounds}
-            fallbackMapSize={mapArea}
-            onFirstIdle={handleFirstIdle}
-            showOverlayButtons={showOverlayButtons}
-            isResizing={isResizing}
-          />
+          <Suspense
+            fallback={<LoadingSpinner message={strings.loading.default} />}
+          >
+            <LazyMapView
+              key={deviceKey}
+              towns={towns}
+              selectedYear={selectedYear}
+              initialPosition={initialPosition}
+              initialZoom={initialZoom}
+              maxBounds={maxBounds}
+              fallbackMapSize={mapArea}
+              onFirstIdle={handleFirstIdle}
+              showOverlayButtons={showOverlayButtons}
+              isResizing={isResizing}
+            />
+          </Suspense>
         </ErrorBoundary>
         {!error && !isMapIdle && (
           <Box

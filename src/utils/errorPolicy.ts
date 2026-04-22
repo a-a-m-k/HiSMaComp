@@ -1,7 +1,28 @@
 import { getUserFacingMessage } from "./errorMessage";
 import { logger } from "./logger";
 import { trackEvent } from "./observability";
-import { captureSentryError } from "./sentry";
+
+let sentryCaptureFn:
+  | ((error: unknown, context?: Record<string, unknown>) => void)
+  | null = null;
+
+const captureSentryErrorDeferred = (
+  error: unknown,
+  context: Record<string, unknown>
+) => {
+  if (sentryCaptureFn) {
+    sentryCaptureFn(error, context);
+    return;
+  }
+  import("./sentry")
+    .then(mod => {
+      sentryCaptureFn = mod.captureSentryError;
+      sentryCaptureFn(error, context);
+    })
+    .catch(importError => {
+      logger.warn("[sentry] Deferred capture import failed", importError);
+    });
+};
 
 export type AppErrorCategory =
   | "initialization"
@@ -61,7 +82,7 @@ export const reportAppError = (
     year: context.year,
     error,
   });
-  captureSentryError(error, {
+  captureSentryErrorDeferred(error, {
     category: context.category,
     operation: context.operation,
     year: context.year,

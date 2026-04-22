@@ -42,6 +42,16 @@ export const initSentry = (): void => {
     ),
     enableLogs: true,
   });
+  logger.info("[sentry] Initialized", {
+    environment: import.meta.env.MODE,
+    dsnHost: (() => {
+      try {
+        return new URL(sentryDsn).host;
+      } catch {
+        return "invalid-dsn";
+      }
+    })(),
+  });
 };
 
 export const captureSentryError = (

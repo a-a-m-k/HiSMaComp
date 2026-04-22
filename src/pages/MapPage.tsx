@@ -46,15 +46,14 @@ const MapPage: React.FC = () => (
     component="main"
     id="main-content"
     sx={{
-      position: "fixed",
-      inset: 0,
+      position: "relative",
       boxSizing: "border-box",
-      width: "100vw",
+      width: "100%",
       height: "var(--viewport-height, 100vh)",
-      minHeight: APP_MIN_HEIGHT,
-      maxHeight: "var(--viewport-height, 100vh)",
+      minHeight: `max(100dvh, ${APP_MIN_HEIGHT}px)`,
+      maxHeight: "none",
       overflowX: "auto",
-      overflowY: "hidden",
+      overflowY: "auto",
       display: "flex",
       flexDirection: "column",
       justifyContent: { xs: "stretch", sm: "center" },

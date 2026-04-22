@@ -18,6 +18,10 @@ const testDevices = [
 ];
 
 test.describe("Boundary Years Zoom Testing", () => {
+  // This suite iterates multiple full browser contexts/devices in a single test,
+  // so default 60s can be too tight on CI or under network variance.
+  test.describe.configure({ timeout: 180_000 });
+
   test("should display all towns correctly in year 800 (first century)", async ({
     browser,
   }) => {

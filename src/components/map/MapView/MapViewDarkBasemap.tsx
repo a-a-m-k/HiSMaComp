@@ -36,10 +36,9 @@ export const MapViewDarkBasemap: React.FC<MapViewDarkBasemapProps> = ({
       position: "absolute",
       inset: 0,
       zIndex: 0,
-      pointerEvents: "none",
-      transform: "translateZ(0)",
-      isolation: "isolate",
-      backfaceVisibility: "hidden",
+      // Keep the wrapper simple so html2canvas reliably captures the underlay
+      // canvas during dark-mode screenshot export.
+      pointerEvents: "auto",
     }}
   >
     <Map

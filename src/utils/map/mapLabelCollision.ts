@@ -4,6 +4,7 @@ import { MAP_BASEMAP_WATER_LABEL_LAYER_IDS } from "@/constants/map";
 export type MapLabelCollisionMap = {
   getLayer: (id: string) => unknown;
   setLayoutProperty: (layerId: string, name: string, value: unknown) => void;
+  setPaintProperty: (layerId: string, name: string, value: unknown) => void;
 };
 
 /**
@@ -17,6 +18,26 @@ export function hideBasemapWaterLabelsForSplitOverlay(
     try {
       if (map.getLayer(id)) {
         map.setLayoutProperty(id, "visibility", "none");
+      }
+    } catch {
+      /* ignore missing layer / style race */
+    }
+  }
+}
+
+/**
+ * Keeps sea/ocean/lake labels visible in split dark mode, but tones them down so
+ * they don't appear bright compared to thematic overlays.
+ */
+export function muteBasemapWaterLabelsForSplitOverlay(
+  map: Pick<MapLabelCollisionMap, "getLayer" | "setPaintProperty">
+): void {
+  for (const id of MAP_BASEMAP_WATER_LABEL_LAYER_IDS) {
+    try {
+      if (map.getLayer(id)) {
+        map.setPaintProperty(id, "text-color", "rgba(126, 133, 143, 0.86)");
+        map.setPaintProperty(id, "text-halo-color", "rgba(14,18,25,0.75)");
+        map.setPaintProperty(id, "text-halo-width", 0.9);
       }
     } catch {
       /* ignore missing layer / style race */

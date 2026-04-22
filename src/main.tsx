@@ -37,7 +37,12 @@ if ("serviceWorker" in navigator && !import.meta.env.DEV) {
     });
 }
 
-if (!import.meta.env.DEV) {
+const sentryEnabledInDev = import.meta.env.VITE_SENTRY_ENABLE_IN_DEV === "true";
+if (import.meta.env.DEV && sentryEnabledInDev) {
+  import("./instrument").catch(error => {
+    logger.warn("Sentry init failed in dev mode:", error);
+  });
+} else if (!import.meta.env.DEV) {
   deferSentryInit();
 }
 

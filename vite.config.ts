@@ -109,6 +109,9 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       output: {
         manualChunks: id => {
+          if (id.includes("html2canvas")) {
+            return "html2canvas";
+          }
           if (id.includes("node_modules")) {
             if (id.includes("maplibre-gl")) {
               return "maplibre";
