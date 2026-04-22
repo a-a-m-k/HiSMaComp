@@ -96,6 +96,10 @@ export function getTerrainDarkStyle(): StyleSpecification {
  */
 export const POPULATION_OVERLAY_STYLE_REVISION = 2;
 
+interface PopulationOverlayStyleOptions {
+  includeWaterNameLayer?: boolean;
+}
+
 /** Disputed-border filter ids (must match `terrain.json` `national-boundary-disputed`). */
 const DISPUTED_BOUNDARY_IDS = [
   238797482, 330695990, 330696000, 330696028, 330696042, 731895849, 731896898,
@@ -111,11 +115,134 @@ const DISPUTED_BOUNDARY_IDS = [
  *
  * Bump `POPULATION_OVERLAY_STYLE_REVISION` in MapView when changing this style’s layers.
  */
-export function getPopulationOverlayStyle(): StyleSpecification {
+export function getPopulationOverlayStyle(
+  options: PopulationOverlayStyleOptions = {}
+): StyleSpecification {
+  const { includeWaterNameLayer = true } = options;
   const base = getTerrainStyle();
   const stamenOmt = base.sources?.["stamen-omt"];
   if (!stamenOmt || stamenOmt.type !== "vector") {
     throw new Error("terrain style missing stamen-omt vector source");
+  }
+
+  const waterNameLayer: StyleSpecification["layers"][number] = {
+    id: "overlay-water-name",
+    type: "symbol",
+    source: "stamen-omt",
+    "source-layer": "water_name",
+    minzoom: 2,
+    filter: [
+      "match",
+      ["get", "class"],
+      ["ocean", "sea", "bay", "lake"],
+      true,
+      false,
+    ],
+    layout: {
+      "symbol-placement": "point",
+      "text-field": [
+        "coalesce",
+        ["get", "name:en"],
+        ["get", "name_int"],
+        ["get", "name"],
+      ],
+      "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+      "text-size": [
+        "interpolate",
+        ["exponential", 1.3],
+        ["zoom"],
+        2,
+        11,
+        6,
+        13,
+        10,
+        16,
+      ],
+      "text-letter-spacing": 0.08,
+      "text-max-width": 8,
+      // Keep major water names visible in split-dark mode even when many
+      // town labels are present.
+      "text-allow-overlap": true,
+      "text-ignore-placement": true,
+    },
+    paint: {
+      "text-color": "rgba(128, 136, 148, 0.86)",
+      "text-halo-color": "rgba(14,18,25,0.82)",
+      "text-halo-width": 1.1,
+    },
+  };
+
+  const layers: StyleSpecification["layers"] = [
+    {
+      id: "overlay-background",
+      type: "background",
+      paint: {
+        "background-color": "rgba(0,0,0,0)",
+      },
+    },
+    {
+      id: "overlay-national-boundary",
+      type: "line",
+      source: "stamen-omt",
+      "source-layer": "boundary",
+      minzoom: 1.5,
+      filter: [
+        "all",
+        ["==", ["get", "admin_level"], 2],
+        ["==", ["get", "disputed"], 0],
+        ["==", ["get", "maritime"], 0],
+      ],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": MAP_MUTED_SLATE_RGBA,
+        "line-dasharray": [
+          "step",
+          ["zoom"],
+          ["literal", [1.25, 2.5]],
+          8,
+          ["literal", [0.75, 3]],
+        ],
+        "line-width": 2,
+      },
+    },
+    {
+      id: "overlay-national-boundary-disputed",
+      type: "line",
+      source: "stamen-omt",
+      "source-layer": "boundary",
+      minzoom: 2,
+      filter: [
+        "all",
+        ["==", ["get", "admin_level"], 2],
+        [
+          "any",
+          [
+            "all",
+            ["==", ["get", "disputed"], 1],
+            ["==", ["get", "maritime"], 0],
+          ],
+          ["match", ["id"], [...DISPUTED_BOUNDARY_IDS], true, false],
+        ],
+      ],
+      layout: { "line-cap": "round", "line-join": "round" },
+      paint: {
+        "line-color": MAP_MUTED_SLATE_RGBA,
+        "line-dasharray": [
+          "step",
+          ["zoom"],
+          ["literal", [0.001, 1.5]],
+          4,
+          ["literal", [0.001, 2.5]],
+          7,
+          ["literal", [0.001, 3]],
+        ],
+        "line-width": 2.5,
+      },
+    },
+  ];
+
+  if (includeWaterNameLayer) {
+    layers.push(waterNameLayer);
   }
 
   return {
@@ -124,120 +251,7 @@ export function getPopulationOverlayStyle(): StyleSpecification {
     sources: {
       "stamen-omt": stamenOmt,
     },
-    layers: [
-      {
-        id: "overlay-background",
-        type: "background",
-        paint: {
-          "background-color": "rgba(0,0,0,0)",
-        },
-      },
-      {
-        id: "overlay-national-boundary",
-        type: "line",
-        source: "stamen-omt",
-        "source-layer": "boundary",
-        minzoom: 1.5,
-        filter: [
-          "all",
-          ["==", ["get", "admin_level"], 2],
-          ["==", ["get", "disputed"], 0],
-          ["==", ["get", "maritime"], 0],
-        ],
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": MAP_MUTED_SLATE_RGBA,
-          "line-dasharray": [
-            "step",
-            ["zoom"],
-            ["literal", [1.25, 2.5]],
-            8,
-            ["literal", [0.75, 3]],
-          ],
-          "line-width": 2,
-        },
-      },
-      {
-        id: "overlay-national-boundary-disputed",
-        type: "line",
-        source: "stamen-omt",
-        "source-layer": "boundary",
-        minzoom: 2,
-        filter: [
-          "all",
-          ["==", ["get", "admin_level"], 2],
-          [
-            "any",
-            [
-              "all",
-              ["==", ["get", "disputed"], 1],
-              ["==", ["get", "maritime"], 0],
-            ],
-            ["match", ["id"], [...DISPUTED_BOUNDARY_IDS], true, false],
-          ],
-        ],
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": MAP_MUTED_SLATE_RGBA,
-          "line-dasharray": [
-            "step",
-            ["zoom"],
-            ["literal", [0.001, 1.5]],
-            4,
-            ["literal", [0.001, 2.5]],
-            7,
-            ["literal", [0.001, 3]],
-          ],
-          "line-width": 2.5,
-        },
-      },
-      {
-        id: "overlay-water-name",
-        type: "symbol",
-        source: "stamen-omt",
-        "source-layer": "water_name",
-        minzoom: 2,
-        filter: [
-          "match",
-          ["get", "class"],
-          ["ocean", "sea", "bay", "lake"],
-          true,
-          false,
-        ],
-        layout: {
-          "symbol-placement": "point",
-          "text-field": [
-            "coalesce",
-            ["get", "name:en"],
-            ["get", "name_int"],
-            ["get", "name"],
-          ],
-          "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
-          "text-size": [
-            "interpolate",
-            ["exponential", 1.3],
-            ["zoom"],
-            2,
-            11,
-            6,
-            13,
-            10,
-            16,
-          ],
-          "text-letter-spacing": 0.08,
-          "text-max-width": 8,
-          // Keep major water names visible in split-dark mode even when many
-          // town labels are present.
-          "text-allow-overlap": true,
-          "text-ignore-placement": true,
-        },
-        paint: {
-          "text-color": "rgba(128, 136, 148, 0.86)",
-          "text-halo-color": "rgba(14,18,25,0.82)",
-          "text-halo-width": 1.1,
-        },
-      },
-    ],
+    layers,
     glyphs: base.glyphs,
   };
 }

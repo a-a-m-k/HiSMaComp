@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { MapRef } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "@mui/material/styles";
@@ -65,6 +65,8 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const basemapMapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [splitOverlayEnhancementsReady, setSplitOverlayEnhancementsReady] =
+    useState(false);
   const isSplitBasemap = mapStyleMode === "dark";
   const containerSize = useMapContainerResize(
     containerRef,
@@ -139,6 +141,15 @@ const MapView: React.FC<MapViewComponentProps> = ({
     maxBounds,
   });
 
+  useEffect(() => {
+    if (!isSplitBasemap) {
+      setSplitOverlayEnhancementsReady(true);
+      return;
+    }
+
+    setSplitOverlayEnhancementsReady(false);
+  }, [isSplitBasemap]);
+
   const { isStyleSwitching, onOverlayIdle, onBasemapIdle } =
     useMapStyleSwitchLoader({
       mapStyleMode,
@@ -147,8 +158,23 @@ const MapView: React.FC<MapViewComponentProps> = ({
 
   const handleMapIdle = React.useCallback(() => {
     setMapReady(true);
+    if (isSplitBasemap && !splitOverlayEnhancementsReady) {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(
+          () => setSplitOverlayEnhancementsReady(true),
+          {
+            timeout: 1500,
+          }
+        );
+      } else {
+        globalThis.setTimeout(
+          () => setSplitOverlayEnhancementsReady(true),
+          200
+        );
+      }
+    }
     onOverlayIdle();
-  }, [onOverlayIdle]);
+  }, [isSplitBasemap, onOverlayIdle, splitOverlayEnhancementsReady]);
 
   const mapDescription = useMemo(
     () => getMapDescription({ isMobile, isDesktop, mapStyleMode }),
@@ -156,8 +182,13 @@ const MapView: React.FC<MapViewComponentProps> = ({
   );
 
   const overlayMapStyle = useMemo(
-    () => (isSplitBasemap ? getPopulationOverlayStyle() : getTerrainStyle()),
-    [isSplitBasemap]
+    () =>
+      isSplitBasemap
+        ? getPopulationOverlayStyle({
+            includeWaterNameLayer: splitOverlayEnhancementsReady,
+          })
+        : getTerrainStyle(),
+    [isSplitBasemap, splitOverlayEnhancementsReady]
   );
   const sharedViewProps = useSharedViewProps(
     viewState,

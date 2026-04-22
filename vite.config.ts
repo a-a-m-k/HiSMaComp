@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { visualizer } from "rollup-plugin-visualizer";
-import { readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { vitePluginCritical } from "./vite-plugin-critical";
@@ -24,6 +24,9 @@ const manifestPlugin = (base: string) => ({
   name: "manifest-transform",
   writeBundle() {
     const manifestPath = join(process.cwd(), "dist", "manifest.json");
+    if (!existsSync(manifestPath)) {
+      return;
+    }
     const manifest = JSON.parse(readFileSync(manifestPath, "utf-8"));
     const basePath = base.replace(/\/$/, "");
     manifest.icons = manifest.icons.map((icon: { src: string }) => ({
