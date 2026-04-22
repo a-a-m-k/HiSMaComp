@@ -52,7 +52,7 @@ export async function waitForAppShell(page: Page): Promise<void> {
     });
   } catch (error) {
     // Fallback for cases where map-ready marker is delayed/not set by style
-    // transitions, while the map is already visible and interactable.
+    // transitions. Still require an interactable, not-busy map shell.
     const mapContainer = page.locator("#map-container-area");
     const mapCanvas = page.locator(".maplibregl-canvas").first();
     const spinner = page.getByRole("status", {
@@ -67,13 +67,18 @@ export async function waitForAppShell(page: Page): Promise<void> {
       state: "visible",
       timeout: APP_READY_TIMEOUT_MS,
     });
+    await page.waitForFunction(() => {
+      const mapEl = document.querySelector("#map-container-area");
+      if (!mapEl) return false;
+      return mapEl.getAttribute("aria-busy") !== "true";
+    });
     if ((await spinner.count()) > 0) {
       await spinner
         .first()
         .waitFor({ state: "hidden", timeout: APP_READY_TIMEOUT_MS });
     }
 
-    // Do not fail solely on missing marker if map shell is interactable.
+    // Do not fail solely on missing marker if map shell is visible and not busy.
     void error;
   }
 }

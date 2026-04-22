@@ -64,6 +64,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   const mapRef = useRef<MapRef>(null);
   const basemapMapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [splitOverlayEnhancementsReady, setSplitOverlayEnhancementsReady] =
     useState(false);
@@ -142,8 +143,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
   });
 
   const handleMapLoad = React.useCallback(() => {
-    // E2E waits for data-map-ready; treat initial map load as readiness too.
-    setMapReady(true);
+    setMapLoaded(true);
     handleOverlayMapLoad();
   }, [handleOverlayMapLoad]);
 
@@ -218,6 +218,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
     >
       <MapCanvasStack
         isSplitBasemap={isSplitBasemap}
+        mapLoaded={mapLoaded}
         basemapMapRef={basemapMapRef}
         mapRef={mapRef}
         sharedViewProps={sharedViewProps}

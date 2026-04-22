@@ -23,6 +23,7 @@ const maplibreGl = import("maplibre-gl");
 
 type MapCanvasStackProps = {
   isSplitBasemap: boolean;
+  mapLoaded: boolean;
   basemapMapRef: React.RefObject<MapRef | null>;
   mapRef: React.MutableRefObject<MapRef | null>;
   sharedViewProps: MapViewSharedCameraProps;
@@ -51,6 +52,7 @@ type MapCanvasStackProps = {
 
 export const MapCanvasStack: React.FC<MapCanvasStackProps> = ({
   isSplitBasemap,
+  mapLoaded,
   basemapMapRef,
   mapRef,
   sharedViewProps,
@@ -73,9 +75,9 @@ export const MapCanvasStack: React.FC<MapCanvasStackProps> = ({
   isTablet,
   isMobile,
 }) => {
-  // Delay dark underlay mount until overlay map reaches first idle.
+  // Delay dark underlay mount until overlay map has loaded.
   // This keeps marker-bearing overlay initialization as the first priority path.
-  const shouldRenderDarkBasemap = isSplitBasemap && mapReady;
+  const shouldRenderDarkBasemap = isSplitBasemap && mapLoaded;
 
   return (
     <>
