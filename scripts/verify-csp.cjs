@@ -13,7 +13,7 @@ const html = fs.readFileSync(htmlPath, "utf-8");
 
 const inlineHandlerRegex = /\son[a-z]+\s*=\s*["'][^"']*["']/gi;
 const jsNavRegex = /(?:href|src)\s*=\s*["']\s*javascript:/gi;
-const strictScriptSrcRegex = /script-src\s+'self'\s+'unsafe-eval'/i;
+const strictScriptSrcRegex = /script-src\s+'self'(?:;|\s)/i;
 
 const inlineHandlers = html.match(inlineHandlerRegex) || [];
 const jsNavs = html.match(jsNavRegex) || [];
@@ -21,7 +21,7 @@ const hasStrictScriptSrc = strictScriptSrcRegex.test(html);
 
 if (!hasStrictScriptSrc) {
   console.error(
-    "[verify:csp] script-src is not strict enough (expected: 'self' 'unsafe-eval')."
+    "[verify:csp] script-src is not strict enough (expected: 'self')."
   );
   process.exit(1);
 }

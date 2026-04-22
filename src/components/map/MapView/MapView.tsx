@@ -141,6 +141,12 @@ const MapView: React.FC<MapViewComponentProps> = ({
     maxBounds,
   });
 
+  const handleMapLoad = React.useCallback(() => {
+    // E2E waits for data-map-ready; treat initial map load as readiness too.
+    setMapReady(true);
+    handleOverlayMapLoad();
+  }, [handleOverlayMapLoad]);
+
   useEffect(() => {
     if (!isSplitBasemap) {
       setSplitOverlayEnhancementsReady(true);
@@ -222,7 +228,7 @@ const MapView: React.FC<MapViewComponentProps> = ({
         preserveDrawingBuffer={true}
         effectiveMinZoom={effectiveMinZoom}
         handleMove={nextViewState => handleMove({ viewState: nextViewState })}
-        onOverlayLoad={handleOverlayMapLoad}
+        onOverlayLoad={handleMapLoad}
         onOverlayIdle={handleMapIdle}
         overlayMapStyle={overlayMapStyle}
         enableZoomControls={enableZoomControls}

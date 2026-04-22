@@ -52,11 +52,10 @@
       Production build: vite-plugin-production-html-csp-cleanup strips async-CSS
       onload handlers and removes script 'unsafe-inline' (not needed for module scripts only).
       style-src 'unsafe-inline' remains for MUI Emotion + inlined critical CSS.
-      script-src 'unsafe-eval' remains for MapLibre GL.
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' https://tiles.stadiamaps.com data:; img-src 'self' data: blob: https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com; connect-src 'self' https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests;"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' https://tiles.stadiamaps.com data:; img-src 'self' data: blob: https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com; connect-src 'self' https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests;"
     />
 
     <title>HiSMaComp - Historical Map Visualizer</title>

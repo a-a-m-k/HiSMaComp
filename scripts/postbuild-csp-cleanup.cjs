@@ -2,8 +2,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const SCRIPT_SRC_RELAXED = "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
-const SCRIPT_SRC_STRICT = "script-src 'self' 'unsafe-eval'";
+const SCRIPT_SRC_RELAXED = "script-src 'self' 'unsafe-inline'";
+const SCRIPT_SRC_STRICT = "script-src 'self'";
 
 const htmlPath = path.join(process.cwd(), "dist", "index.html");
 
