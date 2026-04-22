@@ -1,10 +1,26 @@
-import "./instrument";
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import "./index.css";
 import App from "./App";
 import { logger } from "@/utils/logger";
+
+const deferSentryInit = () => {
+  const loadSentry = () => {
+    import("./instrument").catch(error => {
+      logger.warn("Deferred Sentry init failed:", error);
+    });
+  };
+
+  if (typeof window === "undefined") return;
+
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(() => loadSentry(), { timeout: 4000 });
+    return;
+  }
+
+  globalThis.setTimeout(loadSentry, 1200);
+};
 
 if ("serviceWorker" in navigator && !import.meta.env.DEV) {
   const swPath = import.meta.env.BASE_URL + "hismacomp-service-worker.js";
@@ -19,6 +35,10 @@ if ("serviceWorker" in navigator && !import.meta.env.DEV) {
     .catch(error => {
       logger.warn("Service Worker registration failed:", error);
     });
+}
+
+if (!import.meta.env.DEV) {
+  deferSentryInit();
 }
 
 window.addEventListener("unhandledrejection", event => {

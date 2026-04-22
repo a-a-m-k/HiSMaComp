@@ -184,6 +184,48 @@ export const MapLayout: React.FC<MapLayoutProps> = ({
             isResizing={isResizing}
           />
         </ErrorBoundary>
+        {!error && !isMapIdle && (
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              pointerEvents: "none",
+              background:
+                "linear-gradient(180deg, rgba(245,247,250,0.95) 0%, rgba(245,247,250,0.78) 55%, rgba(245,247,250,0.5) 100%)",
+            }}
+          >
+            <Box
+              sx={{
+                px: 2.5,
+                py: 1.5,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "divider",
+                bgcolor: "background.paper",
+                boxShadow: 1,
+                textAlign: "center",
+              }}
+            >
+              <Box
+                component="p"
+                sx={{
+                  m: 0,
+                  fontSize: { xs: 20, sm: 24 },
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  color: "text.primary",
+                }}
+              >
+                European population
+              </Box>
+            </Box>
+          </Box>
+        )}
         {showResizeSpinner && (
           <Box
             sx={{
