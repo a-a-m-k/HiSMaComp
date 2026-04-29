@@ -1,0 +1,101 @@
+name: CI and Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  test-and-build:
+    name: Test, Lint & Build
+    runs-on: ubuntu-latest
+    env:
+      VITE_STADIA_API_KEY: ${{ secrets.VITE_STADIA_API_KEY || 'test-key-for-ci' }}
+      VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN || '' }}
+      VITE_APP_RELEASE: ${{ secrets.VITE_APP_RELEASE || github.sha }}
+      VITE_SENTRY_TRACES_SAMPLE_RATE: ${{ secrets.VITE_SENTRY_TRACES_SAMPLE_RATE || '0.1' }}
+      VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE: ${{ secrets.VITE_SENTRY_REPLAY_SESSION_SAMPLE_RATE || '0.1' }}
+      VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE: ${{ secrets.VITE_SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE || '1.0' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup repo
+        uses: ./.github/actions/setup
+
+      - name: Lint
+        run: npm run lint:check
+        timeout-minutes: 6
+
+      - name: Typecheck
+        run: npm run typecheck
+        timeout-minutes: 6
+
+      - name: Unit tests with coverage
+        run: npm run test:coverage:ci
+        timeout-minutes: 12
+
+      - name: Build GitHub Pages bundle
+        run: node scripts/build-gh-pages.cjs
+        timeout-minutes: 8
+
+      - name: Check bundle size budget
+        run: node scripts/check-bundle-size.js
+        timeout-minutes: 3
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./dist"
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    needs: test-and-build
+    env:
+      VITE_STADIA_API_KEY: test-key-for-ci
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup repo
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: tests/results/reports/html
+          retention-days: 7
+
+  # Requires: Repo Settings → Pages → Build and deployment → Source = "GitHub Actions"
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [test-and-build, e2e]
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

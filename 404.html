@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="European town populations 800–1750 on an interactive map. Compare centuries with a timeline; marker size shows population.">
+    <meta name="keywords" content="historical map, population data, medieval towns, European history, interactive visualization">
+    <meta name="author" content="HiSMaComp">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="HiSMaComp - Historical Map Visualizer">
+    <meta property="og:description" content="European town populations 800–1750. Timeline, map markers by population, responsive.">
+    <meta property="og:url" content="https://a-a-m-k.github.io/">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="HiSMaComp - Historical Map Visualizer">
+    <meta property="twitter:description" content="European town populations 800–1750. Timeline, map markers by population.">
+
+    <link rel="icon" type="image/x-icon" href="/HiSMaComp/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="/HiSMaComp/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/HiSMaComp/favicon-32x32.png">
+    <link rel="apple-touch-icon" href="/HiSMaComp/apple-touch-icon.png" sizes="180x180">
+    
+    <!-- Resource Hints: Preconnect to external domains -->
+    <link rel="dns-prefetch" href="https://tiles.stadiamaps.com">
+    <link rel="dns-prefetch" href="https://api.stadiamaps.com">
+    <link rel="preconnect" href="https://tiles.stadiamaps.com" crossorigin="">
+    <link rel="preconnect" href="https://api.stadiamaps.com" crossorigin="">
+    <link rel="manifest" href="/HiSMaComp/manifest.json">
+    <meta name="theme-color" content="#1976d2">
+
+    <!-- Content Security Policy (meta: GitHub Pages cannot send CSP headers; use a CDN in front if you need header-based CSP) -->
+    <!--
+      Dev: script-src includes 'unsafe-inline' so Vite HMR / dev overlay work.
+      Production build: vite-plugin-production-html-csp-cleanup strips async-CSS
+      onload handlers and removes script 'unsafe-inline' (not needed for module scripts only).
+      style-src 'unsafe-inline' remains for MUI Emotion + inlined critical CSS.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' https://tiles.stadiamaps.com data:; img-src 'self' data: blob: https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com; connect-src 'self' https://tiles.stadiamaps.com https://*.stadiamaps.com https://stadiamaps.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests;">
+
+    <title>HiSMaComp - Historical Map Visualizer</title>
+        <link rel="modulepreload" href="/HiSMaComp/assets/index-oA0Ogm7B.js">
+<style>:root{font-family:Inter,system-ui,Avenir,Helvetica,Arial,sans-serif;line-height:1.6;font-weight:400;--color-focus:#646cff;--color-focus-hover:#535bf2;--color-focus-shadow:rgba(100, 108, 255, .4);--color-focus-shadow-inset:rgba(100, 108, 255, .2);--color-text-black:#000000;--color-focus-blue:rgba(0, 150, 255, 1);--color-control-border:rgba(0, 0, 0, .1);--overlay-edge-spacing:8px;--overlay-edge-spacing-lg:16px;--timeline-height-mobile:138px;--timeline-height-tablet:81px;--timeline-height-desktop:92px;font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;height:100%;--viewport-height:100vh;--viewport-height:100dvh}#root,body,html{height:100%;width:100%}body{margin:0;display:flex;place-items:stretch;min-height:100vh;min-height:100dvh;overflow:auto}#legend-heading-placeholder{position:fixed;top:12px;left:50%;transform:translate(-50%);z-index:1000;max-width:520px;padding:6px 10px;background:#ffffffe6;border:1px solid rgba(0,0,0,.08);border-radius:10px;box-shadow:0 4px 16px #00000014;backdrop-filter:blur(4px);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}#legend-heading-placeholder .lcp-legend-heading-splash{margin:0;font-size:.88rem;font-weight:500;line-height:1.25;color:#2f2f2f;letter-spacing:.01em;white-space:normal;overflow:visible;text-overflow:clip}@media (max-width:640px){#legend-heading-placeholder{top:8px;max-width:300px;padding:4px 8px}#legend-heading-placeholder .lcp-legend-heading-splash{font-size:.78rem}}</style><script type="module" crossorigin="" src="/HiSMaComp/assets/index-oA0Ogm7B.js"></script>
+    <link rel="modulepreload" crossorigin="" href="/HiSMaComp/assets/vendor-DmUEN5wI.js">
+    <link rel="stylesheet" crossorigin="" href="/HiSMaComp/assets/index-CqT23TPI.css" media="all">
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- LCP: placeholder injected here by vite-plugin-lcp-legend (from src/constants/legendLcp.ts) -->
+    <div id="legend-heading-placeholder" aria-hidden="true"><h2 id="legend-heading" class="lcp-legend-heading-splash">European population</h2></div>
+    <noscript><link rel="stylesheet" crossorigin="" href="/HiSMaComp/assets/index-CqT23TPI.css"></noscript>
+  </body>
+</html>

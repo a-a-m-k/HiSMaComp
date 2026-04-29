@@ -1,0 +1,31 @@
+{
+  "name": "HiSMaComp - Historical Map Visualizer",
+  "short_name": "HiSMaComp",
+  "description": "European town populations 800–1750 on an interactive map with timeline and population-sized markers",
+  "start_url": "/HiSMaComp/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1976d2",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/HiSMaComp/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/HiSMaComp/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "education",
+    "history",
+    "maps"
+  ],
+  "lang": "en",
+  "scope": "/HiSMaComp/"
+}
