@@ -15,6 +15,7 @@
  *   - vendor    → other node_modules (MUI, React, etc.)
  *   - index-    → main app entry
  *   - towns     → async chunk from useTownsData dynamic import (towns.json)
+ *   - maplibre-worker / maplibre-gl-csp-worker → map worker chunks
  *
  * If Vite rollupOptions.output.manualChunks or chunk naming changes, update the
  * classification logic below and BUDGETS to match.
@@ -32,6 +33,7 @@ const BUDGETS = {
   // Sum of all *.js in dist/assets (zlib gzip, same as this script — may differ slightly from Vite’s printed gzip).
   totalJs: 1200,
   maplibre: 280,
+  maplibreWorker: 130,
   // React + MUI + Emotion + react-map-gl deps (Sentry is split to sentry-* chunk).
   vendor: 240,
   // @sentry/react + tracing/replay (gzip varies with SDK version).
@@ -71,7 +73,14 @@ function main() {
     }
 
     totalJs += sizeKiB;
-    if (file.includes("maplibre")) byName.maplibre = (byName.maplibre || 0) + sizeKiB;
+    if (
+      file.includes("maplibre-worker") ||
+      file.includes("maplibre-gl-csp-worker")
+    ) {
+      byName.maplibreWorker = (byName.maplibreWorker || 0) + sizeKiB;
+    } else if (file.includes("maplibre")) {
+      byName.maplibre = (byName.maplibre || 0) + sizeKiB;
+    }
     else if (file.includes("sentry")) byName.sentry = (byName.sentry || 0) + sizeKiB;
     else if (file.includes("vendor")) byName.vendor = (byName.vendor || 0) + sizeKiB;
     else if (file.includes("index-")) byName.index = (byName.index || 0) + sizeKiB;
@@ -87,6 +96,12 @@ function main() {
   if ((byName.maplibre || 0) > BUDGETS.maplibre) {
     console.error(
       `[check-bundle-size] maplibre chunk ${(byName.maplibre || 0).toFixed(0)} KiB exceeds budget ${BUDGETS.maplibre} KiB`
+    );
+    failed = true;
+  }
+  if ((byName.maplibreWorker || 0) > BUDGETS.maplibreWorker) {
+    console.error(
+      `[check-bundle-size] maplibre worker chunks ${(byName.maplibreWorker || 0).toFixed(0)} KiB exceeds budget ${BUDGETS.maplibreWorker} KiB`
     );
     failed = true;
   }
