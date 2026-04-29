@@ -4,8 +4,7 @@ import Map, { type MapProps, type MapRef } from "react-map-gl/maplibre";
 import { getTerrainDarkStyle } from "@/utils/map";
 
 import { SPLIT_BASEMAP_TILE_OPTIONS } from "./constants";
-
-const maplibreGl = import("maplibre-gl");
+import { maplibreGl } from "./maplibreRuntime";
 
 /** Camera + bounds props aligned with the interactive overlay (no `mapStyle`). */
 export type MapViewSharedCameraProps = Pick<

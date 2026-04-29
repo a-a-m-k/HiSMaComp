@@ -12,6 +12,7 @@ import {
   type MapViewSharedCameraProps,
 } from "./MapViewDarkBasemap";
 import MapLayer from "./MapLayer/MapLayer";
+import { maplibreGl } from "./maplibreRuntime";
 import { useDeferredOverlayActivation } from "./useDeferredOverlayActivation";
 
 const TownMarkers = React.lazy(() =>
@@ -20,7 +21,6 @@ const TownMarkers = React.lazy(() =>
 const MapOverlays = React.lazy(() =>
   import("./MapOverlays").then(module => ({ default: module.MapOverlays }))
 );
-const maplibreGl = import("maplibre-gl");
 const ZOOM_SNAP_EPSILON = 1e-6;
 
 type MapCanvasStackProps = {

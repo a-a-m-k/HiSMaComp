@@ -117,6 +117,9 @@ export default defineConfig(({ command }) => ({
             return "html2canvas";
           }
           if (id.includes("node_modules")) {
+            if (id.includes("maplibre-gl-csp-worker")) {
+              return "maplibre-worker";
+            }
             if (id.includes("maplibre-gl")) {
               return "maplibre";
             }
