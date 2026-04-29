@@ -148,7 +148,7 @@ export const MapCanvasStack: React.FC<MapCanvasStackProps> = ({
       maxTileCacheZoomLevels: mapTileCacheOptions.maxTileCacheZoomLevels,
       maxTileCacheSize: mapTileCacheOptions.maxTileCacheSize,
     };
-  }, []);
+  }, [mapTileCacheOptions]);
   const { keyboard, scrollZoom, touchZoomRotate, dragPan } =
     mapInteractionProps;
   const {

@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import { ErrorBoundary } from "@/components/dev";
 import { LoadingSpinner } from "@/components/ui";
 import { Town } from "@/common/types";
-import { Z_INDEX } from "@/constants";
+import { LEGEND_HEADING_LABEL, Z_INDEX } from "@/constants";
 import { strings } from "@/locales";
 
 const LazyMapView = React.lazy(
@@ -112,7 +112,7 @@ export const MapStage: React.FC<MapStageProps> = ({
               color: "text.primary",
             }}
           >
-            European population
+            {LEGEND_HEADING_LABEL}
           </Box>
         </Box>
       </Box>
